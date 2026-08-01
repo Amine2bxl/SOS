@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces", Georgia, serif;
+
+  --color-paper: #f6f4ee;
+  --color-card: #fffdf8;
+  --color-ink: #1b2a36;
+  --color-ink-soft: #4c5b66;
+  --color-line: #e4ddcd;
+  --color-line-soft: #efe9dc;
+
+  --color-navy-950: #07172e;
+  --color-navy-900: #0b2545;
+  --color-navy-800: #123159;
+  --color-navy-700: #1b4073;
+  --color-navy-600: #27548f;
+  --color-navy-100: #dde6f2;
+  --color-navy-50: #eef3fa;
+
+  --color-gold-600: #b97e00;
+  --color-gold-500: #d99a00;
+  --color-gold-400: #f2b705;
+  --color-gold-300: #ffd34d;
+  --color-gold-100: #fdf3d3;
+
+  --color-ok-700: #146c43;
+  --color-ok-600: #178a50;
+  --color-ok-100: #ddf2e4;
+  --color-warn-700: #92580a;
+  --color-warn-600: #b45309;
+  --color-warn-100: #fbeed3;
+  --color-danger-700: #96271c;
+  --color-danger-600: #b3261e;
+  --color-danger-100: #fbe3e0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  12% { transform: scale(1.18); }
+  24% { transform: scale(1); }
+  36% { transform: scale(1.12); }
+  48% { transform: scale(1); }
+}
+.animate-heartbeat {
+  animation: heartbeat 3.2s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-rise {
+  animation: rise 0.45s ease-out both;
+}
+
+.letter-paper {
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #print-zone, #print-zone * {
+    visibility: visible;
+  }
+  #print-zone {
+    position: absolute;
+    inset: 0;
+    padding: 2cm;
+    background: white;
+  }
+}
