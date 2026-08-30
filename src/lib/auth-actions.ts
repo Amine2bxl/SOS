@@ -44,11 +44,13 @@ export async function sInscrire(_precedent: EtatAuth, donnees: FormData): Promis
 
   const email = String(donnees.get("email") ?? "").trim();
   const motDePasse = String(donnees.get("motDePasse") ?? "");
+  const confirmation = String(donnees.get("confirmation") ?? "");
   const prenom = String(donnees.get("prenom") ?? "").trim();
   const nom = String(donnees.get("nom") ?? "").trim();
 
   if (!email || !motDePasse) return { erreur: "Renseignez votre e-mail et un mot de passe." };
   if (motDePasse.length < 8) return { erreur: "Choisissez un mot de passe d'au moins 8 caractères." };
+  if (motDePasse !== confirmation) return { erreur: "Les deux mots de passe ne correspondent pas." };
 
   const { data, error } = await supabase.auth.signUp({
     email,

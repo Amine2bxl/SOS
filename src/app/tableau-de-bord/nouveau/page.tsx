@@ -6,6 +6,7 @@ import { lireUtilisateur } from "@/lib/supabase/server";
 import { listerDossiers, lireProfil } from "@/lib/dossiers";
 import { quotaAtteint, planById } from "@/lib/plans";
 import { Card, LinkBtn } from "@/components/ui";
+import { NavigationMembre } from "@/components/NavigationMembre";
 import { ScannerDocument } from "./ScannerDocument";
 
 export const metadata: Metadata = { title: "Nouvelle contestation" };
@@ -42,12 +43,18 @@ export default async function NouveauDossierPage() {
   }
 
   return (
-    <ScannerDocument
-      formule={planById(profil?.plan).nom}
-      profil={{
-        prenom: profil?.prenom ?? "",
-        nom: profil?.nom ?? "",
-      }}
-    />
+    <div className="mx-auto max-w-6xl px-4 pt-8 sm:px-6">
+      <NavigationMembre
+        prenom={profil?.prenom ?? undefined}
+        planNom={planById(profil?.plan).nom}
+      />
+      <ScannerDocument
+        formule={planById(profil?.plan).nom}
+        profil={{
+          prenom: profil?.prenom ?? "",
+          nom: profil?.nom ?? "",
+        }}
+      />
+    </div>
   );
 }

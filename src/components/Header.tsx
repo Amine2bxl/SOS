@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Logo, PhoneIcon } from "@/components/Logo";
-import { EtatCompte } from "@/components/EtatCompte";
+import { MenuCompte } from "@/components/MenuCompte";
+import { useSession } from "@/components/useSession";
 import { ASSO } from "@/lib/data";
 
 const NAV = [
@@ -18,6 +19,15 @@ const NAV = [
 export function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const { connecte } = useSession();
+
+  // L'espace membre apparaît dans la navigation dès que l'utilisateur est
+  // connecté : impossible de ne plus savoir où le retrouver.
+  const navigation = connecte
+    ? [...NAV, { href: "/tableau-de-bord", label: "Mon espace" }]
+    : NAV;
+
+  const estActif = (href: string) => pathname.startsWith(href);
 
   return (
     <header className="sticky top-0 z-40 print:hidden">
@@ -28,21 +38,20 @@ export function Header() {
           </Link>
 
           <nav className="hidden items-center gap-1 lg:flex" aria-label="Navigation principale">
-            {NAV.map((item) => {
-              const active = pathname.startsWith(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={active ? "page" : undefined}
-                  className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                    active ? "bg-navy-800 text-gold-300" : "text-navy-100 hover:bg-navy-800/70 hover:text-white"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
+            {navigation.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={estActif(item.href) ? "page" : undefined}
+                className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                  estActif(item.href)
+                    ? "bg-navy-800 text-gold-300"
+                    : "text-navy-100 hover:bg-navy-800/70 hover:text-white"
+                }`}
+              >
+                {item.label}
+              </Link>
+            ))}
           </nav>
 
           <div className="flex items-center gap-2">
@@ -55,9 +64,7 @@ export function Header() {
               <span className="hidden sm:inline">{ASSO.telephone}</span>
               <span className="sm:hidden">Appeler</span>
             </a>
-            <span className="hidden lg:inline-flex">
-              <EtatCompte />
-            </span>
+            <MenuCompte />
             <button
               onClick={() => setOpen(!open)}
               className="rounded-md border border-navy-700 p-2 text-navy-100 lg:hidden"
@@ -74,18 +81,21 @@ export function Header() {
         {open && (
           <nav className="border-t border-navy-800 px-4 pb-4 lg:hidden" aria-label="Navigation mobile">
             <div className="grid gap-1 pt-3">
-              {NAV.map((item) => (
+              {navigation.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={() => setOpen(false)}
-                  className="rounded-md px-3 py-2.5 text-sm font-medium text-navy-100 hover:bg-navy-800"
+                  aria-current={estActif(item.href) ? "page" : undefined}
+                  className={`rounded-md px-3 py-2.5 text-sm font-medium ${
+                    estActif(item.href) ? "bg-navy-800 text-gold-300" : "text-navy-100 hover:bg-navy-800"
+                  }`}
                 >
                   {item.label}
                 </Link>
               ))}
               <span className="mt-2 grid">
-                <EtatCompte surNavigation={() => setOpen(false)} />
+                <MenuCompte />
               </span>
             </div>
           </nav>

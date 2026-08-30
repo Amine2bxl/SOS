@@ -29,6 +29,7 @@ export function SuiviDossier({ dossier, profil }: { dossier: DossierLeger; profi
   const [motif, setMotif] = useState("paiement");
   const [explication, setExplication] = useState("");
   const [copie, setCopie] = useState(false);
+  const [confirmationSuppression, setConfirmationSuppression] = useState(false);
   const [enCours, demarrer] = useTransition();
 
   const lettre = useMemo(
@@ -135,16 +136,49 @@ export function SuiviDossier({ dossier, profil }: { dossier: DossierLeger; profi
             variant="ghost"
             className="text-danger-700 hover:bg-danger-100"
             disabled={enCours}
-            onClick={() => {
-              if (confirm("Supprimer définitivement ce dossier et sa chronologie ?")) {
-                demarrer(() => { supprimerDossier(dossier.id); });
-              }
-            }}
+            onClick={() => setConfirmationSuppression(true)}
           >
             Supprimer ce dossier
           </Btn>
         </div>
       </Card>
+
+      {confirmationSuppression && (
+        <div
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="titre-suppression"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-navy-950/70 p-4 backdrop-blur-sm"
+        >
+          <Card className="w-full max-w-sm animate-rise border-navy-950/10 shadow-2xl">
+            <h2 id="titre-suppression" className="font-display text-xl font-bold text-navy-900">
+              Supprimer ce dossier ?
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+              Le dossier, la lettre de contestation et sa chronologie seront définitivement
+              supprimés. Cette action ne peut pas être annulée.
+            </p>
+            <div className="mt-6 flex flex-col gap-2 sm:flex-row">
+              <Btn
+                variant="primary"
+                className="btn-danger flex-1"
+                disabled={enCours}
+                onClick={() => demarrer(() => { supprimerDossier(dossier.id); })}
+              >
+                {enCours ? "Suppression…" : "Supprimer définitivement"}
+              </Btn>
+              <Btn
+                variant="secondary"
+                className="flex-1"
+                disabled={enCours}
+                onClick={() => setConfirmationSuppression(false)}
+              >
+                Annuler
+              </Btn>
+            </div>
+          </Card>
+        </div>
+      )}
     </>
   );
 }

@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { useSearchParams } from "next/navigation";
 import { seConnecter, type EtatAuth } from "@/lib/auth-actions";
 import { Card, Field, TextInput, Btn } from "@/components/ui";
+import { MotDePasseInput } from "@/components/MotDePasseInput";
 
 export function FormulaireConnexion() {
   const parametres = useSearchParams();
@@ -20,7 +21,7 @@ export function FormulaireConnexion() {
         </Field>
 
         <Field label="Mot de passe" required>
-          <TextInput name="motDePasse" type="password" required autoComplete="current-password" />
+          <MotDePasseInput name="motDePasse" required autoComplete="current-password" />
         </Field>
 
         {etat.erreur && (

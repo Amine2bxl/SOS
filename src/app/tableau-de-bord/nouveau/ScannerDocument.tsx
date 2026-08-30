@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { lireDocument, FORMATS_ACCEPTES, TAILLE_MAX_OCTETS, type ProgressionOCR } from "@/lib/ocr";
 import { extraireDonnees, tauxDeReconnaissance, type DonneesExtraites, type Confiance } from "@/lib/extraction";
@@ -115,6 +115,29 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
     }
   };
 
+  // Toujours pointer vers la dernière version de traiterFichier dans l'écouteur.
+  const traiterFichierRef = useRef(traiterFichier);
+  useEffect(() => {
+    traiterFichierRef.current = traiterFichier;
+  });
+
+  // Copier-coller d'image ou de capture d'écran (Ctrl+V / Cmd+V).
+  useEffect(() => {
+    if (etape !== "depot") return;
+
+    const coller = (e: ClipboardEvent) => {
+      const item = [...(e.clipboardData?.items ?? [])].find((i) => i.type.startsWith("image/"));
+      const fichier = item?.getAsFile();
+      if (fichier) {
+        e.preventDefault();
+        traiterFichierRef.current(new File([fichier], "capture.png", { type: fichier.type }));
+      }
+    };
+
+    window.addEventListener("paste", coller);
+    return () => window.removeEventListener("paste", coller);
+  }, [etape, traiterFichierRef]);
+
   const saisirALaMain = () => {
     setExtrait(null);
     setTexteBrut("");
@@ -150,13 +173,28 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
           Ajoutez votre document
         </h1>
         <p className="mt-3 text-center text-ink-soft">
-          Photographiez votre courrier ou déposez le PDF. Nous en extrayons la référence, le
-          montant, les dates et la plaque. Vous vérifiez, puis c&apos;est enregistré.
+          Photographiez votre courrier, collez une capture d&apos;écran (Ctrl+V) ou déposez une photo
+          ou un PDF. Nous en extrayons la référence, le montant, les dates et la plaque. Vous
+          vérifiez, puis c&apos;est enregistré.
         </p>
 
         <button
           type="button"
           onClick={() => fichierRef.current?.click()}
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.currentTarget.classList.add("border-navy-900", "bg-navy-100");
+          }}
+          onDragLeave={(e) => {
+            e.preventDefault();
+            e.currentTarget.classList.remove("border-navy-900", "bg-navy-100");
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            e.currentTarget.classList.remove("border-navy-900", "bg-navy-100");
+            const fichier = e.dataTransfer.files?.[0];
+            if (fichier) traiterFichier(fichier);
+          }}
           className="mt-8 flex w-full flex-col items-center rounded-xl border-2 border-dashed border-navy-600/40 bg-card p-10 text-center transition hover:border-navy-700 hover:bg-navy-50"
         >
           <svg viewBox="0 0 24 24" className="h-12 w-12 text-navy-700" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -164,9 +202,11 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
             <path d="M3 15v3a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3v-3" strokeLinecap="round" />
           </svg>
           <span className="mt-4 font-display text-lg font-bold text-navy-900">
-            Choisir une photo ou un PDF
+            Choisir, coller ou déposer un document
           </span>
-          <span className="mt-1 text-sm text-ink-soft">JPEG, PNG ou PDF — 15 Mo maximum</span>
+          <span className="mt-1 text-sm text-ink-soft">
+            Photo, capture d&apos;écran (Ctrl+V) ou PDF — 15 Mo maximum
+          </span>
         </button>
 
         <input

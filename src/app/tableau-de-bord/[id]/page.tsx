@@ -11,6 +11,7 @@ import {
 import { Card } from "@/components/ui";
 import { BadgeStatut, PastilleEcheance } from "@/components/dossier-ui";
 import { RafraichirEnTempsReel } from "@/components/RafraichirEnTempsReel";
+import { NavigationMembre } from "@/components/NavigationMembre";
 import { SuiviDossier } from "./SuiviDossier";
 
 export const metadata: Metadata = { title: "Mon dossier" };
@@ -36,7 +37,9 @@ export default async function DossierPage({ params }: { params: Promise<{ id: st
     <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
       <RafraichirEnTempsReel dossierId={id} />
 
-      <Link href="/tableau-de-bord" className="text-sm font-semibold text-navy-700 hover:underline">
+      <NavigationMembre prenom={profil?.prenom ?? undefined} />
+
+      <Link href="/tableau-de-bord" className="inline-block text-sm font-semibold text-navy-700 hover:underline">
         ← Retour à mes dossiers
       </Link>
 

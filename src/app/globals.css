@@ -72,6 +72,17 @@ body {
   white-space: pre-wrap;
 }
 
+.btn-danger {
+  background-color: var(--color-danger-700);
+}
+.btn-danger:hover {
+  background-color: var(--color-danger-600);
+}
+.btn-danger:disabled {
+  background-color: var(--color-danger-700);
+  opacity: 0.5;
+}
+
 @media print {
   body * {
     visibility: hidden;

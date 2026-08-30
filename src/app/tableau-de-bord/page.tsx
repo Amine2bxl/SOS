@@ -13,6 +13,7 @@ import { LinkBtn, Card } from "@/components/ui";
 import { BadgeStatut, PastilleEcheance } from "@/components/dossier-ui";
 import { AlerteReglementaire } from "@/components/AlerteReglementaire";
 import { RafraichirEnTempsReel } from "@/components/RafraichirEnTempsReel";
+import { NavigationMembre } from "@/components/NavigationMembre";
 
 export const metadata: Metadata = { title: "Mon tableau de bord" };
 export const dynamic = "force-dynamic";
@@ -46,6 +47,8 @@ export default async function TableauDeBordPage() {
       <RafraichirEnTempsReel />
 
       {alertes.length > 0 && <AlerteReglementaire alerte={alertes[0]} />}
+
+      <NavigationMembre prenom={profil?.prenom ?? undefined} planNom={plan.nom} />
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>

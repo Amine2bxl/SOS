@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { sInscrire, verifierOtp, renvoyerCode, type EtatAuth } from "@/lib/auth-actions";
 import { Card, Field, TextInput, Btn } from "@/components/ui";
+import { MotDePasseInput } from "@/components/MotDePasseInput";
 
 /** Quatre cases de saisie du code à 6 chiffres, avec avance automatique. */
 function SaisieCode({ valeur, onChange }: { valeur: string; onChange: (v: string) => void }) {
@@ -98,7 +99,11 @@ export function FormulaireInscription() {
           </Field>
 
           <Field label="Mot de passe" required hint="Au moins 8 caractères.">
-            <TextInput name="motDePasse" type="password" required minLength={8} autoComplete="new-password" />
+            <MotDePasseInput name="motDePasse" required minLength={8} autoComplete="new-password" />
+          </Field>
+
+          <Field label="Confirmer le mot de passe" required>
+            <MotDePasseInput name="confirmation" required minLength={8} autoComplete="new-password" />
           </Field>
 
           {etat.erreur && (
