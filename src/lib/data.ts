@@ -340,7 +340,16 @@ export type Commune = {
   aSavoir: string;
   /** Site officiel de la commune (source du règlement). */
   siteOfficiel: string;
+  /**
+   * Page précise des tarifs/zones sur parking.brussels, validée en amont.
+   * Les communes sans page dédiée renvoient vers la page « réglementations
+   * par commune », la plus précise qui existe pour elles.
+   */
+  parking: string;
 };
+
+/** Page officielle des règlementations communales (toutes communes). */
+const PARKING_REGLEMENTATIONS = "https://www.parking.brussels/fr/reglementations/par-commune";
 
 export const COMMUNES: Commune[] = [
   {
@@ -353,6 +362,7 @@ export const COMMUNES: Commune[] = [
     riverain: "Cartes de riverain délivrées par la commune, avec enregistrement de la plaque.",
     aSavoir: "Vérifiez les rues en zone mixte et les horaires de marché : le régime peut changer à quelques rues près.",
     siteOfficiel: "https://www.anderlecht.be",
+    parking: "https://www.parking.brussels/fr/stationner-sa-voiture/anderlecht",
   },
   {
     slug: "auderghem",
@@ -364,6 +374,7 @@ export const COMMUNES: Commune[] = [
     riverain: "Régime de cartes de riverain propre à la commune, soumis à enregistrement de la plaque.",
     aSavoir: "Abords de métro : contrôles ScanCar fréquents. Conservez la preuve de votre session de paiement.",
     siteOfficiel: "https://auderghem.be",
+    parking: PARKING_REGLEMENTATIONS,
   },
   {
     slug: "berchem-sainte-agathe",
@@ -375,6 +386,7 @@ export const COMMUNES: Commune[] = [
     riverain: "Cartes de riverain délivrées par la commune pour les résidents.",
     aSavoir: "Règlement communal propre : vérifiez toujours la version applicable à la date du constat.",
     siteOfficiel: "https://www.berchem-sainte-agathe.be",
+    parking: "https://www.parking.brussels/fr/stationner-sa-voiture/berchem-sainte-agathe",
   },
   {
     slug: "bruxelles-ville",
@@ -386,6 +398,7 @@ export const COMMUNES: Commune[] = [
     riverain: "Cartes riverains par secteur du Pentagone : la correspondance plaque/secteur doit être vérifiée.",
     aSavoir: "Centre-ville à forte pression : une session active mais mal enregistrée justifie souvent de contester avec la capture d'écran.",
     siteOfficiel: "https://www.bruxelles.be",
+    parking: PARKING_REGLEMENTATIONS,
   },
   {
     slug: "etterbeek",
@@ -397,6 +410,7 @@ export const COMMUNES: Commune[] = [
     riverain: "Cartes de riverain communales, avec règles propres près des institutions européennes.",
     aSavoir: "Régimes particuliers près des institutions européennes : vérifiez le statut exact de la rue.",
     siteOfficiel: "https://etterbeek.be",
+    parking: PARKING_REGLEMENTATIONS,
   },
   {
     slug: "evere",
@@ -408,6 +422,7 @@ export const COMMUNES: Commune[] = [
     riverain: "Régime de riverain propre à la commune.",
     aSavoir: "Attention aux rues à la frontière avec Schaerbeek : la commune du constat peut être l'une ou l'autre.",
     siteOfficiel: "https://evere.be",
+    parking: "https://www.parking.brussels/fr/stationner-sa-voiture/evere",
   },
   {
     slug: "forest",
@@ -419,6 +434,7 @@ export const COMMUNES: Commune[] = [
     riverain: "Cartes de riverain délivrées par la commune.",
     aSavoir: "Contrôles renforcés autour des salles de spectacle (Forest National) lors des événements.",
     siteOfficiel: "https://forest.brussels",
+    parking: "https://www.parking.brussels/fr/stationner-sa-voiture/forest",
   },
   {
     slug: "ganshoren",
@@ -430,6 +446,7 @@ export const COMMUNES: Commune[] = [
     riverain: "Régime de riverain de la commune.",
     aSavoir: "Zones hospitalières à régime spécifique : vérifiez les panneaux et le règlement.",
     siteOfficiel: "https://www.ganshoren.be",
+    parking: "https://www.parking.brussels/fr/stationner-sa-voiture/ganshoren",
   },
   {
     slug: "ixelles",
@@ -441,6 +458,7 @@ export const COMMUNES: Commune[] = [
     riverain: "Réseau dense de cartes de riverain, avec secteurs précis.",
     aSavoir: "Très forte densité de ScanCars : conservez vos preuves de session et demandez les photos du contrôle.",
     siteOfficiel: "https://www.ixelles.be",
+    parking: "https://www.parking.brussels/fr/stationner-sa-voiture/ixelles",
   },
   {
     slug: "jette",
@@ -452,6 +470,7 @@ export const COMMUNES: Commune[] = [
     riverain: "Régime de riverain communal.",
     aSavoir: "Zones hospitalières : vérifiez le statut particulier de la rue et des panneaux.",
     siteOfficiel: "https://www.jette.be",
+    parking: "https://www.parking.brussels/fr/stationner-sa-voiture/jette",
   },
   {
     slug: "koekelberg",
@@ -463,6 +482,7 @@ export const COMMUNES: Commune[] = [
     riverain: "Cartes de riverain délivrées par la commune.",
     aSavoir: "Signalisation ponctuelle lors des événements à la Basilique : photographiez le cadre du stationnement.",
     siteOfficiel: "https://www.koekelberg.be",
+    parking: "https://www.parking.brussels/fr/stationner-sa-voiture/koekelberg",
   },
   {
     slug: "molenbeek-saint-jean",
@@ -474,6 +494,7 @@ export const COMMUNES: Commune[] = [
     riverain: "Régime de riverain propre à la commune.",
     aSavoir: "Vérifiez les rues en transition de zone : une frontière mal posée peut fonder une contestation.",
     siteOfficiel: "https://www.molenbeek.be",
+    parking: "https://www.parking.brussels/fr/stationner-sa-voiture/molenbeek-saint-jean",
   },
   {
     slug: "saint-gilles",
@@ -485,6 +506,7 @@ export const COMMUNES: Commune[] = [
     riverain: "Cartes de riverain par secteur, avec enregistrement de plaque.",
     aSavoir: "Stationnement très tendu et contrôles fréquents. Siège de notre association.",
     siteOfficiel: "https://stgilles.brussels",
+    parking: "https://www.parking.brussels/fr/stationner-sa-voiture/saint-gilles",
   },
   {
     slug: "saint-josse-ten-noode",
@@ -496,6 +518,7 @@ export const COMMUNES: Commune[] = [
     riverain: "Régime de riverain strict dû à la densité.",
     aSavoir: "Zone rouge stricte : vérifiez les dérogations et cartes applicables avant de contester.",
     siteOfficiel: "https://www.saint-josse.irisnet.be",
+    parking: PARKING_REGLEMENTATIONS,
   },
   {
     slug: "schaerbeek",
@@ -507,6 +530,7 @@ export const COMMUNES: Commune[] = [
     riverain: "Régime de riverain avec secteurs précis.",
     aSavoir: "Commune très étendue : vérifiez précisément la zone de la rue exacte du constat.",
     siteOfficiel: "https://www.schaerbeek.be",
+    parking: "https://www.parking.brussels/fr/stationner-sa-voiture/schaerbeek",
   },
   {
     slug: "uccle",
@@ -518,6 +542,7 @@ export const COMMUNES: Commune[] = [
     riverain: "Cartes de riverain selon secteurs.",
     aSavoir: "Certaines voiries sont régionales : le gestionnaire (commune ou Région) peut différer et importe pour la contestation.",
     siteOfficiel: "https://www.uccle.be",
+    parking: PARKING_REGLEMENTATIONS,
   },
   {
     slug: "watermael-boitsfort",
@@ -529,6 +554,7 @@ export const COMMUNES: Commune[] = [
     riverain: "Régime de riverain communal.",
     aSavoir: "Le week-end près des étangs change le régime : photographiez la signalisation du jour du constat.",
     siteOfficiel: "https://www.watermael-boitsfort.be",
+    parking: "https://www.parking.brussels/fr/stationner-sa-voiture/watermael-boitsfort",
   },
   {
     slug: "woluwe-saint-lambert",
@@ -540,6 +566,7 @@ export const COMMUNES: Commune[] = [
     riverain: "Régime de riverain par secteur.",
     aSavoir: "Zones commerciales à durée limitée : une session validée mais hors plage exacte mérite vérification.",
     siteOfficiel: "https://www.woluwe1200.be",
+    parking: PARKING_REGLEMENTATIONS,
   },
   {
     slug: "woluwe-saint-pierre",
@@ -551,6 +578,7 @@ export const COMMUNES: Commune[] = [
     riverain: "Régime de riverain communal.",
     aSavoir: "Vérifiez les avenues à régime mixte : la règle peut changer d'un côté à l'autre de la rue.",
     siteOfficiel: "https://www.woluwe1150.be",
+    parking: "https://www.parking.brussels/fr/stationner-sa-voiture/woluwe-saint-pierre",
   },
 ];
 

@@ -3,8 +3,6 @@
 import { useState } from "react";
 import { COMMUNES } from "@/lib/data";
 
-const PARKING_BRUSSELS = "https://www.parking.brussels";
-
 /** Sections d'une fiche commune, présentées sous forme de repères clairs. */
 function Repaire({ label, valeur }: { label: string; valeur: string }) {
   return (
@@ -19,6 +17,10 @@ function Repaire({ label, valeur }: { label: string; valeur: string }) {
 export function ExplorateurCommunes() {
   const [slug, setSlug] = useState(COMMUNES[0].slug);
   const commune = COMMUNES.find((c) => c.slug === slug) ?? COMMUNES[0];
+
+  // Page « réglementations par commune » : seule page précise pour les communes
+  // sans page dédiée sur parking.brussels.
+  const estPageGenerale = commune.parking.includes("reglementations/par-commune");
 
   return (
     <div className="mt-8 grid gap-5 lg:grid-cols-[280px_1fr]">
@@ -56,14 +58,6 @@ export function ExplorateurCommunes() {
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-display text-2xl font-bold text-navy-900">{commune.nom}</h2>
-          <a
-            href={commune.siteOfficiel}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-md border border-line bg-white px-3 py-1.5 text-xs font-semibold text-navy-900 transition hover:border-navy-600/50 hover:bg-navy-50"
-          >
-            Site officiel ↗
-          </a>
         </div>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -80,14 +74,27 @@ export function ExplorateurCommunes() {
           <span className="font-bold text-navy-900">À retenir :</span> {commune.aSavoir}
         </p>
 
-        <a
-          href={PARKING_BRUSSELS}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-4 inline-flex items-center gap-1.5 rounded-md border border-line bg-white px-3 py-1.5 text-xs font-semibold text-navy-900 transition hover:border-navy-600/50 hover:bg-navy-50"
-        >
-          Tarifs et zones à jour sur parking.brussels ↗
-        </a>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <a
+            href={commune.parking}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-md bg-navy-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-navy-800"
+          >
+            {estPageGenerale
+              ? `Règlement communal de ${commune.nom} — parking.brussels`
+              : `Tarifs et zones de ${commune.nom} — parking.brussels`}{" "}
+            ↗
+          </a>
+          <a
+            href={commune.siteOfficiel}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-md border border-line bg-white px-3 py-2 text-xs font-semibold text-navy-900 transition hover:border-navy-600/50 hover:bg-navy-50"
+          >
+            Site officiel de la commune ↗
+          </a>
+        </div>
 
         <p className="mt-4 text-xs leading-relaxed text-ink-soft">
           Les horaires, tarifs et plages de gratuité exacts figurent dans le règlement communal en
