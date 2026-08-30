@@ -4,7 +4,7 @@ import { MailIcon } from "@/components/Logo";
 import { BoutonContact } from "@/components/Contact";
 import { CtaHero } from "@/components/CtaHero";
 import { ZonesVisuel } from "@/components/visuels";
-import { ASSO, CHIFFRES, ETAPES, NOUS_FAISONS, NOUS_NE_FAISONS_PAS, ALERTE } from "@/lib/data";
+import { ASSO, CHIFFRES, PARCOURS, NOUS_FAISONS, NOUS_NE_FAISONS_PAS, ALERTE } from "@/lib/data";
 
 /** Les situations les plus fréquentes : le visiteur doit se reconnaître en 5 secondes. */
 const SITUATIONS = [
@@ -100,48 +100,62 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* COMMENT ÇA MARCHE — 3 étapes, pas 6. */}
-      <section className="mx-auto max-w-4xl px-4 py-14 sm:px-6">
+      {/* LE PARCOURS UTILISATEUR — chaque étape mène à la suivante. */}
+      <section className="mx-auto max-w-5xl px-4 py-14 sm:px-6">
         <h2 className="text-center font-display text-2xl font-bold text-navy-900 sm:text-3xl">
-          Comment ça se passe ?
+          Le parcours, de votre courrier au suivi
         </h2>
         <p className="mx-auto mt-3 max-w-xl text-center text-ink-soft">
-          Trois étapes. Vous gardez la main du début à la fin.
+          Quatre étapes simples. Vous avancez à votre rythme, et chacune vous emmène à la suivante.
         </p>
-        <ol className="mt-9 grid gap-5 sm:grid-cols-3">
-          {ETAPES.map((e, i) => (
-            <li key={e.titre} className="rounded-xl border border-line bg-card p-5 shadow-sm">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-navy-900 font-display text-lg font-bold text-gold-300">
-                {i + 1}
-              </span>
-              <h3 className="mt-4 font-display text-base font-bold text-navy-900">{e.titre}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-ink-soft">{e.texte}</p>
+        <ol className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {PARCOURS.map((p, i) => (
+            <li
+              key={p.titre}
+              className="flex flex-col rounded-xl border border-line bg-card p-5 shadow-sm transition hover:border-navy-600/40 hover:shadow-md"
+            >
+              <div className="flex items-center justify-between">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-navy-900 font-display text-lg font-bold text-gold-300">
+                  {i + 1}
+                </span>
+                {i < PARCOURS.length - 1 && (
+                  <span className="hidden text-navy-600 lg:block" aria-hidden="true">
+                    →
+                  </span>
+                )}
+              </div>
+              <h3 className="mt-4 font-display text-base font-bold text-navy-900">{p.titre}</h3>
+              <p className="mt-2 flex-1 text-sm leading-relaxed text-ink-soft">{p.texte}</p>
+              <LinkBtn href={p.href} variant="secondary" className="mt-4 w-full">
+                {p.cta}
+              </LinkBtn>
             </li>
           ))}
         </ol>
-
-        <div className="mt-8 flex justify-center">
-          <LinkBtn href="/comprendre" variant="secondary">
-            Comprendre la procédure en détail →
-          </LinkBtn>
-        </div>
+        <p className="mt-6 text-center text-sm text-ink-soft">
+          Déjà un dossier ?{" "}
+          <Link href="/connexion" className="font-semibold text-navy-700 underline">
+            Connectez-vous
+          </Link>{" "}
+          pour le retrouver.
+        </p>
       </section>
 
-      {/* LES ZONES, EN 30 SECONDES — visuel utile avant toute contestation. */}
-      <section className="bg-navy-50/60 py-14">
+      {/* LES ZONES, EN 30 SECONDES — bloc sombre, cohérent avec le hero. */}
+      <section className="bg-navy-950 py-14 text-white">
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <h2 className="text-center font-display text-2xl font-bold text-navy-900 sm:text-3xl">
+          <h2 className="text-center font-display text-2xl font-bold sm:text-3xl">
             Les zones de stationnement, en un coup d&apos;œil
           </h2>
-          <p className="mx-auto mt-3 max-w-xl text-center text-ink-soft">
+          <p className="mx-auto mt-3 max-w-xl text-center text-navy-100/80">
             Tout commence par la zone où vous étiez garé : c&apos;est elle qui fixe le tarif, les
             horaires et les règles applicables à votre dossier.
           </p>
           <div className="mt-8">
-            <ZonesVisuel />
+            <ZonesVisuel sombre />
           </div>
           <div className="mt-8 flex justify-center">
-            <LinkBtn href="/communes" variant="secondary">
+            <LinkBtn href="/communes" variant="outline">
               Voir le détail pour ma commune →
             </LinkBtn>
           </div>

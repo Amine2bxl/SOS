@@ -22,14 +22,31 @@ const ZONES = [
 ];
 
 /** Les 3 zones du stationnement bruxellois, d'un coup d'œil. */
-export function ZonesVisuel() {
+export function ZonesVisuel({ sombre = false }: { sombre?: boolean }) {
   return (
     <div className="grid gap-3 sm:grid-cols-3">
       {ZONES.map((z) => (
-        <div key={z.nom} className="rounded-xl border border-line bg-card p-4">
+        <div
+          key={z.nom}
+          className={`rounded-xl border p-4 ${
+            sombre ? "border-white/10 bg-white/5" : "border-line bg-card"
+          }`}
+        >
           <span className={`block h-2.5 w-full rounded-full ${z.classe}`} aria-hidden="true" />
-          <p className="mt-2 font-display text-base font-bold text-navy-900">{z.nom}</p>
-          <p className="mt-1 text-sm leading-relaxed text-ink-soft">{z.texte}</p>
+          <p
+            className={`mt-2 font-display text-base font-bold ${
+              sombre ? "text-white" : "text-navy-900"
+            }`}
+          >
+            {z.nom}
+          </p>
+          <p
+            className={`mt-1 text-sm leading-relaxed ${
+              sombre ? "text-navy-100/80" : "text-ink-soft"
+            }`}
+          >
+            {z.texte}
+          </p>
         </div>
       ))}
     </div>

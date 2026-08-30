@@ -64,6 +64,38 @@ export const ETAPES: { titre: string; texte: string }[] = [
   },
 ];
 
+/** Le parcours utilisateur, de la découverte au suivi des dossiers. */
+export const PARCOURS: { titre: string; texte: string; cta: string; href: string }[] = [
+  {
+    titre: "Je comprends mon courrier",
+    texte:
+      "Guides gratuits et commune par commune : quel courrier, quel délai, quelles preuves comptent.",
+    cta: "Comprendre",
+    href: "/comprendre",
+  },
+  {
+    titre: "Je crée mon compte",
+    texte:
+      "Gratuit, en une minute. C'est la porte d'entrée : le scan et la contestation se passent ici.",
+    cta: "Créer mon compte",
+    href: "/inscription",
+  },
+  {
+    titre: "Je scanne et je conteste",
+    texte:
+      "Photo, capture d'écran ou PDF : nous lisons votre courrier et générons votre lettre.",
+    cta: "Créer un dossier",
+    href: "/tableau-de-bord/nouveau",
+  },
+  {
+    titre: "Je suis mes dossiers",
+    texte:
+      "Échéances, réponses, rappels : tout est suivi et à jour, sans recharger la page.",
+    cta: "Voir mes dossiers",
+    href: "/tableau-de-bord",
+  },
+];
+
 /** Ce que l'association fait — et ne fait pas. Cadre les attentes clairement. */
 export const NOUS_FAISONS = [
   "Nous traduisons votre courrier en langage clair",

@@ -204,11 +204,21 @@ export default async function TableauDeBordPage() {
 
       {dossiers.length === 0 ? (
         <Card className="mt-4 text-center">
-          <p className="font-display text-lg font-bold text-navy-900">Aucun dossier pour l&apos;instant</p>
+          <p className="font-display text-lg font-bold text-navy-900">Votre premier dossier commence ici</p>
           <p className="mx-auto mt-2 max-w-md text-sm text-ink-soft">
-            Prenez votre courrier en photo. Nous en extrayons la référence, le montant et les
-            dates ; vous n&apos;avez plus qu&apos;à vérifier.
+            Prenez votre courrier en photo ou collez une capture d&apos;écran (Ctrl+V). Nous en extrayons
+            la référence, le montant et les dates ; vous n&apos;avez plus qu&apos;à vérifier.
           </p>
+          <div className="mx-auto mt-5 flex max-w-sm items-start justify-center gap-4 text-left">
+            {["Scanner", "Vérifier", "Contester", "Suivre"].map((e, i) => (
+              <div key={e} className="flex-1">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-navy-100 text-xs font-black text-navy-900">
+                  {i + 1}
+                </span>
+                <p className="mt-1.5 text-[11px] font-semibold leading-tight text-ink-soft">{e}</p>
+              </div>
+            ))}
+          </div>
           <LinkBtn href="/tableau-de-bord/nouveau" variant="gold" className="mt-5">
             Scanner mon document
           </LinkBtn>

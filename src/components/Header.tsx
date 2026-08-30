@@ -150,11 +150,12 @@ function HeaderApp({
 }) {
   return (
     <header className="sticky top-0 z-40 print:hidden">
-      <div className="border-b border-line bg-white text-navy-900 shadow-sm shadow-navy-950/5">
+      <div className="border-b border-navy-800 bg-navy-900 text-white shadow-lg shadow-navy-950/20">
+        <div className="h-0.5 bg-gold-400" aria-hidden="true" />
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-3 py-2.5 sm:px-5">
           <div className="flex shrink-0 items-center gap-2.5">
             <Link href="/tableau-de-bord" aria-label="Mon espace SOS Citizens" className="shrink-0">
-              <Logo surClair />
+              <Logo />
             </Link>
             <Link
               href="/tableau-de-bord"
@@ -179,8 +180,8 @@ function HeaderApp({
                   aria-current={actif ? "page" : undefined}
                   className={`whitespace-nowrap rounded-md px-2.5 py-2 text-[13.5px] font-medium transition-colors ${
                     actif
-                      ? "bg-navy-900 text-gold-300"
-                      : "text-navy-700 hover:bg-navy-50 hover:text-navy-900"
+                      ? "bg-navy-800 text-gold-300"
+                      : "text-navy-100 hover:bg-navy-800/70 hover:text-white"
                   }`}
                 >
                   {item.label}
@@ -192,7 +193,7 @@ function HeaderApp({
           <div className="flex items-center gap-1.5">
             <Link
               href="/"
-              className="hidden whitespace-nowrap rounded-md px-2.5 py-2 text-[13.5px] font-medium text-navy-600 transition hover:bg-navy-50 hover:text-navy-900 sm:inline"
+              className="hidden whitespace-nowrap rounded-md px-2.5 py-2 text-[13.5px] font-medium text-navy-100/80 transition hover:bg-navy-800/70 hover:text-white sm:inline"
             >
               Voir le site
             </Link>
@@ -200,7 +201,7 @@ function HeaderApp({
 
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="rounded-md border border-line p-2 text-navy-700 xl:hidden"
+              className="rounded-md border border-navy-700 p-2 text-navy-100 xl:hidden"
               aria-label={mobileOpen ? "Fermer le menu" : "Ouvrir le menu"}
               aria-expanded={mobileOpen}
             >
@@ -212,7 +213,7 @@ function HeaderApp({
         </div>
 
         {mobileOpen && (
-          <nav className="border-t border-line px-4 pb-4 xl:hidden" aria-label="Navigation de l'espace membre">
+          <nav className="border-t border-navy-800 px-4 pb-4 xl:hidden" aria-label="Navigation de l'espace membre">
             <div className="grid gap-1 pt-3">
               {NAV_MEMBRE.map((item) => (
                 <Link
@@ -222,8 +223,8 @@ function HeaderApp({
                   aria-current={pathname.startsWith(item.href) ? "page" : undefined}
                   className={`rounded-md px-3 py-2.5 text-sm font-medium ${
                     pathname.startsWith(item.href)
-                      ? "bg-navy-900 text-gold-300"
-                      : "text-navy-700 hover:bg-navy-50"
+                      ? "bg-navy-800 text-gold-300"
+                      : "text-navy-100 hover:bg-navy-800"
                   }`}
                 >
                   {item.label}
@@ -232,7 +233,7 @@ function HeaderApp({
               <Link
                 href="/"
                 onClick={() => setMobileOpen(false)}
-                className="rounded-md px-3 py-2.5 text-sm font-medium text-navy-600 hover:bg-navy-50"
+                className="rounded-md px-3 py-2.5 text-sm font-medium text-navy-100/80 hover:bg-navy-800"
               >
                 Voir le site public
               </Link>
