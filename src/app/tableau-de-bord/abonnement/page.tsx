@@ -7,7 +7,7 @@ import { lireUtilisateur } from "@/lib/supabase/server";
 import { lireProfil, listerDossiers } from "@/lib/dossiers";
 import { planById, contestationsRestantes, formatPrix } from "@/lib/plans";
 import { NavigationMembre } from "@/components/NavigationMembre";
-import { Card, LinkBtn, Check } from "@/components/ui";
+import { Card, LinkBtn, Check, BarreProgression } from "@/components/ui";
 import { BoutonContact } from "@/components/Contact";
 
 export const metadata: Metadata = { title: "Mon abonnement" };
@@ -64,18 +64,29 @@ export default async function AbonnementPage() {
               vous permet d&apos;ouvrir autant de dossiers que nécessaire.
             </p>
           ) : (
-            <p className="text-sm leading-relaxed text-ink-soft">
-              Il vous reste{" "}
-              <strong className="text-navy-900">
-                {restantes} contestation{restantes > 1 ? "s" : ""} gratuite{restantes > 1 ? "s" : ""}
-              </strong>{" "}
-              sur votre formule. Après cela, une adhésion ouvre les contestations illimitées.
-            </p>
-          )}
-          {restantes !== null && restantes > 0 && (
-            <LinkBtn href="/tableau-de-bord/nouveau" variant="secondary" className="mt-4">
-              Ouvrir une contestation
-            </LinkBtn>
+            <>
+              <p className="text-sm leading-relaxed text-ink-soft">
+                Il vous reste{" "}
+                <strong className="text-navy-900">
+                  {restantes} contestation{restantes > 1 ? "s" : ""} gratuite{restantes > 1 ? "s" : ""}
+                </strong>{" "}
+                sur votre formule.
+              </p>
+              {plan.quotaContestations !== null && (
+                <div className="mt-4">
+                  <BarreProgression
+                    utilise={Math.min(dossiers.length, plan.quotaContestations)}
+                    total={plan.quotaContestations}
+                    label="Contestations utilisées"
+                  />
+                </div>
+              )}
+              {restantes > 0 && (
+                <LinkBtn href="/tableau-de-bord/nouveau" variant="secondary" className="mt-4">
+                  Ouvrir une contestation
+                </LinkBtn>
+              )}
+            </>
           )}
         </Card>
 

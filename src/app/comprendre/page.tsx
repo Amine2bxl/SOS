@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PageHead, Card, KeyBox, LinkBtn, Check } from "@/components/ui";
 import { BoutonContact } from "@/components/Contact";
+import { TimelineProcedure } from "@/components/visuels";
 import { DOCUMENTS, NOTIONS, PREUVES, FAQS } from "@/lib/data";
 
 export const metadata: Metadata = {
@@ -38,6 +39,10 @@ export default function ComprendrePage() {
         <p className="mt-2 text-ink-soft">
           Ils arrivent dans cet ordre. Plus vous réagissez tôt, moins cela vous coûte.
         </p>
+
+        <div className="mt-6 rounded-xl border border-line bg-card p-4 shadow-sm">
+          <TimelineProcedure />
+        </div>
 
         <ol className="mt-7 space-y-4">
           {DOCUMENTS.map((d) => {
@@ -113,6 +118,49 @@ export default function ComprendrePage() {
             </details>
           ))}
         </div>
+      </section>
+
+      {/* LIENS UTILES ET SOURCES OFFICIELLES */}
+      <section className="mt-14">
+        <Card title="Liens utiles et sources officielles" subtitle="Les seuls textes et services qui font foi pour votre dossier.">
+          <div className="grid gap-3 sm:grid-cols-2">
+            {[
+              {
+                titre: "parking.brussels",
+                texte: "Zones, tarifs, horaires et démarches de contestation en ligne.",
+                href: "https://www.parking.brussels",
+              },
+              {
+                titre: "Votre commune",
+                texte: "Le règlement communal applicable figure sur le site officiel de chaque commune.",
+                href: "/communes",
+              },
+              {
+                titre: "Ombudsman bruxellois",
+                texte: "Médiation gratuite en cas de blocage avec une administration régionale.",
+                href: "https://www.ombudsmanbru.be",
+              },
+              {
+                titre: "Protection des données",
+                texte: "Pour vos droits en matière de données personnelles (RGPD).",
+                href: "https://www.autoriteprotectiondonnees.be",
+              },
+            ].map((l) => (
+              <a
+                key={l.titre}
+                href={l.href}
+                target={l.href.startsWith("http") ? "_blank" : undefined}
+                rel={l.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                className="group rounded-lg border border-line bg-white p-4 transition hover:border-navy-600/40 hover:shadow-sm"
+              >
+                <p className="font-semibold text-navy-900 group-hover:underline">
+                  {l.titre} {l.href.startsWith("http") ? "↗" : "→"}
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-ink-soft">{l.texte}</p>
+              </a>
+            ))}
+          </div>
+        </Card>
       </section>
 
       {/* CTA */}

@@ -149,6 +149,37 @@ export function Btn({
   );
 }
 
+/** Barre de progression simple (ex. quota de contestations utilisé). */
+export function BarreProgression({
+  utilise,
+  total,
+  label,
+}: {
+  utilise: number;
+  total: number;
+  label?: string;
+}) {
+  const pourcentage = total > 0 ? Math.max(0, Math.min(100, Math.round((utilise / total) * 100))) : 0;
+  const presqueEpuise = pourcentage >= 80;
+  return (
+    <div>
+      {label && (
+        <p className="mb-1.5 text-xs font-semibold text-ink-soft">
+          {label} — {utilise}/{total}
+        </p>
+      )}
+      <div className="h-2.5 overflow-hidden rounded-full bg-line-soft">
+        <div
+          className={`h-full rounded-full transition-[width] ${
+            presqueEpuise ? "bg-danger-600" : "bg-gold-400"
+          }`}
+          style={{ width: `${pourcentage}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function LinkBtn({
   href,
   children,

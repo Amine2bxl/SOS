@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Card, LinkBtn, Check, Cross } from "@/components/ui";
 import { MailIcon } from "@/components/Logo";
 import { BoutonContact } from "@/components/Contact";
+import { ZonesVisuel } from "@/components/visuels";
 import { ASSO, CHIFFRES, ETAPES, NOUS_FAISONS, NOUS_NE_FAISONS_PAS, ALERTE } from "@/lib/data";
 
 /** Les situations les plus fréquentes : le visiteur doit se reconnaître en 5 secondes. */
@@ -124,6 +125,27 @@ export default function HomePage() {
           <LinkBtn href="/comprendre" variant="secondary">
             Comprendre la procédure en détail →
           </LinkBtn>
+        </div>
+      </section>
+
+      {/* LES ZONES, EN 30 SECONDES — visuel utile avant toute contestation. */}
+      <section className="bg-navy-50/60 py-14">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6">
+          <h2 className="text-center font-display text-2xl font-bold text-navy-900 sm:text-3xl">
+            Les zones de stationnement, en un coup d&apos;œil
+          </h2>
+          <p className="mx-auto mt-3 max-w-xl text-center text-ink-soft">
+            Tout commence par la zone où vous étiez garé : c&apos;est elle qui fixe le tarif, les
+            horaires et les règles applicables à votre dossier.
+          </p>
+          <div className="mt-8">
+            <ZonesVisuel />
+          </div>
+          <div className="mt-8 flex justify-center">
+            <LinkBtn href="/communes" variant="secondary">
+              Voir le détail pour ma commune →
+            </LinkBtn>
+          </div>
         </div>
       </section>
 

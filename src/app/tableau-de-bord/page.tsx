@@ -9,7 +9,7 @@ import {
   TYPES_DOCUMENT, joursAvantEcheance, formatMontant, formatDate,
 } from "@/lib/dossiers-format";
 import { planById, contestationsRestantes } from "@/lib/plans";
-import { LinkBtn, Card } from "@/components/ui";
+import { LinkBtn, Card, BarreProgression } from "@/components/ui";
 import { BadgeStatut, PastilleEcheance } from "@/components/dossier-ui";
 import { AlerteReglementaire } from "@/components/AlerteReglementaire";
 import { RafraichirEnTempsReel } from "@/components/RafraichirEnTempsReel";
@@ -130,6 +130,17 @@ export default async function TableauDeBordPage() {
               Gérer mon abonnement
             </LinkBtn>
           </div>
+
+          {restantes !== null && plan.quotaContestations !== null && (
+            <div className="mt-4">
+              <BarreProgression
+                utilise={Math.min(dossiers.length, plan.quotaContestations)}
+                total={plan.quotaContestations}
+                label="Contestations utilisées"
+              />
+            </div>
+          )}
+
           {restantes !== null && restantes === 0 && (
             <p className="mt-3 rounded-md bg-gold-100 p-2.5 text-sm text-ink">
               Quota épuisé —{" "}
