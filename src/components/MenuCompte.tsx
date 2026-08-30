@@ -86,7 +86,7 @@ export function MenuCompte() {
                   onClick={() => setOuvert(false)}
                   aria-current={estActif(l.href) ? "page" : undefined}
                   className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold transition ${
-                    estActif(l.href) ? "bg-gold-100 text-navy-900" : "text-navy-700 hover:bg-navy-50"
+                    estActif(l.href) ? "bg-navy-50 text-navy-900" : "text-navy-700 hover:bg-navy-50"
                   }`}
                 >
                   {l.label}

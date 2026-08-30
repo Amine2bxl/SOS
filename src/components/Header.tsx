@@ -117,7 +117,7 @@ function HeaderPublic({
                   aria-current={pathname.startsWith(item.href) ? "page" : undefined}
                   className={`rounded-md px-3 py-2.5 text-sm font-medium ${
                     pathname.startsWith(item.href)
-                      ? "bg-navy-800 text-gold-300"
+                      ? "bg-white/10 text-white"
                       : "text-navy-100 hover:bg-navy-800"
                   }`}
                 >
@@ -212,7 +212,7 @@ function HeaderApp({
           </div>
         </div>
 
-        {mobileOpen && (
+{mobileOpen && (
           <nav className="border-t border-navy-800 px-4 pb-4 xl:hidden" aria-label="Navigation de l'espace membre">
             <div className="grid gap-1 pt-3">
               {NAV_MEMBRE.map((item) => (
@@ -223,7 +223,7 @@ function HeaderApp({
                   aria-current={pathname.startsWith(item.href) ? "page" : undefined}
                   className={`rounded-md px-3 py-2.5 text-sm font-medium ${
                     pathname.startsWith(item.href)
-                      ? "bg-navy-800 text-gold-300"
+                      ? "bg-white/10 text-white"
                       : "text-navy-100 hover:bg-navy-800"
                   }`}
                 >
