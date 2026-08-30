@@ -3,40 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { creerClientServeur } from "@/lib/supabase/server";
+import { traduireErreur } from "@/lib/auth-erreurs";
 
 export type EtatAuth = { erreur?: string; message?: string; otpEnvoye?: boolean; verifie?: boolean };
-
-/** Traduit les messages d'erreur Supabase en français compréhensible. */
-function traduireErreur(message: string): string {
-  const m = message.toLowerCase();
-  if (m.includes("invalid login credentials")) return "E-mail ou mot de passe incorrect.";
-  if (m.includes("email not confirmed")) return "Confirmez d'abord votre adresse e-mail : vérifiez votre boîte de réception.";
-  if (m.includes("user already registered")) return "Un compte existe déjà avec cette adresse. Connectez-vous.";
-  if (m.includes("password should be at least")) return "Le mot de passe doit contenir au moins 8 caractères.";
-  if (m.includes("unable to validate email")) return "Cette adresse e-mail ne semble pas valide.";
-  if (m.includes("otp expired") || m.includes("token has expired") || m.includes("too many requests"))
-    return "Ce code a expiré. Demandez-en un nouveau.";
-  if (m.includes("invalid token") || m.includes("invalid otp") || m.includes("email otp") || m.includes("otp"))
-    return "Code incorrect. Regardez le code du dernier e-mail reçu.";
-  if (m.includes("rate limit") || m.includes("too many")) return "Trop de tentatives. Réessayez dans quelques minutes.";
-  return "Une erreur est survenue. Réessayez, ou appelez-nous si cela persiste.";
-}
-
-export async function seConnecter(_precedent: EtatAuth, donnees: FormData): Promise<EtatAuth> {
-  const supabase = await creerClientServeur();
-  if (!supabase) return { erreur: "Le service de connexion n'est pas disponible pour le moment." };
-
-  const email = String(donnees.get("email") ?? "").trim();
-  const motDePasse = String(donnees.get("motDePasse") ?? "");
-  if (!email || !motDePasse) return { erreur: "Renseignez votre e-mail et votre mot de passe." };
-
-  const { error } = await supabase.auth.signInWithPassword({ email, password: motDePasse });
-  if (error) return { erreur: traduireErreur(error.message) };
-
-  const suite = String(donnees.get("suite") ?? "/tableau-de-bord");
-  revalidatePath("/", "layout");
-  redirect(suite.startsWith("/") ? suite : "/tableau-de-bord");
-}
 
 export async function sInscrire(_precedent: EtatAuth, donnees: FormData): Promise<EtatAuth> {
   const supabase = await creerClientServeur();

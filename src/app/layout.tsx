@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces, Public_Sans } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
+import { FooterSurSite } from "@/components/FooterSurSite";
 import { ASSO } from "@/lib/data";
 
 const fraunces = Fraunces({
@@ -77,7 +77,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main id="contenu" className="flex-1">
           {children}
         </main>
-        <Footer />
+        <FooterSurSite />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

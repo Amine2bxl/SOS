@@ -77,10 +77,10 @@ function HeaderPublic({
                   key={item.href}
                   href={item.href}
                   aria-current={actif ? "page" : undefined}
-                  className={`whitespace-nowrap rounded-md px-2.5 py-2 text-[13.5px] font-medium transition-colors ${
+                  className={`whitespace-nowrap border-b-2 px-2.5 py-1.5 text-[13.5px] font-medium transition-colors ${
                     actif
-                      ? "bg-navy-800 text-gold-300"
-                      : "text-navy-100 hover:bg-navy-800/70 hover:text-white"
+                      ? "border-gold-400 text-gold-300"
+                      : "border-transparent text-navy-100 hover:border-navy-700 hover:text-white"
                   }`}
                 >
                   {item.label}
@@ -178,10 +178,10 @@ function HeaderApp({
                   key={item.href}
                   href={item.href}
                   aria-current={actif ? "page" : undefined}
-                  className={`whitespace-nowrap rounded-md px-2.5 py-2 text-[13.5px] font-medium transition-colors ${
+                  className={`whitespace-nowrap border-b-2 px-2.5 py-1.5 text-[13.5px] font-medium transition-colors ${
                     actif
-                      ? "bg-navy-800 text-gold-300"
-                      : "text-navy-100 hover:bg-navy-800/70 hover:text-white"
+                      ? "border-gold-400 text-gold-300"
+                      : "border-transparent text-navy-100 hover:border-navy-700 hover:text-white"
                   }`}
                 >
                   {item.label}
