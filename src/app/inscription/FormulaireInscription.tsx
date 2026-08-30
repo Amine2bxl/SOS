@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { sInscrire, verifierOtp, renvoyerCode, type EtatAuth } from "@/lib/auth-actions";
 import { Card, Field, TextInput, Btn } from "@/components/ui";
 import { MotDePasseInput } from "@/components/MotDePasseInput";
@@ -53,6 +53,7 @@ function SaisieCode({ valeur, onChange }: { valeur: string; onChange: (v: string
 export function FormulaireInscription() {
   const parametres = useSearchParams();
   const suite = parametres.get("suite") ?? "/tableau-de-bord";
+  const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -69,6 +70,13 @@ export function FormulaireInscription() {
   useEffect(() => {
     if (code.length === 6) formulaireCodeRef.current?.requestSubmit();
   }, [code]);
+
+  // Code accepté : après le petit signe de validation, direction le tableau de bord.
+  useEffect(() => {
+    if (!etatCode.verifie) return;
+    const minuteur = setTimeout(() => router.push(suite), 1600);
+    return () => clearTimeout(minuteur);
+  }, [etatCode.verifie, suite, router]);
 
   const popupVisible = etat.otpEnvoye;
 
@@ -131,56 +139,89 @@ export function FormulaireInscription() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-navy-950/70 p-4 backdrop-blur-sm"
         >
           <Card className="w-full max-w-sm animate-rise border-navy-950/10 shadow-2xl">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gold-400/20">
-              <svg viewBox="0 0 24 24" className="h-6 w-6 text-gold-600" fill="currentColor" aria-hidden="true">
-                <path d="M7 11V7a5 5 0 0 1 10 0v4h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2h2Zm2 0h6V7a3 3 0 0 0-6 0v4Z" />
-              </svg>
-            </div>
-
-            <h2 id="titre-code" className="mt-4 text-center font-display text-xl font-bold text-navy-900">
-              Vérifiez votre adresse e-mail
-            </h2>
-            <p className="mt-2 text-center text-sm leading-relaxed text-ink-soft">
-              Un code à 6 chiffres a été envoyé à <span className="font-semibold text-ink">{email || "votre adresse"}</span>.
-              Saisissez-le pour activer votre compte.
-            </p>
-
-            <form ref={formulaireCodeRef} action={actionCode} className="mt-5 space-y-4">
-              <input type="hidden" name="email" value={email} />
-              <input type="hidden" name="suite" value={suite} />
-              <input type="hidden" name="code" value={code} />
-
-              <SaisieCode valeur={code} onChange={setCode} />
-
-              {etatCode.erreur && (
-                <p role="alert" className="rounded-md bg-danger-100 p-3 text-center text-sm font-medium text-danger-700">
-                  {etatCode.erreur}
+            {etatCode.verifie ? (
+              /* Le code est bon : petit signe de validation, puis on file. */
+              <div className="py-4 text-center">
+                <span
+                  className="animate-pop mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-ok-600 shadow-lg shadow-ok-600/30"
+                  aria-hidden="true"
+                >
+                  <svg viewBox="0 0 24 24" className="h-10 w-10 text-white">
+                    <path
+                      className="check-draw"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M4.5 12.5l5 5L19.5 7"
+                    />
+                  </svg>
+                </span>
+                <h2 className="mt-5 font-display text-2xl font-bold text-ok-700">
+                  Compte vérifié&nbsp;✓
+                </h2>
+                <p className="mt-2 text-sm text-ink-soft">
+                  On vous emmène sur votre tableau de bord…
                 </p>
-              )}
-              {etatRenvol.message && (
-                <p className="text-center text-sm font-medium text-ok-700">{etatRenvol.message}</p>
-              )}
+                <div className="mx-auto mt-6 h-1.5 w-40 overflow-hidden rounded-full bg-line-soft">
+                  <div className="barre-avance h-full rounded-full bg-gold-400" />
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gold-400/20">
+                  <svg viewBox="0 0 24 24" className="h-6 w-6 text-gold-600" fill="currentColor" aria-hidden="true">
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2h2Zm2 0h6V7a3 3 0 0 0-6 0v4Z" />
+                  </svg>
+                </div>
 
-              <Btn type="submit" variant="gold" className="w-full" disabled={codeEnCours || code.length < 6}>
-                {codeEnCours ? "Vérification…" : "Vérifier mon compte"}
-              </Btn>
-            </form>
-
-            <form action={actionRenvol} className="mt-3 text-center">
-              <input type="hidden" name="email" value={email} />
-              {etatRenvol.erreur && (
-                <p role="alert" className="mb-2 rounded-md bg-danger-100 p-2 text-center text-xs font-medium text-danger-700">
-                  {etatRenvol.erreur}
+                <h2 id="titre-code" className="mt-4 text-center font-display text-xl font-bold text-navy-900">
+                  Vérifiez votre adresse e-mail
+                </h2>
+                <p className="mt-2 text-center text-sm leading-relaxed text-ink-soft">
+                  Un code à 6 chiffres a été envoyé à <span className="font-semibold text-ink">{email || "votre adresse"}</span>.
+                  Saisissez-le pour activer votre compte.
                 </p>
-              )}
-              <button
-                type="submit"
-                disabled={renvoiEnCours}
-                className="text-sm font-semibold text-navy-700 underline decoration-navy-700/30 underline-offset-2 transition hover:text-navy-900"
-              >
-                {renvoiEnCours ? "Envoi en cours…" : "Je n'ai pas reçu le code, renvoyer"}
-              </button>
-            </form>
+
+                <form ref={formulaireCodeRef} action={actionCode} className="mt-5 space-y-4">
+                  <input type="hidden" name="email" value={email} />
+                  <input type="hidden" name="suite" value={suite} />
+                  <input type="hidden" name="code" value={code} />
+
+                  <SaisieCode valeur={code} onChange={setCode} />
+
+                  {etatCode.erreur && (
+                    <p role="alert" className="rounded-md bg-danger-100 p-3 text-center text-sm font-medium text-danger-700">
+                      {etatCode.erreur}
+                    </p>
+                  )}
+                  {etatRenvol.message && (
+                    <p className="text-center text-sm font-medium text-ok-700">{etatRenvol.message}</p>
+                  )}
+
+                  <Btn type="submit" variant="gold" className="w-full" disabled={codeEnCours || code.length < 6}>
+                    {codeEnCours ? "Vérification…" : "Vérifier mon compte"}
+                  </Btn>
+                </form>
+
+                <form action={actionRenvol} className="mt-3 text-center">
+                  <input type="hidden" name="email" value={email} />
+                  {etatRenvol.erreur && (
+                    <p role="alert" className="mb-2 rounded-md bg-danger-100 p-2 text-center text-xs font-medium text-danger-700">
+                      {etatRenvol.erreur}
+                    </p>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={renvoiEnCours}
+                    className="text-sm font-semibold text-navy-700 underline decoration-navy-700/30 underline-offset-2 transition hover:text-navy-900"
+                  >
+                    {renvoiEnCours ? "Envoi en cours…" : "Je n'ai pas reçu le code, renvoyer"}
+                  </button>
+                </form>
+              </>
+            )}
           </Card>
         </div>
       )}

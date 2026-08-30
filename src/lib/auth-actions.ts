@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { creerClientServeur } from "@/lib/supabase/server";
 
-export type EtatAuth = { erreur?: string; message?: string; otpEnvoye?: boolean };
+export type EtatAuth = { erreur?: string; message?: string; otpEnvoye?: boolean; verifie?: boolean };
 
 /** Traduit les messages d'erreur Supabase en français compréhensible. */
 function traduireErreur(message: string): string {
@@ -81,9 +81,10 @@ export async function verifierOtp(_precedent: EtatAuth, donnees: FormData): Prom
   const { error } = await supabase.auth.verifyOtp({ email, token: code, type: "signup" });
   if (error) return { erreur: traduireErreur(error.message) };
 
-  const suite = String(donnees.get("suite") ?? "/tableau-de-bord");
+  // Succès : la session est ouverte côté serveur. Le client affiche alors
+  // l'animation de validation puis emmène l'utilisateur sur le tableau de bord.
   revalidatePath("/", "layout");
-  redirect(suite.startsWith("/") ? suite : "/tableau-de-bord");
+  return { verifie: true };
 }
 
 /** Renvoie un nouveau code de confirmation par e-mail. */

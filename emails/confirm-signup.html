@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Votre code de confirmation — SOS Citizens ASBL</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f6f4ee;font-family:Arial,Helvetica,sans-serif;color:#1b2a36;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f6f4ee;padding:24px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+          <!-- En-tête -->
+          <tr>
+            <td style="background-color:#0b2545;border-radius:12px 12px 0 0;padding:22px 28px;text-align:left;">
+              <img src="{{ .SiteURL }}/logo-email.png" alt="SOS Citizens ASBL" width="44" height="48" style="display:inline-block;vertical-align:middle;margin-right:10px;">
+              <span style="font-size:20px;font-weight:bold;color:#f2b705;letter-spacing:0.5px;vertical-align:middle;">SOS&nbsp;CITIZENS&nbsp;<span style="color:#ffffff;">ASBL</span></span>
+            </td>
+          </tr>
+          <!-- Corps -->
+          <tr>
+            <td style="background-color:#ffffff;padding:32px 28px;border-radius:0 0 12px 12px;">
+              <h1 style="margin:0 0 10px;font-size:22px;line-height:1.3;color:#0b2545;">Confirmez votre adresse e-mail</h1>
+              <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#4c5b66;">
+                Bonjour, vous venez de créer un compte sur le site de l&apos;association. Utilisez le code
+                ci-dessous pour l&apos;activer&nbsp;:
+              </p>
+
+              <div style="background-color:#f6f4ee;border:2px dashed #f2b705;border-radius:12px;padding:22px;text-align:center;">
+                <p style="margin:0 0 6px;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#4c5b66;">Votre code de confirmation</p>
+                <p style="margin:0;font-size:38px;font-weight:bold;letter-spacing:10px;color:#0b2545;">{{ .Token }}</p>
+                <p style="margin:12px 0 0;font-size:12px;color:#92580a;">Valable quelques minutes — ce code est personnel, ne le partagez pas.</p>
+              </div>
+
+              <p style="margin:20px 0 0;font-size:13px;line-height:1.6;color:#4c5b66;">
+                Si vous préférez, vous pouvez aussi valider en cliquant sur ce lien&nbsp;:
+                <a href="{{ .ConfirmationURL }}" style="color:#0b2545;font-weight:bold;">confirmer mon adresse e-mail</a>.
+              </p>
+
+              <p style="margin:12px 0 0;font-size:12px;line-height:1.6;color:#4c5b66;">
+                Vous n&apos;avez pas créé de compte&nbsp;? <strong>Ignorez cet e-mail.</strong>
+              </p>
+            </td>
+          </tr>
+          <!-- Pied de page -->
+          <tr>
+            <td style="background-color:#eef3fa;border-radius:12px;padding:18px 28px;margin-top:12px;">
+              <p style="margin:0;font-size:12px;line-height:1.6;color:#4c5b66;">
+                <strong style="color:#0b2545;">SOS Citizens ASBL</strong> — Association sans but lucratif bruxelloise.<br>
+                Rue Émile Feron 153, 1060 Saint-Gilles, Belgique. Contact&nbsp;:{" "}
+                <a href="{{ .SiteURL }}" style="color:#0b2545;">{{ .SiteURL }}</a>
+              </p>
+              <p style="margin:8px 0 0;font-size:11px;line-height:1.5;color:#4c5b66;">
+                Nous sommes une association d&apos;information et d&apos;accompagnement citoyen, et non un
+                cabinet d&apos;avocats. Nous ne garantissons aucune annulation.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
