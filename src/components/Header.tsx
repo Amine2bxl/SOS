@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Logo } from "@/components/Logo";
 import { MenuCompte } from "@/components/MenuCompte";
 import { BoutonContact } from "@/components/Contact";
+import { PillAbonnement } from "@/components/PillAbonnement";
 import { useSession } from "@/components/useSession";
 
 const NAV = [
@@ -157,14 +158,7 @@ function HeaderApp({
             <Link href="/tableau-de-bord" aria-label="Mon espace SOS Citizens" className="shrink-0">
               <Logo />
             </Link>
-            <Link
-              href="/tableau-de-bord"
-              className="inline-flex items-center gap-1.5 rounded-full bg-gold-400 px-3 py-1 text-xs font-black tracking-wide text-navy-950 transition hover:bg-gold-300"
-            >
-              <span aria-hidden="true">✦</span>
-              <span className="hidden sm:inline">Espace membre</span>
-              <span className="sm:hidden">Membre</span>
-            </Link>
+            <PillAbonnement />
           </div>
 
           <nav className="hidden items-center gap-0.5 xl:flex" aria-label="Espace membre">

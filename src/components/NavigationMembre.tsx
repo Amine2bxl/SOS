@@ -23,13 +23,17 @@ export function NavigationMembre({ prenom, planNom }: { prenom?: string; planNom
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-line-soft px-4 py-2.5 sm:px-5">
         <p className="flex items-center gap-2 text-sm font-bold text-navy-900">
           <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-ok-600" aria-hidden="true" />
-          Espace membre
-          {prenom && <span className="hidden font-semibold text-ink-soft sm:inline">— {prenom}</span>}
-          {planNom && (
-            <span className="rounded-full bg-navy-900 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-gold-300">
-              {planNom}
-            </span>
+          {planNom === "Gratuit" || !planNom ? (
+            <Link
+              href="/tarifs"
+              className="font-semibold text-navy-700 underline decoration-navy-700/30 underline-offset-2 hover:text-navy-900"
+            >
+              Devenir membre →
+            </Link>
+          ) : (
+            <span>{planNom}</span>
           )}
+          {prenom && <span className="hidden font-semibold text-ink-soft sm:inline">— {prenom}</span>}
         </p>
       </div>
 

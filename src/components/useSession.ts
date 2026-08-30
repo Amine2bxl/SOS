@@ -5,17 +5,19 @@ import { creerClientNavigateur } from "@/lib/supabase/client";
 import { supabaseConfigure } from "@/lib/supabase/config";
 
 export type SessionUtilisateur = {
+  id: string;
   email: string | null;
   prenom: string;
   nom: string;
   initiale: string;
 };
 
-function versSessionUtilisateur(user: { email?: string | null; user_metadata?: Record<string, unknown> } | null): SessionUtilisateur | null {
+function versSessionUtilisateur(user: { id?: string; email?: string | null; user_metadata?: Record<string, unknown> } | null): SessionUtilisateur | null {
   if (!user) return null;
   const prenom = String(user.user_metadata?.prenom ?? "").trim();
   const nom = String(user.user_metadata?.nom ?? "").trim();
   return {
+    id: user.id ?? "",
     email: user.email ?? null,
     prenom,
     nom,
