@@ -34,20 +34,20 @@ export default function ContesterPage() {
           Préparez votre lettre de contestation
         </h1>
         <p className="mt-4 text-base leading-relaxed text-ink-soft">
-          Remplissez ce qui vous concerne : la lettre s&apos;écrit toute seule à droite. Vous pouvez ensuite
-          la copier ou l&apos;imprimer. Rien n&apos;est enregistré, rien n&apos;est envoyé : tout reste sur
+          Remplissez ce qui vous concerne, la lettre s&apos;écrit à droite au fur et à mesure. Copiez-la
+          ou imprimez-la ensuite. Rien n&apos;est enregistré, rien n&apos;est envoyé : tout reste sur
           votre appareil.
         </p>
       </div>
 
       <div className="mx-auto mt-8 max-w-3xl">
         <KeyBox title="Avant de commencer : vérifiez votre délai">
-          Le délai pour contester est indiqué <strong>sur le courrier que vous avez reçu</strong> (souvent 14
-          à 30 jours). C&apos;est cette mention qui fait foi. Si le délai est court ou déjà dépassé,{" "}
+          Votre délai est inscrit <strong>sur le courrier que vous avez reçu</strong>, souvent 14 à 30
+          jours. C&apos;est cette mention qui fait foi. S&apos;il est court ou déjà dépassé,{" "}
           <a href={`tel:${ASSO.telephoneLien}`} className="font-semibold underline">
             appelez-nous
           </a>{" "}
-          : il reste souvent quelque chose à faire.
+          : il reste presque toujours une carte à jouer.
         </KeyBox>
       </div>
 

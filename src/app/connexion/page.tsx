@@ -16,7 +16,7 @@ export default function ConnexionPage() {
         Connexion
       </h1>
       <p className="mt-3 text-center text-ink-soft">
-        Accédez au suivi de vos dossiers.
+        Retrouvez vos dossiers et leur avancement.
       </p>
 
       <Suspense fallback={null}>

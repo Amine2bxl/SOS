@@ -21,11 +21,11 @@ const publicSans = Public_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: "SOS Citizens ASBL — Aide gratuite contre les redevances de stationnement à Bruxelles",
+    default: "SOS Citizens ASBL — Contester une redevance de stationnement à Bruxelles",
     template: "%s — SOS Citizens ASBL",
   },
   description:
-    "Association bruxelloise qui aide gratuitement les citoyens à comprendre et contester les redevances de stationnement, les amendes et les sanctions administratives. Appelez-nous.",
+    "Association bruxelloise. Nous aidons les habitants à comprendre et contester les redevances de stationnement, les amendes et les sanctions communales. Deux contestations gratuites, et l'appel ne coûte rien.",
   keywords: [
     "SOS Citizens",
     "contester redevance stationnement",
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "SOS Citizens ASBL — Vous n'êtes pas seul face à votre amende",
     description:
-      "Aide gratuite pour comprendre et contester les redevances de stationnement à Bruxelles.",
+      "Comprendre son courrier, réunir les bonnes preuves et contester dans les délais. Par une association bruxelloise.",
     locale: "fr_BE",
     type: "website",
   },
@@ -49,7 +49,7 @@ const jsonLd = {
   "@type": "NGO",
   name: ASSO.nom,
   description:
-    "Association sans but lucratif bruxelloise qui accompagne gratuitement les citoyens dans la contestation des redevances de stationnement et des sanctions administratives.",
+    "Association sans but lucratif bruxelloise qui accompagne les citoyens dans la contestation des redevances de stationnement et des sanctions administratives communales.",
   foundingDate: "2024-08-16",
   telephone: ASSO.telephone,
   email: ASSO.email,

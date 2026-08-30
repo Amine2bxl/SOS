@@ -15,13 +15,13 @@ export default function CommunesPage() {
       <PageHead
         kicker="Repères"
         title="Les 19 communes bruxelloises"
-        intro="Chaque commune a ses zones, ses tarifs et ses règles. C'est le règlement de la commune du constat, à la date des faits, qui s'applique à votre dossier."
+        intro="Chaque commune a ses zones, ses tarifs et ses règles. Celui qui compte dans votre dossier : le règlement de la commune du constat, à la date des faits."
       />
 
       <div className="mx-auto mt-8 max-w-3xl">
         <KeyBox title="À vérifier en priorité">
-          La commune indiquée sur votre courrier correspond-elle bien à l&apos;endroit où vous étiez garé ?
-          Une erreur de commune ou de zone est un motif de contestation à part entière.
+          La commune inscrite sur votre courrier correspond-elle à l&apos;endroit où vous étiez garé ?
+          Une erreur de commune ou de zone suffit à fonder une contestation.
         </KeyBox>
       </div>
 
@@ -39,8 +39,8 @@ export default function CommunesPage() {
       </ul>
 
       <p className="mt-8 text-center text-sm text-ink-soft">
-        Ces informations sont des repères généraux. Les zones et tarifs évoluent : vérifiez toujours le
-        règlement de la commune applicable à la date de votre constat.
+        Ces informations sont des repères. Les zones et les tarifs changent : vérifiez le règlement
+        applicable à la date de votre constat.
       </p>
 
       <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">

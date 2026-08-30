@@ -64,7 +64,7 @@ export default async function DossierPage({ params }: { params: Promise<{ id: st
           </p>
           <p className="mt-1 text-sm text-ink">
             {jours < 0
-              ? "Il reste souvent quelque chose à faire : appelez-nous pour en parler."
+              ? "Il reste presque toujours une carte à jouer. Appelez-nous."
               : "Envoyez votre contestation sans attendre et conservez une preuve de l'envoi."}
           </p>
         </div>

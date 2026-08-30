@@ -18,8 +18,8 @@ export function Footer() {
         <div>
           <Logo />
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-navy-100/80">
-            Association citoyenne bruxelloise. Nous aidons gratuitement les habitants à comprendre et
-            contester les redevances de stationnement et les sanctions administratives.
+            Association citoyenne bruxelloise. Nous aidons les habitants à comprendre et contester
+            les redevances de stationnement et les sanctions administratives.
           </p>
         </div>
 

@@ -16,7 +16,7 @@ export default function TarifsPage() {
       <PageHead
         kicker="Adhésion"
         title="Commencez gratuitement"
-        intro="Vos deux premières contestations ne coûtent rien. Au-delà, l'adhésion à l'association finance l'outil, la veille réglementaire et l'accompagnement."
+        intro="Vos deux premières contestations ne coûtent rien. Au-delà, l'adhésion finance l'outil, la veille réglementaire et l'accompagnement des dossiers."
       />
 
       <div className="mt-12 grid gap-5 lg:grid-cols-4">
@@ -67,8 +67,8 @@ export default function TarifsPage() {
 
       <div className="mx-auto mt-12 max-w-3xl">
         <KeyBox title="L'aide par téléphone reste gratuite, quelle que soit la formule">
-          L&apos;adhésion finance la plateforme, pas le droit d&apos;être aidé. Si vous êtes en
-          difficulté financière, appelez-nous au{" "}
+          Vous pouvez nous appeler autant que nécessaire sans adhérer. L&apos;adhésion finance
+          l&apos;outil en ligne. Et si l&apos;argent est un obstacle, dites-le nous au{" "}
           <a href={`tel:${ASSO.telephoneLien}`} className="font-semibold underline">
             {ASSO.telephone}
           </a>{" "}
@@ -83,12 +83,12 @@ export default function TarifsPage() {
             {
               question: "Comment se passe le paiement ?",
               reponse:
-                "Le paiement en ligne n'est pas encore actif. Vous demandez votre adhésion depuis le site, nous vous transmettons les coordonnées bancaires de l'association, et votre compte est activé dès réception du virement.",
+                "Par virement, pour l'instant. Vous demandez votre adhésion depuis le site, nous vous envoyons les coordonnées bancaires de l'association, et votre compte s'ouvre dès réception.",
             },
             {
               question: "Que se passe-t-il après mes 2 contestations gratuites ?",
               reponse:
-                "Vos dossiers existants restent accessibles et vous continuez à en suivre l'évolution. Seule la création d'une nouvelle contestation demande une adhésion.",
+                "Vos dossiers restent accessibles et vous continuez à les suivre. Seule l'ouverture d'une nouvelle contestation demande une adhésion.",
             },
             {
               question: "L'adhésion est-elle reconduite automatiquement ?",
@@ -118,8 +118,7 @@ export default function TarifsPage() {
       <Card className="mt-12 border-navy-600/30 bg-navy-50 text-center">
         <p className="font-display text-lg font-bold text-navy-900">Un doute sur la formule adaptée ?</p>
         <p className="mx-auto mt-2 max-w-lg text-sm text-ink-soft">
-          Appelez-nous : nous vous dirons franchement si vous avez besoin d&apos;adhérer ou si la
-          formule gratuite suffit à votre situation.
+          Appelez-nous. Nous vous dirons franchement si la formule gratuite suffit dans votre cas.
         </p>
         <LinkBtn href={`tel:${ASSO.telephoneLien}`} variant="secondary" className="mt-5">
           <PhoneIcon className="h-4 w-4" />

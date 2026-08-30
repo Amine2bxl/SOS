@@ -47,8 +47,8 @@ export function FormulaireInscription() {
         </Btn>
 
         <p className="text-xs leading-relaxed text-ink-soft">
-          Vos données servent uniquement au suivi de vos dossiers. Vous pouvez demander leur
-          suppression à tout moment.
+          Vos données servent au suivi de vos dossiers, à rien d&apos;autre. Supprimez-les quand
+          vous voulez.
         </p>
       </form>
     </Card>

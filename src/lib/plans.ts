@@ -26,15 +26,15 @@ export const PLANS: Plan[] = [
   {
     id: "gratuit",
     nom: "Gratuit",
-    pour: "Pour essayer, ou pour un problème isolé",
+    pour: "Pour un problème isolé",
     prixAnnuel: 0,
     quotaContestations: 2,
     avantages: [
       "2 contestations au total",
       "Scan automatique de votre document",
       "Lettre de contestation générée",
-      "Suivi de vos dossiers dans le tableau de bord",
-      "Rappel des délais à ne pas dépasser",
+      "Suivi de vos dossiers en un coup d'œil",
+      "Rappel avant chaque échéance",
     ],
   },
   {
@@ -48,14 +48,14 @@ export const PLANS: Plan[] = [
       "Jusqu'à 2 véhicules",
       "Relecture de votre lettre par l'association",
       "Alertes quand le règlement de votre commune change",
-      "Réponse prioritaire par téléphone et e-mail",
+      "Réponse prioritaire au téléphone et par e-mail",
     ],
     miseEnAvant: true,
   },
   {
     id: "independant",
     nom: "Indépendant",
-    pour: "Pour les indépendants et professions libérales",
+    pour: "Pour les indépendants et les professions libérales",
     prixAnnuel: 400,
     quotaContestations: null,
     avantages: [

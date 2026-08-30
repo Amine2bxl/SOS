@@ -89,7 +89,7 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
 
       if (texte.trim().length < 20) {
         setErreur(
-          "Nous n'avons pas réussi à lire ce document. Reprenez la photo à plat, bien éclairée et sans reflet — ou saisissez les informations à la main ci-dessous.",
+          "Nous n'avons pas réussi à lire ce document. Reprenez la photo à plat, bien éclairée et sans reflet. Ou saisissez les informations vous-même, juste en dessous.",
         );
       }
 
@@ -109,7 +109,7 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
       setEtape("verification");
     } catch {
       setErreur(
-        "La lecture du document a échoué. Vous pouvez réessayer avec une photo, ou saisir les informations à la main.",
+        "La lecture a échoué. Réessayez avec une photo, ou saisissez les informations vous-même.",
       );
       setEtape("depot");
     }
@@ -150,8 +150,8 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
           Ajoutez votre document
         </h1>
         <p className="mt-3 text-center text-ink-soft">
-          Photographiez votre courrier ou déposez le PDF : nous en extrayons la référence, le
-          montant, les dates et la plaque. Vous vérifiez ensuite, puis c&apos;est enregistré.
+          Photographiez votre courrier ou déposez le PDF. Nous en extrayons la référence, le
+          montant, les dates et la plaque. Vous vérifiez, puis c&apos;est enregistré.
         </p>
 
         <button
@@ -194,9 +194,8 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
 
         <div className="mt-8">
           <KeyBox title="Votre document ne quitte pas votre appareil">
-            La lecture se fait entièrement dans votre navigateur. Le fichier n&apos;est envoyé à
-            aucun serveur : seules les informations que vous confirmerez à l&apos;écran seront
-            enregistrées dans votre dossier.
+            La lecture se fait dans votre navigateur. Le fichier ne part vers aucun serveur : seules
+            les informations que vous confirmez à l&apos;écran rejoignent votre dossier.
           </KeyBox>
         </div>
 
@@ -221,8 +220,8 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
         </div>
         <p className="mt-2 text-sm font-semibold text-navy-800">{progression.pourcentage} %</p>
         <p className="mt-6 text-xs leading-relaxed text-ink-soft">
-          La première lecture télécharge le moteur de reconnaissance : elle peut prendre une
-          trentaine de secondes. Les suivantes seront bien plus rapides.
+          La première lecture télécharge le moteur de reconnaissance, comptez une trentaine de
+          secondes. Les suivantes sont bien plus rapides.
         </p>
       </div>
     );
@@ -237,14 +236,13 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
 
       {extrait ? (
         <p className="mt-3 leading-relaxed text-ink-soft">
-          Nous avons reconnu <strong className="text-navy-900">{taux} %</strong> des informations
-          attendues. <strong className="text-navy-900">Relisez chaque champ</strong> et corrigez ce
-          qui ne correspond pas : une date d&apos;échéance mal lue pourrait vous faire rater un
-          délai.
+          Nous avons reconnu <strong className="text-navy-900">{taux} %</strong> des informations.
+          <strong className="text-navy-900"> Relisez chaque champ</strong> et corrigez ce qui cloche :
+          une date d&apos;échéance mal lue vous ferait rater un délai.
         </p>
       ) : (
         <p className="mt-3 text-ink-soft">
-          Saisissez les informations qui figurent sur votre courrier.
+          Recopiez les informations qui figurent sur votre courrier.
         </p>
       )}
 

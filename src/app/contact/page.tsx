@@ -36,7 +36,7 @@ export default function ContactPage() {
       <PageHead
         kicker="Contact"
         title="Parlons de votre dossier"
-        intro="Un appel ou un e-mail suffit. Nous sommes une petite association : nous répondons nous-mêmes, et notre aide est gratuite."
+        intro="Un appel ou un e-mail suffit. Nous sommes une petite association : c'est nous qui vous répondons, et l'appel ne vous coûte rien."
       />
 
       {/* CONTACT DIRECT — mis en avant avant tout formulaire. */}
@@ -73,8 +73,7 @@ export default function ContactPage() {
             ))}
           </ul>
           <p className="mt-4 text-xs leading-relaxed text-ink-soft">
-            Vous n&apos;avez pas tout sous la main ? Écrivez-nous quand même : nous vous dirons ce qui
-            manque.
+            Il vous manque des éléments ? Écrivez-nous quand même, nous vous dirons quoi chercher.
           </p>
         </Card>
 
@@ -106,10 +105,10 @@ export default function ContactPage() {
       {/* L'ASSOCIATION */}
       <Card title="L'association" className="mt-6">
         <p className="text-sm leading-relaxed text-ink-soft">
-          {ASSO.nom} est une association sans but lucratif bruxelloise, créée le {ASSO.constitution}. Beaucoup
-          de personnes sont renvoyées vers un avocat sans en avoir les moyens ni l&apos;envie : notre rôle est
-          de leur permettre de se défendre elles-mêmes. Avec un simple numéro de téléphone et une adresse
-          e-mail, nous avons déjà accompagné entre 220 et 250 dossiers.
+          {ASSO.nom} est une association sans but lucratif bruxelloise, créée le {ASSO.constitution}.
+          Beaucoup de gens sont renvoyés vers un avocat sans en avoir les moyens ni l&apos;envie. Nous
+          existons pour qu&apos;ils puissent se défendre seuls. Avec un numéro de téléphone et une
+          adresse e-mail, nous avons accompagné entre 220 et 250 dossiers.
         </p>
 
         <dl className="mt-5 grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
@@ -149,13 +148,13 @@ export default function ContactPage() {
       {/* DONNÉES PERSONNELLES */}
       <Card title="Vos données personnelles" className="mt-6">
         <p className="text-sm leading-relaxed text-ink-soft">
-          Ce site ne collecte aucune donnée : il n&apos;y a ni compte, ni base de données, ni formulaire
-          enregistré. Les informations que vous saisissez dans l&apos;outil de contestation restent dans
-          votre navigateur et disparaissent lorsque vous fermez la page.
+          L&apos;outil de contestation ne garde rien : ce que vous y saisissez reste dans votre
+          navigateur et disparaît quand vous fermez la page. Si vous créez un compte, vos dossiers
+          sont conservés pour vous seul, et vous pouvez les supprimer quand vous voulez.
         </p>
         <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-          Si vous nous écrivez, nous conservons votre message uniquement le temps de vous accompagner. Vous
-          pouvez demander sa suppression à tout moment en écrivant à{" "}
+          Si vous nous écrivez, nous gardons votre message le temps de vous accompagner. Demandez sa
+          suppression quand vous le souhaitez à{" "}
           <a href={`mailto:${ASSO.email}`} className="font-semibold text-navy-700 underline">
             {ASSO.email}
           </a>

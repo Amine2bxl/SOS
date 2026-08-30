@@ -109,8 +109,8 @@ export default async function TableauDeBordPage() {
             Vous avez utilisé vos 2 contestations gratuites
           </p>
           <p className="mt-2 text-sm text-ink-soft">
-            Vos dossiers actuels restent accessibles et vous continuez à les suivre. Pour en créer de
-            nouveaux, adhérez à l&apos;association.
+            Vos dossiers restent accessibles et vous continuez à les suivre. Pour en ouvrir un
+            nouveau, adhérez à l&apos;association.
           </p>
           <LinkBtn href="/tarifs" variant="gold" className="mt-4">
             Voir les formules
@@ -125,8 +125,8 @@ export default async function TableauDeBordPage() {
         <Card className="mt-4 text-center">
           <p className="font-display text-lg font-bold text-navy-900">Aucun dossier pour l&apos;instant</p>
           <p className="mx-auto mt-2 max-w-md text-sm text-ink-soft">
-            Prenez votre courrier en photo : nous en extrayons automatiquement la référence, le
-            montant et les dates, et vous n&apos;avez plus qu&apos;à vérifier.
+            Prenez votre courrier en photo. Nous en extrayons la référence, le montant et les
+            dates ; vous n&apos;avez plus qu&apos;à vérifier.
           </p>
           <LinkBtn href="/tableau-de-bord/nouveau" variant="gold" className="mt-5">
             Scanner mon document
@@ -168,8 +168,7 @@ export default async function TableauDeBordPage() {
       )}
 
       <p className="mt-8 text-center text-xs text-ink-soft">
-        Les statuts sont mis à jour automatiquement dès qu&apos;un changement survient sur un de vos
-        dossiers, sans rechargement de page.
+        Vos dossiers se mettent à jour tout seuls, sans rechargement de page.
       </p>
     </div>
   );

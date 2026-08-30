@@ -27,7 +27,7 @@ export default function ComprendrePage() {
       <PageHead
         kicker="Guide"
         title="Comprendre votre courrier"
-        intro="Tout part du document que vous avez reçu. Identifiez-le ci-dessous : vous saurez immédiatement où vous en êtes et ce qu'il faut faire."
+        intro="Tout part du courrier que vous avez reçu. Trouvez-le dans la liste : vous saurez où vous en êtes et ce qu'il vous reste à faire."
       />
 
       {/* LES 5 ÉTAPES DE LA PROCÉDURE */}
@@ -36,8 +36,7 @@ export default function ComprendrePage() {
           Quel courrier avez-vous reçu ?
         </h2>
         <p className="mt-2 text-ink-soft">
-          Les courriers arrivent toujours dans cet ordre. Plus vous réagissez tôt, plus c&apos;est simple et
-          moins cela coûte cher.
+          Ils arrivent dans cet ordre. Plus vous réagissez tôt, moins cela vous coûte.
         </p>
 
         <ol className="mt-7 space-y-4">
@@ -65,9 +64,9 @@ export default function ComprendrePage() {
 
       <section className="mt-10">
         <KeyBox title="Payer ou contester : décidez avant de payer">
-          Payer une redevance équivaut le plus souvent à reconnaître les faits, et clôture le dossier. Si
-          vous comptez contester, faites-le <strong>par écrit, dans le délai indiqué, avec une preuve
-          d&apos;envoi</strong>, et demandez la suspension du recouvrement le temps de l&apos;examen.
+          Payer vaut reconnaissance des faits et referme le dossier. Si vous comptez contester,
+          faites-le <strong>par écrit, dans le délai indiqué, avec une preuve d&apos;envoi</strong>,
+          et demandez la suspension du recouvrement pendant l&apos;examen.
         </KeyBox>
       </section>
 
@@ -86,7 +85,7 @@ export default function ComprendrePage() {
 
       {/* LES PREUVES */}
       <section className="mt-14">
-        <Card title="Les preuves qui font la différence" subtitle="Une contestation sans preuve a peu de chances d'aboutir.">
+        <Card title="Les preuves qui font la différence" subtitle="Sans preuve, une contestation aboutit rarement.">
           <ul className="grid gap-2 sm:grid-cols-2">
             {PREUVES.map((p) => (
               <li key={p} className="flex gap-2.5 rounded-md bg-paper p-3 text-sm text-ink">
@@ -120,7 +119,7 @@ export default function ComprendrePage() {
       <section className="mt-14 rounded-xl bg-navy-900 p-8 text-center text-white">
         <h2 className="font-display text-xl font-bold">Prêt à passer à l&apos;action ?</h2>
         <p className="mx-auto mt-3 max-w-lg text-navy-100">
-          Préparez votre lettre en quelques minutes, ou appelez-nous si vous préférez en parler.
+          Préparez votre lettre en quelques minutes. Ou appelez-nous, si vous préférez en parler.
         </p>
         <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <LinkBtn href="/contester" variant="gold">

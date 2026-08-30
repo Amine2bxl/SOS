@@ -29,8 +29,8 @@ export default async function NouveauDossierPage() {
             Vos 2 contestations gratuites sont utilisées
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-            Vous restez libre de consulter et de suivre vos dossiers existants. Pour en ouvrir un
-            nouveau, l&apos;adhésion à l&apos;association donne accès aux contestations illimitées.
+            Vos dossiers restent accessibles et vous continuez à les suivre. L&apos;adhésion ouvre
+            les contestations illimitées.
           </p>
           <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
             <LinkBtn href="/tarifs" variant="gold">Voir les formules</LinkBtn>

@@ -7,15 +7,15 @@ import { ASSO, CHIFFRES, ETAPES, NOUS_FAISONS, NOUS_NE_FAISONS_PAS, ALERTE } fro
 const SITUATIONS = [
   {
     titre: "Une redevance de stationnement",
-    texte: "Un courrier de parking.brussels ou de votre commune vous réclame 25 €, 50 € ou plus.",
+    texte: "parking.brussels ou votre commune vous réclame 25 €, 50 €, parfois bien plus.",
   },
   {
     titre: "Une amende qui a grossi",
-    texte: "Vous n'avez pas réagi à temps et les rappels, les frais ou un huissier s'y sont ajoutés.",
+    texte: "Vous n'avez pas réagi à temps, et les rappels ont fait grimper la note.",
   },
   {
     titre: "Une sanction communale (SAC)",
-    texte: "Un fonctionnaire sanctionnateur vous réclame une somme et vous ne savez pas quoi répondre.",
+    texte: "Un fonctionnaire sanctionnateur vous réclame une somme. Vous ne savez pas quoi répondre.",
   },
 ];
 
@@ -33,9 +33,9 @@ export default function HomePage() {
             <span className="text-gold-400">Vous n&apos;êtes pas seul.</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-navy-100">
-            SOS Citizens est une association bruxelloise qui aide <strong className="text-white">gratuitement</strong>{" "}
-            les habitants à comprendre leur courrier et à le contester quand c&apos;est justifié. Pas
-            d&apos;avocat, pas de frais : un appel suffit pour commencer.
+            Nous sommes une association bruxelloise. Nous décryptons votre courrier avec vous et
+            vous aidons à le contester quand c&apos;est justifié. Un appel suffit pour commencer, et
+            il ne vous coûte <strong className="text-white">rien</strong>.
           </p>
 
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -49,7 +49,7 @@ export default function HomePage() {
           </div>
 
           <p className="mt-6 text-sm text-navy-100/80">
-            Gratuit · Sans engagement · Réponse par une vraie personne
+            Appel gratuit · Sans engagement · Une vraie personne au bout du fil
           </p>
         </div>
       </section>
@@ -107,7 +107,7 @@ export default function HomePage() {
           Comment ça se passe ?
         </h2>
         <p className="mx-auto mt-3 max-w-xl text-center text-ink-soft">
-          Trois étapes, et vous gardez la main à chaque moment.
+          Trois étapes. Vous gardez la main du début à la fin.
         </p>
         <ol className="mt-9 grid gap-5 sm:grid-cols-3">
           {ETAPES.map((e, i) => (
@@ -151,8 +151,9 @@ export default function HomePage() {
               ))}
             </ul>
             <p className="mt-4 text-xs leading-relaxed text-ink-soft">
-              Nous préférons être honnêtes : personne ne peut garantir l&apos;annulation d&apos;une
-              redevance. Ce que nous garantissons, c&apos;est que vous saurez quoi faire.
+              Personne ne peut garantir l&apos;annulation d&apos;une redevance, et méfiez-vous de
+              qui vous le promet. Nous vous donnons les moyens de vous défendre, et le délai pour
+              le faire.
             </p>
           </Card>
         </div>
@@ -161,9 +162,9 @@ export default function HomePage() {
       {/* LE POINT LE PLUS IMPORTANT */}
       <section className="mx-auto max-w-3xl px-4 pb-14 sm:px-6">
         <KeyBox title="Si vous ne deviez retenir qu'une chose">
-          Ne payez pas immédiatement si vous comptez contester : le paiement est généralement compris
-          comme une reconnaissance des faits et clôture le dossier. Vérifiez d&apos;abord le délai indiqué
-          sur votre courrier, puis répondez par écrit en gardant une preuve de votre envoi.
+          Ne payez pas avant d&apos;avoir décidé. Payer vaut reconnaissance des faits et clôture le
+          dossier. Regardez le délai inscrit sur votre courrier, puis répondez par écrit en gardant
+          une preuve d&apos;envoi.
         </KeyBox>
       </section>
 
@@ -174,8 +175,8 @@ export default function HomePage() {
             Parlons de votre dossier
           </h2>
           <p className="mx-auto mt-4 max-w-xl leading-relaxed text-navy-100">
-            Beaucoup de gens sont renvoyés vers un avocat sans en avoir les moyens. Notre rôle est de vous
-            permettre de vous défendre vous-même. Décrivez-nous votre situation, nous vous répondons.
+            Beaucoup de gens sont renvoyés vers un avocat sans en avoir les moyens. Nous existons
+            pour que vous puissiez vous défendre seul. Décrivez-nous votre situation, nous répondons.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <LinkBtn href={`tel:${ASSO.telephoneLien}`} variant="gold" className="w-full px-6 py-3.5 text-base sm:w-auto">

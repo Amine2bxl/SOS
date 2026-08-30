@@ -93,7 +93,7 @@ export function Header() {
       </div>
 
       <p className="border-b border-gold-500/30 bg-gold-100 px-4 py-1.5 text-center text-[13px] font-semibold text-navy-900">
-        Association sans but lucratif — notre aide est entièrement gratuite.
+        Association sans but lucratif. L'aide par téléphone est gratuite, sans limite.
       </p>
     </header>
   );

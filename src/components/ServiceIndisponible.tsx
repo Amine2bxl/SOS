@@ -14,8 +14,8 @@ export function ServiceIndisponible() {
         Cet espace est en cours d&apos;installation
       </h1>
       <p className="mt-4 leading-relaxed text-ink-soft">
-        La création de compte et le suivi en ligne ne sont pas encore actifs. Le reste du site
-        fonctionne normalement, et surtout : nous restons joignables pour vous aider.
+        La création de compte et le suivi en ligne arrivent bientôt. Le reste du site fonctionne, et
+        nous restons joignables pour vous aider.
       </p>
       <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
         <LinkBtn href={`tel:${ASSO.telephoneLien}`} variant="gold">

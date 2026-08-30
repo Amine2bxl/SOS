@@ -29,53 +29,53 @@ export const CHIFFRES: { valeur: string; label: string; detail: string }[] = [
   {
     valeur: "220-250",
     label: "dossiers accompagnés",
-    detail: "Depuis la création de l'association, en toute gratuité.",
+    detail: "Depuis la création de l'association en 2024.",
   },
   {
     valeur: "19",
     label: "communes bruxelloises",
-    detail: "Chaque commune a ses zones, ses tarifs et ses règles.",
+    detail: "Chacune a ses zones, ses tarifs, ses règles.",
   },
   {
-    valeur: "0 €",
-    label: "pour être aidé",
-    detail: "L'accompagnement est gratuit. Les dons sont libres.",
+    valeur: "2",
+    label: "contestations gratuites",
+    detail: "Et le téléphone reste gratuit, sans limite.",
   },
 ];
 
 /** Les 3 étapes de l'accompagnement — volontairement courtes. */
 export const ETAPES: { titre: string; texte: string }[] = [
   {
-    titre: "Vous nous appelez ou nous écrivez",
+    titre: "Vous nous envoyez votre courrier",
     texte:
-      "Un appel ou un e-mail suffit. Décrivez votre situation et envoyez une photo du courrier que vous avez reçu.",
+      "Une photo suffit. Dites-nous en deux lignes ce qui s'est passé.",
   },
   {
-    titre: "Nous lisons votre dossier avec vous",
+    titre: "Nous le décryptons avec vous",
     texte:
-      "Nous vérifions la nature du document, la commune, les dates, les délais et les preuves dont vous disposez.",
+      "Quel type de courrier, quel délai il vous reste, quelles preuves comptent dans votre cas.",
   },
   {
-    titre: "Vous envoyez une contestation solide",
+    titre: "Vous envoyez votre contestation",
     texte:
-      "Nous préparons avec vous un courrier motivé et vous expliquons où l'envoyer et comment garder une preuve.",
+      "Nous rédigeons le courrier avec vous. Vous saurez où l'envoyer et quelle preuve garder.",
   },
 ];
 
 /** Ce que l'association fait — et ne fait pas. Cadre les attentes clairement. */
 export const NOUS_FAISONS = [
-  "Nous lisons votre courrier et vous expliquons ce qu'il signifie vraiment",
-  "Nous vérifions les délais et le stade exact de la procédure",
-  "Nous vous aidons à rassembler les bonnes preuves",
-  "Nous rédigeons avec vous une contestation motivée",
-  "Nous vous aidons à demander les photos et les pièces du dossier",
-  "Nous vous orientons si le dossier part chez un huissier",
+  "Nous traduisons votre courrier en langage clair",
+  "Nous calculons le délai qu'il vous reste pour réagir",
+  "Nous vous disons quelles preuves comptent dans votre cas",
+  "Nous rédigeons votre contestation avec vous",
+  "Nous vous aidons à réclamer les photos du contrôle",
+  "Nous restons là si un huissier entre en jeu",
 ];
 
 export const NOUS_NE_FAISONS_PAS = [
   "Nous ne sommes pas un cabinet d'avocats",
-  "Nous ne promettons jamais l'annulation de votre redevance",
-  "Nous ne demandons aucun paiement pour vous aider",
+  "Nous ne promettons aucune annulation",
+  "Nous ne prenons aucun pourcentage sur ce que vous récupérez",
   "Nous ne payons pas votre redevance à votre place",
 ];
 
@@ -83,7 +83,7 @@ export const NOUS_NE_FAISONS_PAS = [
 export const ALERTE = {
   titre: "Important depuis le 15 mars 2026",
   texte:
-    "parking.brussels ne traite plus les contestations envoyées par e-mail : elles sont automatiquement rejetées. Vous devez désormais passer par le formulaire en ligne officiel. Gardez toujours une capture d'écran de votre envoi comme preuve.",
+    "parking.brussels rejette les contestations envoyées par e-mail. Passez par le formulaire en ligne, et gardez une capture d'écran de votre envoi : c'est votre seule preuve.",
 };
 
 /* -------------------------------------------------------------------------- */
@@ -101,41 +101,41 @@ export const DOCUMENTS: EtapeDoc[] = [
   {
     titre: "1. La notification initiale",
     cestQuoi:
-      "Le premier courrier qui vous réclame une redevance après un contrôle (ScanCar, agent ou caméra). Il indique la référence, le lieu, la date, le montant et la manière de contester.",
+      "Le premier courrier après un contrôle par ScanCar, agent ou caméra. Il porte la référence, le lieu, la date, le montant et la marche à suivre pour contester.",
     aFaire:
-      "C'est le meilleur moment pour agir. Ne payez pas si vous voulez contester : le paiement peut être compris comme une reconnaissance des faits.",
+      "Le meilleur moment pour agir. Ne payez pas si vous comptez contester : payer vaut reconnaissance des faits.",
     gravite: "info",
   },
   {
     titre: "2. Le rappel",
     cestQuoi:
-      "Envoyé si vous n'avez ni payé ni répondu. Le montant est parfois majoré de frais administratifs.",
+      "Il arrive quand vous n'avez ni payé ni répondu. Des frais s'ajoutent parfois au montant.",
     aFaire:
-      "Répondez par écrit et gardez une preuve d'envoi. Si vous aviez déjà contesté, signalez-le et joignez votre premier courrier.",
+      "Répondez par écrit, avec preuve d'envoi. Si vous aviez déjà contesté, joignez votre premier courrier.",
     gravite: "attention",
   },
   {
     titre: "3. La mise en demeure",
     cestQuoi:
-      "Un courrier formel qui exige le paiement dans un délai précis avant le recouvrement forcé. C'est le dernier stade à l'amiable.",
+      "Un courrier formel qui exige le paiement dans un délai précis. Dernier stade avant le recouvrement forcé.",
     aFaire:
-      "Ne l'ignorez surtout pas. Réagissez par écrit dans le délai indiqué et demandez la suspension du recouvrement le temps de l'examen.",
+      "Ne l'ignorez pas. Répondez par écrit dans le délai indiqué et demandez la suspension du recouvrement.",
     gravite: "attention",
   },
   {
     titre: "4. La contrainte",
     cestQuoi:
-      "Un acte qui rend la dette exécutoire : l'administration peut désormais la récupérer de force.",
+      "Un acte qui rend la dette exécutoire : l'administration peut la récupérer de force.",
     aFaire:
-      "Des recours existent, mais les délais sont courts. Contactez-nous rapidement pour vérifier ce qui est encore possible.",
+      "Des recours existent, avec des délais courts. Appelez-nous pour voir ce qui reste possible.",
     gravite: "urgent",
   },
   {
     titre: "5. L'huissier de justice",
     cestQuoi:
-      "Un huissier intervient pour récupérer la somme, avec des frais supplémentaires importants (saisie, citation).",
+      "Un huissier intervient pour récupérer la somme. Les frais grimpent : saisie, citation.",
     aFaire:
-      "À ce stade, un accompagnement individualisé est nécessaire. Appelez-nous, et n'ignorez aucun courrier.",
+      "Appelez-nous. Et n'ignorez aucun courrier de l'huissier.",
     gravite: "urgent",
   },
 ];
@@ -148,32 +148,32 @@ export const NOTIONS: { titre: string; texte: string }[] = [
   {
     titre: "Une redevance n'est pas une amende de police",
     texte:
-      "Une redevance de stationnement est une dette administrative réclamée par la commune ou son opérateur. Elle ne vient pas d'un tribunal et ne donne pas de casier. Elle suit sa propre procédure, différente d'un PV de police ou d'une sanction administrative communale (SAC).",
+      "C'est une dette administrative réclamée par la commune ou son opérateur. Aucun tribunal, aucun casier. Elle suit sa propre procédure, distincte du PV de police et de la sanction administrative communale (SAC).",
   },
   {
     titre: "La ScanCar",
     texte:
-      "Une voiture équipée de caméras qui lit les plaques et les compare aux paiements enregistrés. Chaque contrôle est associé à une heure et à une position. Ces photos et ces données existent : vous avez le droit de les demander.",
+      "Une voiture à caméras qui lit les plaques et les compare aux paiements enregistrés. Chaque contrôle laisse une photo, une heure et une position. Ces données existent, et vous avez le droit de les réclamer.",
   },
   {
     titre: "La zone compte autant que la rue",
     texte:
-      "Chaque commune découpe son territoire en zones (rouge, verte, bleue) avec des tarifs, des horaires et des durées différents. C'est le règlement de la zone exacte, à la date du contrôle, qui s'applique.",
+      "Chaque commune découpe son territoire en zones rouge, verte ou bleue, avec ses tarifs et ses horaires. Ce qui s'applique à votre dossier : le règlement de la zone exacte, à la date du contrôle.",
   },
   {
     titre: "Arrêt ou stationnement ?",
     texte:
-      "S'immobiliser le temps de faire monter ou descendre quelqu'un, ou de charger, n'est pas toujours du stationnement. Mais c'est à vous de prouver la situation : durée, présence au volant, témoin, photo.",
+      "S'arrêter le temps de faire monter quelqu'un ou de charger ne compte pas toujours comme du stationnement. À vous de le prouver : durée, présence au volant, témoin, photo.",
   },
   {
     titre: "Vous avez des droits sur vos données",
     texte:
-      "Les photos et les journaux de contrôle sont des données personnelles vous concernant. Le RGPD vous permet d'en demander une copie, indépendamment de votre contestation.",
+      "Les photos et les journaux de contrôle vous concernent : ce sont des données personnelles. Le RGPD vous permet d'en réclamer une copie, séparément de votre contestation.",
   },
   {
     titre: "Payer, c'est souvent reconnaître",
     texte:
-      "Si vous payez, le dossier est en principe clôturé et il devient très difficile de revenir en arrière. Décidez donc avant de payer : contester ou non.",
+      "Payer clôture le dossier, et revenir en arrière devient très difficile. Tranchez avant de payer, pas après.",
   },
 ];
 
@@ -351,17 +351,17 @@ export const FAQS: Faq[] = [
   {
     question: "Combien coûte votre aide ?",
     reponse:
-      "Rien. L'accompagnement de SOS Citizens ASBL est entièrement gratuit. Nous sommes une ASBL, pas un cabinet. Si vous souhaitez soutenir notre travail, un don libre est possible, mais il n'est jamais une condition pour être aidé.",
+      "L'aide par téléphone et par e-mail ne coûte rien, sans limite de dossiers. Sur le site, vos deux premières contestations sont gratuites ; au-delà, l'adhésion ouvre les contestations illimitées. Nous sommes une ASBL, pas un cabinet : personne ne prend de commission sur ce que vous récupérez.",
   },
   {
     question: "Je viens de recevoir un courrier. Que dois-je faire en premier ?",
     reponse:
-      "Ne payez pas tout de suite si vous pensez contester : le paiement clôture généralement le dossier. Regardez d'abord la date du constat, la date du courrier, le délai indiqué pour réagir et la commune concernée. Rassemblez ensuite vos preuves (reçu, capture d'application, photos). Puis contactez-nous ou utilisez notre outil de courrier.",
+      "Ne payez pas tout de suite si vous pensez contester : payer clôture le dossier. Relevez d'abord la date du constat, le délai pour réagir et la commune. Rassemblez vos preuves : reçu, capture de l'application, photos. Puis appelez-nous ou utilisez notre outil.",
   },
   {
     question: "Puis-je encore contester par e-mail auprès de parking.brussels ?",
     reponse:
-      "Non. Depuis le 15 mars 2026, parking.brussels rejette automatiquement les contestations envoyées par e-mail et impose son formulaire en ligne. Utilisez ce formulaire, collez-y votre courrier et conservez impérativement une capture d'écran de l'envoi et de l'éventuel numéro de suivi.",
+      "Non. Depuis le 15 mars 2026, parking.brussels rejette les contestations par e-mail et impose son formulaire en ligne. Collez-y votre courrier, puis gardez une capture d'écran de l'envoi et du numéro de suivi.",
   },
   {
     question: "Quel est le délai pour contester ?",
@@ -391,7 +391,7 @@ export const FAQS: Faq[] = [
   {
     question: "Garantissez-vous que ma redevance sera annulée ?",
     reponse:
-      "Non, et méfiez-vous de quiconque vous le promet. Nous vous aidons à comprendre votre dossier, à réunir les bonnes preuves et à envoyer une contestation solide dans les délais. La décision finale appartient à l'administration, puis le cas échéant au juge.",
+      "Non, et méfiez-vous de quiconque vous le promet. Nous vous aidons à comprendre votre dossier, réunir les bonnes preuves et contester dans les délais. La décision revient à l'administration, puis au juge.",
   },
   {
     question: "Êtes-vous des avocats ?",
