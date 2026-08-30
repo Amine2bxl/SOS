@@ -10,26 +10,13 @@ export function Logo({ compact = false }: { compact?: boolean }) {
         />
         <circle cx="18" cy="20" r="4.2" fill="#f2b705" />
         <circle cx="30" cy="20" r="4.2" fill="#f6f4ee" />
-        <path
-          d="M11 34c0-4.6 3.4-7.5 7-7.5s7 2.9 7 7.5"
-          fill="none"
-          stroke="#f2b705"
-          strokeWidth="2.6"
-          strokeLinecap="round"
-        />
-        <path
-          d="M24 34c0-4.6 3.4-7.5 7-7.5s7 2.9 7 7.5"
-          fill="none"
-          stroke="#f6f4ee"
-          strokeWidth="2.6"
-          strokeLinecap="round"
-        />
+        <path d="M11 34c0-4.6 3.4-7.5 7-7.5s7 2.9 7 7.5" fill="none" stroke="#f2b705" strokeWidth="2.6" strokeLinecap="round" />
+        <path d="M24 34c0-4.6 3.4-7.5 7-7.5s7 2.9 7 7.5" fill="none" stroke="#f6f4ee" strokeWidth="2.6" strokeLinecap="round" />
       </svg>
       {!compact && (
         <span className="leading-none">
           <span className="block font-display text-lg font-bold tracking-tight">
-            <span className="text-gold-400">SOS</span>{" "}
-            <span className="text-white">CITIZENS</span>
+            <span className="text-gold-400">SOS</span> <span className="text-white">CITIZENS</span>
           </span>
           <span className="block text-[10px] font-semibold uppercase tracking-[0.28em] text-navy-100/80">
             ASBL
@@ -40,10 +27,19 @@ export function Logo({ compact = false }: { compact?: boolean }) {
   );
 }
 
-export function HeartIcon({ className = "h-4 w-4" }: { className?: string }) {
+export function PhoneIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
-      <path d="M12 21s-7.5-4.7-10-9.3C.4 8.6 2.3 5 5.8 5c2 0 3.4 1.1 4.2 2.5h4C14.8 6.1 16.2 5 18.2 5c3.5 0 5.4 3.6 3.8 6.7C19.5 16.3 12 21 12 21Z" />
+      <path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.46.57 3.6a1 1 0 0 1-.25 1l-2.22 2.2Z" />
+    </svg>
+  );
+}
+
+export function MailIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <rect x="2.5" y="4.5" width="19" height="15" rx="2" />
+      <path d="m3 6 9 6.5L21 6" />
     </svg>
   );
 }

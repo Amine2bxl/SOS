@@ -1,43 +1,57 @@
-import Link from "next/link";
-import { db } from "@/db";
-import { communes } from "@/db/schema";
-import { asc } from "drizzle-orm";
-import { ensureSeeded } from "@/lib/seed";
-import { PageHead, SectionCard } from "@/components/ui";
+import type { Metadata } from "next";
+import { PageHead, KeyBox, LinkBtn } from "@/components/ui";
+import { PhoneIcon } from "@/components/Logo";
+import { ASSO, COMMUNES } from "@/lib/data";
 
-export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "Les 19 communes bruxelloises",
+  description:
+    "Zones de stationnement et points de vigilance dans les 19 communes de la Région de Bruxelles-Capitale.",
+};
 
-export default async function CommunesPage() {
-  await ensureSeeded();
-  const rows = await db.select().from(communes).orderBy(asc(communes.nom));
-
+export default function CommunesPage() {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+    <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
       <PageHead
-        kicker="Région de Bruxelles-Capitale"
-        title="Les 19 communes"
-        intro="Le gestionnaire, les zones, les tarifs, les cartes, les modalités de contrôle et les procédures peuvent varier. Chaque fiche présente les informations pertinentes, sous réserve de la vérification de la version applicable à la date des faits."
+        kicker="Repères"
+        title="Les 19 communes bruxelloises"
+        intro="Chaque commune a ses zones, ses tarifs et ses règles. C'est le règlement de la commune du constat, à la date des faits, qui s'applique à votre dossier."
       />
 
-      <SectionCard className="mt-10">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {rows.map((c) => (
-            <Link
-              key={c.slug}
-              href={`/communes/${c.slug}`}
-              className="group rounded-lg border border-line bg-white p-4 transition hover:border-navy-700/50 hover:shadow-md"
-            >
-              <p className="font-display text-lg font-bold text-navy-900 group-hover:underline">{c.nom}</p>
-              <p className="mt-1 line-clamp-2 text-xs text-ink-soft">{c.zones}</p>
-              {c.alertes && <p className="mt-2 line-clamp-1 text-xs font-medium text-warn-700">⚠ {c.alertes}</p>}
-            </Link>
-          ))}
-        </div>
-      </SectionCard>
+      <div className="mx-auto mt-8 max-w-3xl">
+        <KeyBox title="À vérifier en priorité">
+          La commune indiquée sur votre courrier correspond-elle bien à l&apos;endroit où vous étiez garé ?
+          Une erreur de commune ou de zone est un motif de contestation à part entière.
+        </KeyBox>
+      </div>
 
-      <p className="mt-6 text-center text-sm text-ink-soft">
-        Les fiches sont vérifiées périodiquement. La date de dernière vérification figure sur chaque fiche.
+      <ul className="mt-10 grid gap-4 sm:grid-cols-2">
+        {COMMUNES.map((c) => (
+          <li key={c.slug} className="rounded-xl border border-line bg-card p-5 shadow-sm">
+            <h2 className="font-display text-lg font-bold text-navy-900">{c.nom}</h2>
+            <p className="mt-2 text-sm leading-relaxed text-ink-soft">{c.zones}</p>
+            <p className="mt-3 flex gap-2 rounded-md bg-gold-100/70 p-2.5 text-sm text-ink">
+              <span aria-hidden="true">→</span>
+              {c.aSavoir}
+            </p>
+          </li>
+        ))}
+      </ul>
+
+      <p className="mt-8 text-center text-sm text-ink-soft">
+        Ces informations sont des repères généraux. Les zones et tarifs évoluent : vérifiez toujours le
+        règlement de la commune applicable à la date de votre constat.
       </p>
+
+      <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <LinkBtn href="/contester" variant="gold">
+          Préparer ma lettre de contestation
+        </LinkBtn>
+        <LinkBtn href={`tel:${ASSO.telephoneLien}`} variant="secondary">
+          <PhoneIcon className="h-4 w-4" />
+          Demander de l&apos;aide
+        </LinkBtn>
+      </div>
     </div>
   );
 }
