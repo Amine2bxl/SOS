@@ -52,11 +52,7 @@ export default function MentionsLegalesPage() {
           </div>
           <div>
             <dt className="font-semibold text-navy-900">Téléphone</dt>
-            <dd className="text-ink-soft">
-              <a href={`tel:${ASSO.telephoneLien}`} className="font-semibold text-navy-700 underline">
-                {ASSO.telephone}
-              </a>
-            </dd>
+            <dd className="text-ink-soft">{ASSO.telephone}</dd>
           </div>
           <div className="sm:col-span-2">
             <dt className="font-semibold text-navy-900">Adresse e-mail</dt>

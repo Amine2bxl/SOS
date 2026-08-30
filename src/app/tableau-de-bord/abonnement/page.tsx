@@ -8,7 +8,7 @@ import { lireProfil, listerDossiers } from "@/lib/dossiers";
 import { planById, contestationsRestantes, formatPrix } from "@/lib/plans";
 import { NavigationMembre } from "@/components/NavigationMembre";
 import { Card, LinkBtn, Check } from "@/components/ui";
-import { ASSO } from "@/lib/data";
+import { BoutonContact } from "@/components/Contact";
 
 export const metadata: Metadata = { title: "Mon abonnement" };
 export const dynamic = "force-dynamic";
@@ -113,11 +113,8 @@ export default async function AbonnementPage() {
         <p className="text-sm leading-relaxed text-ink-soft">
           Le paiement en ligne n&apos;est pas encore actif : aucune donnée bancaire n&apos;est demandée
           sur ce site. L&apos;adhésion se règle par virement au compte de l&apos;association, et votre
-          accès est activé dès réception. Une question ? Appelez-nous au{" "}
-          <a href={`tel:${ASSO.telephoneLien}`} className="font-semibold text-navy-700 underline">
-            {ASSO.telephone}
-          </a>
-          .
+          accès est activé dès réception. Une question ?{" "}
+          <BoutonContact variante="lien">Contactez-nous</BoutonContact>.
         </p>
       </Card>
     </div>

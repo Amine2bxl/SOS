@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { PageHead, Card, LinkBtn, Check, KeyBox } from "@/components/ui";
-import { PhoneIcon } from "@/components/Logo";
+import { BoutonContact } from "@/components/Contact";
 import { PLANS, formatPrix } from "@/lib/plans";
-import { ASSO, FAQS } from "@/lib/data";
+import { FAQS } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "Tarifs et adhésion",
@@ -66,12 +66,10 @@ export default function TarifsPage() {
       </div>
 
       <div className="mx-auto mt-12 max-w-3xl">
-        <KeyBox title="L'aide par téléphone reste gratuite, quelle que soit la formule">
-          Vous pouvez nous appeler autant que nécessaire sans adhérer. L&apos;adhésion finance
-          l&apos;outil en ligne. Et si l&apos;argent est un obstacle, dites-le nous au{" "}
-          <a href={`tel:${ASSO.telephoneLien}`} className="font-semibold underline">
-            {ASSO.telephone}
-          </a>{" "}
+        <KeyBox title="L'aide par écrit reste gratuite, quelle que soit la formule">
+          Vous pouvez nous écrire sur WhatsApp ou par e-mail autant que nécessaire sans adhérer.
+          L&apos;adhésion finance l&apos;outil en ligne. Et si l&apos;argent est un obstacle,{" "}
+          <BoutonContact variante="lien">dites-le-nous</BoutonContact>{" "}
           : nous trouverons une solution.
         </KeyBox>
       </div>
@@ -118,12 +116,9 @@ export default function TarifsPage() {
       <Card className="mt-12 border-navy-600/30 bg-navy-50 text-center">
         <p className="font-display text-lg font-bold text-navy-900">Un doute sur la formule adaptée ?</p>
         <p className="mx-auto mt-2 max-w-lg text-sm text-ink-soft">
-          Appelez-nous. Nous vous dirons franchement si la formule gratuite suffit dans votre cas.
+          Écrivez-nous. Nous vous dirons franchement si la formule gratuite suffit dans votre cas.
         </p>
-        <LinkBtn href={`tel:${ASSO.telephoneLien}`} variant="secondary" className="mt-5">
-          <PhoneIcon className="h-4 w-4" />
-          {ASSO.telephone}
-        </LinkBtn>
+        <BoutonContact variante="secondaire" className="mt-5" />
       </Card>
     </div>
   );

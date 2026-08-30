@@ -7,9 +7,10 @@ import { lireUtilisateur } from "@/lib/supabase/server";
 import { lireProfil } from "@/lib/dossiers";
 import { NavigationMembre } from "@/components/NavigationMembre";
 import { Card, LinkBtn } from "@/components/ui";
+import { BoutonContact } from "@/components/Contact";
+import { ASSO } from "@/lib/data";
 import { FormulaireProfil } from "./FormulaireProfil";
 import { FormulaireSecurite } from "./FormulaireSecurite";
-import { ASSO } from "@/lib/data";
 
 export const metadata: Metadata = { title: "Mon compte" };
 export const dynamic = "force-dynamic";
@@ -67,11 +68,8 @@ export default async function ComptePage() {
       </Card>
 
       <p className="mt-8 text-center text-xs text-ink-soft">
-        Un souci de compte ? Appelez-nous au{" "}
-        <a href={`tel:${ASSO.telephoneLien}`} className="font-semibold text-navy-700 underline">
-          {ASSO.telephone}
-        </a>
-        .
+        Un souci de compte ?{" "}
+        <BoutonContact variante="lien">Écrivez-nous</BoutonContact>.
       </p>
     </div>
   );

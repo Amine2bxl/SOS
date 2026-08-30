@@ -25,11 +25,7 @@ export default function ConfidentialitePage() {
           <a href={`mailto:${ASSO.email}`} className="font-semibold text-navy-700 underline">
             {ASSO.email}
           </a>{" "}
-          ou{" "}
-          <a href={`tel:${ASSO.telephoneLien}`} className="font-semibold text-navy-700 underline">
-            {ASSO.telephone}
-          </a>
-          .
+          ou au {ASSO.telephone}.
         </p>
       </Card>
 
@@ -125,10 +121,6 @@ export default function ConfidentialitePage() {
           à{" "}
           <a href={`mailto:${ASSO.email}`} className="font-semibold text-navy-700 underline">
             {ASSO.email}
-          </a>{" "}
-          ou en appelant le{" "}
-          <a href={`tel:${ASSO.telephoneLien}`} className="font-semibold text-navy-700 underline">
-            {ASSO.telephone}
           </a>
           . Nous répondons dans les meilleurs délais et au plus tard dans le mois.
         </p>

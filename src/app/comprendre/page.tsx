@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PageHead, Card, KeyBox, LinkBtn, Check } from "@/components/ui";
-import { PhoneIcon } from "@/components/Logo";
-import { ASSO, DOCUMENTS, NOTIONS, PREUVES, FAQS } from "@/lib/data";
+import { BoutonContact } from "@/components/Contact";
+import { DOCUMENTS, NOTIONS, PREUVES, FAQS } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "Comprendre votre amende de stationnement",
@@ -119,16 +119,13 @@ export default function ComprendrePage() {
       <section className="mt-14 rounded-xl bg-navy-900 p-8 text-center text-white">
         <h2 className="font-display text-xl font-bold">Prêt à passer à l&apos;action ?</h2>
         <p className="mx-auto mt-3 max-w-lg text-navy-100">
-          Préparez votre lettre en quelques minutes. Ou appelez-nous, si vous préférez en parler.
+          Préparez votre lettre en quelques minutes. Ou écrivez-nous, si vous préférez en parler.
         </p>
         <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <LinkBtn href="/contester" variant="gold">
             Préparer ma lettre
           </LinkBtn>
-          <LinkBtn href={`tel:${ASSO.telephoneLien}`} variant="outline">
-            <PhoneIcon className="h-4 w-4" />
-            {ASSO.telephone}
-          </LinkBtn>
+          <BoutonContact variante="outline" />
         </div>
       </section>
     </div>

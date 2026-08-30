@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Card, LinkBtn, Check, Cross } from "@/components/ui";
-import { PhoneIcon, MailIcon } from "@/components/Logo";
+import { MailIcon } from "@/components/Logo";
+import { BoutonContact } from "@/components/Contact";
 import { ASSO, CHIFFRES, ETAPES, NOUS_FAISONS, NOUS_NE_FAISONS_PAS, ALERTE } from "@/lib/data";
 
 /** Les situations les plus fréquentes : le visiteur doit se reconnaître en 5 secondes. */
@@ -39,17 +40,17 @@ export default function HomePage() {
           </p>
 
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <LinkBtn href={`tel:${ASSO.telephoneLien}`} variant="gold" className="w-full px-6 py-3.5 text-base sm:w-auto">
-              <PhoneIcon className="h-5 w-5" />
-              Appelez-nous : {ASSO.telephone}
-            </LinkBtn>
+            <BoutonContact
+              variante="gold"
+              className="w-full px-6 py-3.5 text-base sm:w-auto"
+            />
             <LinkBtn href="/contester" variant="outline" className="w-full px-6 py-3.5 text-base sm:w-auto">
               Préparer ma contestation en ligne
             </LinkBtn>
           </div>
 
           <p className="mt-6 text-sm text-navy-100/80">
-            Appel gratuit · Sans engagement · Une vraie personne au bout du fil
+            Gratuit · Sans engagement · Une réponse écrite, par WhatsApp ou e-mail
           </p>
         </div>
       </section>
@@ -82,9 +83,7 @@ export default function HomePage() {
         </div>
         <p className="mt-6 text-center text-sm text-ink-soft">
           Vous n&apos;êtes pas sûr de votre situation ?{" "}
-          <a href={`tel:${ASSO.telephoneLien}`} className="font-semibold text-navy-700 underline">
-            Appelez-nous, nous regardons avec vous.
-          </a>
+          <BoutonContact variante="lien">Écrivez-nous, nous regardons avec vous.</BoutonContact>
         </p>
       </section>
 
@@ -165,10 +164,7 @@ export default function HomePage() {
             fausse promesse.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <LinkBtn href={`tel:${ASSO.telephoneLien}`} variant="gold" className="w-full px-6 py-3.5 text-base sm:w-auto">
-              <PhoneIcon className="h-5 w-5" />
-              {ASSO.telephone}
-            </LinkBtn>
+            <BoutonContact variante="gold" className="w-full px-6 py-3.5 text-base sm:w-auto" />
             <LinkBtn href={`mailto:${ASSO.email}`} variant="outline" className="w-full px-6 py-3.5 text-base sm:w-auto">
               <MailIcon className="h-5 w-5" />
               Nous écrire

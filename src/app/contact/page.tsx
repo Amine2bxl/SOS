@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { PageHead, Card, Field, TextInput, TextArea, LinkBtn, Check } from "@/components/ui";
-import { PhoneIcon, MailIcon } from "@/components/Logo";
+import { MailIcon } from "@/components/Logo";
+import { WhatsAppIcon } from "@/components/Contact";
 import { ASSO } from "@/lib/data";
 
 /** Ce qu'il est utile de préparer avant de nous écrire. */
@@ -13,6 +14,10 @@ const A_PREPARER = [
   "Vos preuves : reçu, capture de l'application, photos du lieu",
   "En une phrase : ce qui s'est passé selon vous",
 ];
+
+const LIEN_WHATSAPP = `https://wa.me/${ASSO.whatsapp}?text=${encodeURIComponent(
+  "Bonjour, je vous contacte au sujet d'une redevance de stationnement.",
+)}`;
 
 export default function ContactPage() {
   const [nom, setNom] = useState("");
@@ -40,14 +45,16 @@ export default function ContactPage() {
         intro="Un appel ou un e-mail suffit. Nous sommes une petite association : c'est nous qui vous répondons, et l'appel ne vous coûte rien."
       />
 
-      {/* CONTACT DIRECT — mis en avant avant tout formulaire. */}
+      {/* CONTACT DIRECT — WhatsApp et e-mail, jamais d'appel direct. */}
       <div className="mt-10 grid gap-4 sm:grid-cols-2">
         <a
-          href={`tel:${ASSO.telephoneLien}`}
-          className="group rounded-xl border-2 border-gold-400 bg-gold-100/60 p-6 text-center transition hover:bg-gold-100"
+          href={LIEN_WHATSAPP}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group rounded-xl border-2 border-[#25d366]/40 bg-[#25d366]/10 p-6 text-center transition hover:bg-[#25d366]/20"
         >
-          <PhoneIcon className="mx-auto h-7 w-7 text-gold-600" />
-          <p className="mt-3 font-display text-lg font-bold text-navy-900">Appelez-nous</p>
+          <WhatsAppIcon className="mx-auto h-7 w-7 text-[#1da851]" />
+          <p className="mt-3 font-display text-lg font-bold text-navy-900">Écrivez-nous sur WhatsApp</p>
           <p className="mt-1 font-semibold text-navy-800 group-hover:underline">{ASSO.telephone}</p>
           <p className="mt-2 text-sm text-ink-soft">Le plus rapide, surtout si votre délai est court.</p>
         </a>
@@ -62,6 +69,11 @@ export default function ContactPage() {
           <p className="mt-2 text-sm text-ink-soft">Idéal pour joindre une photo de votre courrier.</p>
         </a>
       </div>
+
+      <p className="mt-4 text-center text-xs text-ink-soft">
+        Pas de ligne d&apos;appel direct : nous répondons par écrit, et nous rappelons si nécessaire en
+        cas d&apos;urgence.
+      </p>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <Card title="Ce qu'il faut nous préparer" subtitle="Avec ces éléments, nous pouvons vous aider tout de suite.">

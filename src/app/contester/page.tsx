@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { Card, Field, TextInput, TextArea, SelectInput, Btn, LinkBtn, KeyBox, Check } from "@/components/ui";
-import { PhoneIcon } from "@/components/Logo";
-import { ASSO, COMMUNES, MOTIFS } from "@/lib/data";
+import { BoutonContact } from "@/components/Contact";
+import { COMMUNES, MOTIFS } from "@/lib/data";
 import { construireLettre, SAISIE_VIDE, type SaisieLettre } from "@/lib/lettre";
 
 export default function ContesterPage() {
@@ -44,10 +44,8 @@ export default function ContesterPage() {
         <KeyBox title="Avant de commencer : vérifiez votre délai">
           Votre délai est inscrit <strong>sur le courrier que vous avez reçu</strong>, souvent 14 à 30
           jours. C&apos;est cette mention qui fait foi. S&apos;il est court ou déjà dépassé,{" "}
-          <a href={`tel:${ASSO.telephoneLien}`} className="font-semibold underline">
-            appelez-nous
-          </a>{" "}
-          : il reste presque toujours une carte à jouer.
+          <BoutonContact variante="lien">écrivez-nous</BoutonContact>
+          {" "}: il reste presque toujours une carte à jouer.
         </KeyBox>
       </div>
 
@@ -201,10 +199,7 @@ export default function ContesterPage() {
             <p className="mt-1.5 text-sm text-ink-soft">
               Nous relisons votre lettre avec vous, gratuitement.
             </p>
-            <LinkBtn href={`tel:${ASSO.telephoneLien}`} variant="gold" className="mt-4">
-              <PhoneIcon className="h-4 w-4" />
-              {ASSO.telephone}
-            </LinkBtn>
+            <BoutonContact variante="gold" className="mt-4" />
           </div>
         </div>
       </div>

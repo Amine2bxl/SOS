@@ -17,6 +17,8 @@ export const ASSO = {
   pays: "Belgique",
   telephone: "+32 470 53 35 14",
   telephoneLien: "+32470533514",
+  /** Numéro WhatsApp international, sans « + » ni espaces (pour wa.me). */
+  whatsapp: "32470533514",
   email: "azmo007@protonmail.com",
   president: "Mohamed Azouzi",
   administrateurs: ["Mohamed Azouzi", "Mohamed Boutrika"],

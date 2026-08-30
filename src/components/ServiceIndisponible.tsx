@@ -1,11 +1,10 @@
 import { LinkBtn } from "@/components/ui";
-import { PhoneIcon } from "@/components/Logo";
-import { ASSO } from "@/lib/data";
+import { BoutonContact } from "@/components/Contact";
 
 /**
  * Affiché à la place des pages de compte lorsque la base n'est pas configurée.
  * L'objectif est qu'une variable d'environnement manquante n'empêche jamais un
- * visiteur d'obtenir de l'aide : le téléphone reste en évidence.
+ * visiteur d'obtenir de l'aide : le contact (WhatsApp, e-mail) reste en évidence.
  */
 export function ServiceIndisponible() {
   return (
@@ -18,10 +17,7 @@ export function ServiceIndisponible() {
         nous restons joignables pour vous aider.
       </p>
       <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-        <LinkBtn href={`tel:${ASSO.telephoneLien}`} variant="gold">
-          <PhoneIcon className="h-4 w-4" />
-          {ASSO.telephone}
-        </LinkBtn>
+        <BoutonContact variante="gold" />
         <LinkBtn href="/contester" variant="secondary">
           Préparer ma lettre sans compte
         </LinkBtn>

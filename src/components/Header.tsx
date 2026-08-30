@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Logo, PhoneIcon } from "@/components/Logo";
+import { Logo } from "@/components/Logo";
 import { MenuCompte } from "@/components/MenuCompte";
+import { BoutonContact, WhatsAppIcon } from "@/components/Contact";
 import { useSession } from "@/components/useSession";
-import { ASSO } from "@/lib/data";
 
 const NAV = [
   { href: "/contester", label: "Contester mon amende" },
@@ -21,8 +21,8 @@ export function Header() {
   const [open, setOpen] = useState(false);
   const { connecte } = useSession();
 
-  // L'espace membre apparaît dans la navigation dès que l'utilisateur est
-  // connecté : impossible de ne plus savoir où le retrouver.
+  // L'espace membre apparaît dès que l'utilisateur est connecté : la
+  // navigation bascule d'un site public vers une vraie application.
   const navigation = connecte
     ? [...NAV, { href: "/tableau-de-bord", label: "Mon espace" }]
     : NAV;
@@ -31,19 +31,19 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 print:hidden">
-      <div className="bg-navy-950 text-white shadow-lg shadow-navy-950/20">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+      <div className="bg-navy-950 text-white shadow-md shadow-navy-950/15">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
           <Link href="/" aria-label="SOS Citizens ASBL — Accueil">
-            <Logo />
+            <Logo compact />
           </Link>
 
-          <nav className="hidden items-center gap-1 lg:flex" aria-label="Navigation principale">
+          <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Navigation principale">
             {navigation.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 aria-current={estActif(item.href) ? "page" : undefined}
-                className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                className={`rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors ${
                   estActif(item.href)
                     ? "bg-navy-800 text-gold-300"
                     : "text-navy-100 hover:bg-navy-800/70 hover:text-white"
@@ -54,20 +54,16 @@ export function Header() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-2">
-            {/* L'appel est le premier réflexe attendu : le bouton principal est un téléphone. */}
-            <a
-              href={`tel:${ASSO.telephoneLien}`}
-              className="inline-flex items-center gap-2 rounded-md bg-gold-400 px-3 py-2 text-sm font-bold text-navy-950 transition hover:bg-gold-300 sm:px-4"
-            >
-              <PhoneIcon className="h-4 w-4" />
-              <span className="hidden sm:inline">{ASSO.telephone}</span>
-              <span className="sm:hidden">Appeler</span>
-            </a>
+          <div className="flex items-center gap-1.5">
+            <BoutonContact
+              variante="gold"
+              className="hidden px-3 py-1.5 sm:inline-flex"
+            />
             <MenuCompte />
+
             <button
               onClick={() => setOpen(!open)}
-              className="rounded-md border border-navy-700 p-2 text-navy-100 lg:hidden"
+              className="rounded-md border border-navy-700 p-1.5 text-navy-100 lg:hidden"
               aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
               aria-expanded={open}
             >
@@ -79,32 +75,32 @@ export function Header() {
         </div>
 
         {open && (
-          <nav className="border-t border-navy-800 px-4 pb-4 lg:hidden" aria-label="Navigation mobile">
-            <div className="grid gap-1 pt-3">
+          <nav className="border-t border-navy-800 px-4 pb-3 lg:hidden" aria-label="Navigation mobile">
+            <div className="grid gap-1 pt-2.5">
               {navigation.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={() => setOpen(false)}
                   aria-current={estActif(item.href) ? "page" : undefined}
-                  className={`rounded-md px-3 py-2.5 text-sm font-medium ${
+                  className={`rounded-md px-3 py-2 text-sm font-medium ${
                     estActif(item.href) ? "bg-navy-800 text-gold-300" : "text-navy-100 hover:bg-navy-800"
                   }`}
                 >
                   {item.label}
                 </Link>
               ))}
-              <span className="mt-2 grid">
+              <div className="mt-2 grid gap-2">
+                <BoutonContact variante="gold" className="w-full">
+                  <WhatsAppIcon className="h-4 w-4" />
+                  Nous contacter
+                </BoutonContact>
                 <MenuCompte />
-              </span>
+              </div>
             </div>
           </nav>
         )}
       </div>
-
-      <p className="border-b border-gold-500/30 bg-gold-100 px-4 py-1.5 text-center text-[13px] font-semibold text-navy-900">
-        Association sans but lucratif. L'aide par téléphone est gratuite, sans limite.
-      </p>
     </header>
   );
 }

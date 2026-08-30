@@ -42,6 +42,12 @@ export default async function TableauDeBordPage() {
   });
   const totalEnJeu = enCours.reduce((s, d) => s + (d.montant ?? 0), 0);
 
+  // Prochaine échéance, pour ne jamais rater un délai.
+  const prochain = enCours
+    .filter((d) => d.date_echeance)
+    .sort((a, b) => (a.date_echeance! < b.date_echeance! ? -1 : 1))[0];
+  const joursProchain = prochain ? joursAvantEcheance(prochain.date_echeance) : null;
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
       <RafraichirEnTempsReel />
@@ -103,6 +109,67 @@ export default async function TableauDeBordPage() {
             <p className="mt-1 text-sm text-ink-soft">{c.label}</p>
           </div>
         ))}
+      </div>
+
+      {/* Abonnement et prochaine échéance : les deux infos qui comptent. */}
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <Card>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+                Mon abonnement
+              </p>
+              <p className="mt-0.5 font-display text-lg font-bold text-navy-900">{plan.nom}</p>
+              <p className="text-sm text-ink-soft">
+                {restantes === null
+                  ? "Contestations illimitées"
+                  : `${restantes} contestation${restantes > 1 ? "s" : ""} gratuite${restantes > 1 ? "s" : ""} restante${restantes > 1 ? "s" : ""}`}
+              </p>
+            </div>
+            <LinkBtn href="/tableau-de-bord/abonnement" variant="secondary">
+              Gérer mon abonnement
+            </LinkBtn>
+          </div>
+          {restantes !== null && restantes === 0 && (
+            <p className="mt-3 rounded-md bg-gold-100 p-2.5 text-sm text-ink">
+              Quota épuisé —{" "}
+              <Link href="/tarifs" className="font-semibold text-navy-700 underline">
+                adhérez pour continuer gratuitement
+              </Link>{" "}
+              sur de nouveaux dossiers ? Vos dossiers restent suivis.
+            </p>
+          )}
+        </Card>
+
+        <Card>
+          <p className="text-[11px] font-bold uppercase tracking-wide text-ink-soft">
+            Prochaine échéance
+          </p>
+          {prochain ? (
+            <div className="mt-0.5 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <Link
+                  href={`/tableau-de-bord/${prochain.id}`}
+                  className="font-display text-lg font-bold text-navy-900 hover:underline"
+                >
+                  {prochain.reference ?? "Dossier"}
+                </Link>
+                <p className="text-sm text-ink-soft">
+                  {joursProchain === null
+                    ? "Date limite à vérifier"
+                    : joursProchain < 0
+                      ? `Échéance dépassée depuis ${-joursProchain} jour(s)`
+                      : joursProchain === 0
+                        ? "L'échéance, c'est aujourd'hui"
+                        : `${formatDate(prochain.date_echeance)} — dans ${joursProchain} jour${joursProchain > 1 ? "s" : ""}`}
+                </p>
+              </div>
+              {joursProchain !== null && <PastilleEcheance jours={joursProchain} />}
+            </div>
+          ) : (
+            <p className="mt-0.5 text-sm text-ink-soft">Aucun dossier en cours : aucune échéance.</p>
+          )}
+        </Card>
       </div>
 
       {/* Quota épuisé */}

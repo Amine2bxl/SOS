@@ -6,7 +6,7 @@ import { lireUtilisateur } from "@/lib/supabase/server";
 import { lireProfil } from "@/lib/dossiers";
 import { planById, PLANS, formatPrix } from "@/lib/plans";
 import { Card, LinkBtn, Check } from "@/components/ui";
-import { ASSO } from "@/lib/data";
+import { BoutonContact } from "@/components/Contact";
 import { FormulaireAdhesion } from "./FormulaireAdhesion";
 
 export const metadata: Metadata = { title: "Adhérer à l'association" };
@@ -75,10 +75,8 @@ export default async function AdhererPage({
             sera activé dès réception du virement.
           </p>
           <p className="mt-3 text-sm text-ink">
-            Une question dans l&apos;intervalle ? Appelez-nous au{" "}
-            <a href={`tel:${ASSO.telephoneLien}`} className="font-semibold underline">
-              {ASSO.telephone}
-            </a>
+            Une question dans l&apos;intervalle ?{" "}
+            <BoutonContact variante="lien">Contactez-nous</BoutonContact>
             .
           </p>
         </Card>
