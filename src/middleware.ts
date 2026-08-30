@@ -53,8 +53,8 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    // Tout sauf les fichiers statiques et les images.
-    "/((?!_next/static|_next/image|favicon.ico|icon.svg|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
+  // Le middleware n'est utile que là où l'authentification compte : l'espace
+  // membre et les pages d'accès. Les pages publiques restent statiques et
+  // rapides, sans appel Supabase à chaque visite.
+  matcher: ["/tableau-de-bord/:path*", "/adherer/:path*", "/connexion", "/inscription"],
 };
