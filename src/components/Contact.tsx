@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ASSO } from "@/lib/data";
 import { MailIcon } from "@/components/Logo";
+import { useLangue, t } from "@/lib/i18n";
 
 export function WhatsAppIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
@@ -42,6 +43,7 @@ export function BoutonContact({
   children?: React.ReactNode;
 }) {
   const [ouvert, setOuvert] = useState(false);
+  const { langue } = useLangue();
 
   return (
     <>
@@ -55,7 +57,7 @@ export function BoutonContact({
         {children ?? (
           <>
             <WhatsAppIcon className="h-4 w-4" />
-            Nous contacter
+            {t(langue, "commun.contacter")}
           </>
         )}
       </button>

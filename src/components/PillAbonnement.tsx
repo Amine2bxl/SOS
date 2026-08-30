@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { creerClientNavigateur } from "@/lib/supabase/client";
 import { planById, type PlanId } from "@/lib/plans";
 import { useSession } from "@/components/useSession";
+import { useLangue, t } from "@/lib/i18n";
 
 /**
  * Pastille de l'en-tête connecté : « Devenir membre » tant que la formule
@@ -12,6 +13,7 @@ import { useSession } from "@/components/useSession";
  */
 export function PillAbonnement() {
   const { utilisateur } = useSession();
+  const { langue } = useLangue();
   const [plan, setPlan] = useState<string | null>(null);
 
   useEffect(() => {
@@ -40,8 +42,8 @@ export function PillAbonnement() {
 
   const planActif = planById(plan);
   const paye = plan !== null && planActif.quotaContestations === null;
-  const label = paye ? planActif.nom : "Devenir membre";
-  const court = paye ? planActif.nom : "Membre";
+  const label = paye ? planActif.nom : t(langue, "commun.devenirMembre");
+  const court = paye ? planActif.nom : t(langue, "commun.membre");
   const href = paye ? "/tableau-de-bord/abonnement" : "/tarifs";
 
   return (

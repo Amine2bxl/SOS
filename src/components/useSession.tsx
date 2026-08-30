@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { creerClientNavigateur } from "@/lib/supabase/client";
 import { supabaseConfigure } from "@/lib/supabase/config";
 
@@ -12,7 +12,9 @@ export type SessionUtilisateur = {
   initiale: string;
 };
 
-function versSessionUtilisateur(user: { id?: string; email?: string | null; user_metadata?: Record<string, unknown> } | null): SessionUtilisateur | null {
+export function versSessionUtilisateur(
+  user: { id?: string; email?: string | null; user_metadata?: Record<string, unknown> } | null,
+): SessionUtilisateur | null {
   if (!user) return null;
   const prenom = String(user.user_metadata?.prenom ?? "").trim();
   const nom = String(user.user_metadata?.nom ?? "").trim();
@@ -25,22 +27,30 @@ function versSessionUtilisateur(user: { id?: string; email?: string | null; user
   };
 }
 
-/**
- * État de connexion lu dans le navigateur. Le rendu côté serveur reste
- * statique : seule la petite zone du compte s'abonne à la session.
- */
-export function useSession(): {
+type EtatSession = {
   connecte: boolean;
   chargement: boolean;
   utilisateur: SessionUtilisateur | null;
-} {
+};
+
+const ContexteSession = createContext<EtatSession>({
+  connecte: false,
+  chargement: false,
+  utilisateur: null,
+});
+
+/**
+ * Fournisseur unique de la session, enveloppant tout le site : un seul
+ * abonnement à l'authentification, un seul appel getSession, partagés par
+ * l'en-tête, le pied de page et tous les composants — plus rapide au chargement.
+ */
+export function SessionProvider({ children }: { children: ReactNode }) {
   const [utilisateur, setUtilisateur] = useState<SessionUtilisateur | null | undefined>(
     supabaseConfigure() ? undefined : null,
   );
 
   useEffect(() => {
     const supabase = creerClientNavigateur();
-    // Sans configuration, l'état initial est déjà null : rien à mettre à jour.
     if (!supabase) return;
 
     let actif = true;
@@ -58,9 +68,19 @@ export function useSession(): {
     };
   }, []);
 
-  return {
-    connecte: utilisateur !== null,
-    chargement: utilisateur === undefined,
-    utilisateur: utilisateur ?? null,
-  };
+  return (
+    <ContexteSession.Provider
+      value={{
+        connecte: utilisateur !== null,
+        chargement: utilisateur === undefined,
+        utilisateur: utilisateur ?? null,
+      }}
+    >
+      {children}
+    </ContexteSession.Provider>
+  );
+}
+
+export function useSession(): EtatSession {
+  return useContext(ContexteSession);
 }

@@ -2,32 +2,33 @@ import Link from "next/link";
 import { Logo, MailIcon } from "@/components/Logo";
 import { WhatsAppIcon } from "@/components/Contact";
 import { ASSO } from "@/lib/data";
+import { t, type Langue } from "@/lib/i18n";
 
-const COLONNES: { titre: string; liens: { href: string; label: string }[] }[] = [
+const COLONNES: { titreCle: string; liens: { href: string; cle?: string; label?: string }[] }[] = [
   {
-    titre: "Découvrir",
+    titreCle: "footer.decouvrir",
     liens: [
-      { href: "/contester", label: "Contester" },
-      { href: "/comprendre", label: "Comprendre" },
-      { href: "/communes", label: "Communes" },
-      { href: "/tarifs", label: "Tarifs" },
-      { href: "/contact", label: "Contact" },
+      { href: "/contester", cle: "nav.contester" },
+      { href: "/comprendre", cle: "nav.comprendre" },
+      { href: "/communes", cle: "nav.communes" },
+      { href: "/tarifs", cle: "nav.tarifs" },
+      { href: "/contact", cle: "nav.contact" },
     ],
   },
   {
-    titre: "Espace membre",
+    titreCle: "footer.espaceMembre",
     liens: [
-      { href: "/tableau-de-bord", label: "Mon tableau de bord" },
-      { href: "/tableau-de-bord/abonnement", label: "Mon abonnement" },
-      { href: "/tableau-de-bord/compte", label: "Mon compte" },
+      { href: "/tableau-de-bord", cle: "menu.mesDossiers" },
+      { href: "/tableau-de-bord/abonnement", cle: "menu.monAbonnement" },
+      { href: "/tableau-de-bord/compte", cle: "menu.mesParametres" },
     ],
   },
   {
-    titre: "Légal",
+    titreCle: "footer.legal",
     liens: [
-      { href: "/mentions-legales", label: "Mentions légales" },
-      { href: "/confidentialite", label: "Confidentialité" },
-      { href: "/conditions-utilisation", label: "Conditions d'utilisation" },
+      { href: "/mentions-legales", cle: "footer.mentionsLegales" },
+      { href: "/confidentialite", cle: "footer.confidentialite" },
+      { href: "/conditions-utilisation", cle: "footer.conditions" },
     ],
   },
 ];
@@ -36,7 +37,7 @@ const LIEN_WHATSAPP = `https://wa.me/${ASSO.whatsapp}?text=${encodeURIComponent(
   "Bonjour, je vous contacte au sujet d'une redevance de stationnement.",
 )}`;
 
-export function Footer() {
+export function Footer({ langue }: { langue: Langue }) {
   return (
     <footer className="mt-16 border-t border-navy-800 bg-navy-950 text-navy-100 print:hidden">
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -44,15 +45,14 @@ export function Footer() {
           <div className="max-w-xs">
             <Logo />
             <p className="mt-3 text-sm leading-relaxed text-navy-100/70">
-              Association citoyenne bruxelloise qui aide à comprendre et contester les redevances
-              de stationnement.
+              {t(langue, "footer.tagline")}
             </p>
             <div className="mt-4 flex gap-2">
               <a
                 href={LIEN_WHATSAPP}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Nous contacter sur WhatsApp"
+                aria-label="WhatsApp"
                 className="inline-flex items-center gap-2 rounded-md bg-[#25d366] px-3 py-2 text-sm font-bold text-white transition hover:bg-[#1da851]"
               >
                 <WhatsAppIcon className="h-4 w-4" />
@@ -60,7 +60,7 @@ export function Footer() {
               </a>
               <a
                 href={`mailto:${ASSO.email}`}
-                aria-label="Nous écrire par e-mail"
+                aria-label="Email"
                 className="inline-flex items-center gap-2 rounded-md border border-navy-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-navy-800"
               >
                 <MailIcon className="h-4 w-4" />
@@ -71,15 +71,15 @@ export function Footer() {
 
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
             {COLONNES.map((col) => (
-              <nav key={col.titre} aria-label={col.titre}>
+              <nav key={col.titreCle} aria-label={t(langue, col.titreCle)}>
                 <h2 className="text-xs font-bold uppercase tracking-wider text-gold-300">
-                  {col.titre}
+                  {t(langue, col.titreCle)}
                 </h2>
                 <ul className="mt-3 space-y-2 text-sm">
                   {col.liens.map((l) => (
-                    <li key={l.href + l.label}>
+                    <li key={l.href + (l.cle ?? l.label ?? "")}>
                       <Link href={l.href} className="text-navy-100/80 transition hover:text-gold-300">
-                        {l.label}
+                        {l.cle ? t(langue, l.cle) : l.label}
                       </Link>
                     </li>
                   ))}
@@ -94,10 +94,7 @@ export function Footer() {
             <strong className="text-navy-100">{ASSO.nom}</strong> — {ASSO.formeJuridique} — BCE{" "}
             {ASSO.bce} — {ASSO.rue}, {ASSO.codePostal} {ASSO.ville}.
           </p>
-          <p>
-            Association d&apos;information et d&apos;accompagnement citoyen, non un cabinet d&apos;avocats :
-            aucune annulation n&apos;est garantie.
-          </p>
+          <p>{t(langue, "footer.identite")}</p>
         </div>
       </div>
     </footer>

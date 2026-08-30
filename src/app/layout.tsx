@@ -3,6 +3,8 @@ import { Fraunces, Public_Sans } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
 import { FooterSurSite } from "@/components/FooterSurSite";
+import { SessionProvider } from "@/components/useSession";
+import { LanguageProvider } from "@/lib/i18n";
 import { ASSO } from "@/lib/data";
 
 const fraunces = Fraunces({
@@ -67,21 +69,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fr" className={`${fraunces.variable} ${publicSans.variable}`}>
       <body className="flex min-h-screen flex-col font-sans antialiased">
-        <a
-          href="#contenu"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-navy-900 focus:px-4 focus:py-2 focus:text-white"
-        >
-          Aller au contenu
-        </a>
-        <Header />
-        <main id="contenu" className="flex-1">
-          {children}
-        </main>
-        <FooterSurSite />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
+        <SessionProvider>
+          <a
+            href="#contenu"
+            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-navy-900 focus:px-4 focus:py-2 focus:text-white"
+          >
+            Aller au contenu
+          </a>
+          <LanguageProvider>
+            <Header />
+            <main id="contenu" className="flex-1">
+              {children}
+            </main>
+            <FooterSurSite />
+          </LanguageProvider>
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          />
+        </SessionProvider>
       </body>
     </html>
   );

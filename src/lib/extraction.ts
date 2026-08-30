@@ -187,11 +187,11 @@ function extraireReference(texte: string): Champ<string> {
     return { valeur: m[2].trim(), confiance: "haute", contexte: contexteAutour(texte, m.index ?? 0) };
   }
 
-  // Motif fréquent : une année suivie d'un séparateur et d'un long numéro.
-  const motif = /\b(20\d{2}[\/\-]\d{4,10})\b/;
+  // Motif fréquent : une année séparée d'un long numéro, avec ou sans tiret.
+  const motif = /\b(20\d{2}[\/\- ]?\d{4,10})\b/;
   const s = texte.match(motif);
   if (s) {
-    return { valeur: s[1], confiance: "moyenne", contexte: contexteAutour(texte, s.index ?? 0) };
+    return { valeur: s[1].replace(/\s+/g, "-"), confiance: "moyenne", contexte: contexteAutour(texte, s.index ?? 0) };
   }
 
   return champVide<string>();
@@ -216,11 +216,11 @@ function extraireCommune(texte: string): Champ<string> {
 
 function extraireAutorite(texte: string): Champ<string> {
   const connues: [RegExp, string][] = [
-    [/parking\.?\s?brussels/i, "parking.brussels"],
+    [/parking\.?\s?brussels|parkeeragentschap/i, "parking.brussels"],
     [/agence\s+du\s+stationnement/i, "Agence du stationnement"],
-    [/parkeeragentschap/i, "Parkeeragentschap"],
+    [/soci[ée]t[ée]\s+bruxelloise|bruce/i, "BRUCE"],
     [/fonctionnaire\s+sanctionnateur/i, "Fonctionnaire sanctionnateur"],
-    [/huissier/i, "Huissier de justice"],
+    [/huissier|gerechtsdeurwaarder|deurwaarder/i, "Huissier de justice"],
   ];
   for (const [motif, nom] of connues) {
     const m = texte.match(motif);
@@ -232,10 +232,10 @@ function extraireAutorite(texte: string): Champ<string> {
 /** Détermine le stade de la procédure : c'est lui qui dicte l'urgence. */
 function extraireTypeDocument(texte: string): Champ<string> {
   const stades: [RegExp, string][] = [
-    [/huissier|exploit|saisie/i, "courrier_huissier"],
+    [/huissier|exploit|saisie|gerechtsdeurwaarder|deurwaarder/i, "courrier_huissier"],
     [/contrainte|titre\s+ex[ée]cutoire|dwangbevel/i, "contrainte"],
-    [/mise\s+en\s+demeure|ingebrekestelling/i, "mise_en_demeure"],
-    [/(second|2e|deuxi[èe]me)\s+rappel|tweede\s+herinnering/i, "deuxieme_rappel"],
+    [/mise\s+en\s+demeure|ingebrekestelling|sommatie/i, "mise_en_demeure"],
+    [/(second|2e|deuxi[èe]me)\s+rappel|tweede\s+herinnering|tweede\s+aanmaning/i, "deuxieme_rappel"],
     [/rappel|herinnering|aanmaning/i, "premier_rappel"],
     [/redevance|notification|retribution|retributie/i, "notification"],
   ];
@@ -257,13 +257,13 @@ export function extraireDonnees(texteBrut: string): DonneesExtraites {
   const dateConstat = dateApresLibelle(
     texte,
     dates,
-    /(date\s+du\s+constat|constat[ée]?\s+le|constatation|vaststelling|datum\s+vaststelling)/i,
+    /(date\s+du\s+constat|constat[ée]?\s+le|constatation|vaststelling|datum\s+vaststelling|gecontroleerd\s+op|inbreuk\s+op|datum\s+van\s+het\s+feit)/i,
   );
 
   const dateEcheance = dateApresLibelle(
     texte,
     dates,
-    /([ée]ch[ée]ance|avant\s+le|payer\s+avant|au\s+plus\s+tard|vervaldatum|uiterlijk|betaal\s+voor)/i,
+    /([ée]ch[ée]ance|avant\s+le|payer\s+avant|au\s+plus\s+tard|vervaldatum|uiterlijk|betaal\s+voor|laatste\s+datum|moet\s+betaald|deadline|binnen)/i,
   );
 
   // À défaut de libellé, la première date du document est le plus souvent

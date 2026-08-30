@@ -4,13 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useSession } from "@/components/useSession";
+import { useLangue, t } from "@/lib/i18n";
 import { seDeconnecter } from "@/lib/auth-actions";
 
 const LIENS = [
-  { href: "/tableau-de-bord", label: "Mes dossiers" },
-  { href: "/tableau-de-bord/nouveau", label: "Nouvelle contestation" },
-  { href: "/tableau-de-bord/abonnement", label: "Mon abonnement" },
-  { href: "/tableau-de-bord/compte", label: "Mon compte" },
+  { href: "/tableau-de-bord", cle: "menu.mesDossiers" },
+  { href: "/tableau-de-bord/nouveau", cle: "menu.nouvelleContestation" },
+  { href: "/tableau-de-bord/abonnement", cle: "menu.monAbonnement" },
+  { href: "/tableau-de-bord/compte", cle: "menu.mesParametres" },
 ];
 
 /**
@@ -19,12 +20,11 @@ const LIENS = [
  */
 export function MenuCompte() {
   const { connecte, chargement, utilisateur } = useSession();
+  const { langue } = useLangue();
   const pathname = usePathname();
   const [ouvert, setOuvert] = useState(false);
   const [enCours, demarrer] = useTransition();
 
-  // Pendant la première lecture de session, on réserve la place pour ne pas
-  // décaler la mise en page.
   if (chargement) return <span className="h-9 w-24" aria-hidden="true" />;
 
   if (!connecte) {
@@ -33,7 +33,7 @@ export function MenuCompte() {
         href="/connexion"
         className="inline-flex items-center rounded-md border border-navy-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-navy-800"
       >
-        Connexion
+        {t(langue, "commun.seConnecter")}
       </Link>
     );
   }
@@ -54,7 +54,7 @@ export function MenuCompte() {
           {utilisateur?.initiale}
         </span>
         <span className="hidden max-w-28 truncate text-sm font-semibold sm:inline">
-          {utilisateur?.prenom || "Mon compte"}
+          {utilisateur?.prenom || t(langue, "footer.espaceMembre")}
         </span>
         <svg viewBox="0 0 20 20" className={`h-4 w-4 transition-transform ${ouvert ? "rotate-180" : ""}`} fill="currentColor" aria-hidden="true">
           <path d="M5.5 7.5 10 12l4.5-4.5 1.2 1.2L10 14.4 4.3 8.7 5.5 7.5Z" />
@@ -73,7 +73,7 @@ export function MenuCompte() {
                 {utilisateur?.prenom} {utilisateur?.nom}
               </p>
               <p className="mt-0.5 truncate text-xs text-ink-soft">
-                {utilisateur?.email ?? "Connecté à votre espace"}
+                {utilisateur?.email ?? t(langue, "footer.espaceMembre")}
               </p>
             </div>
 
@@ -89,7 +89,7 @@ export function MenuCompte() {
                     estActif(l.href) ? "bg-navy-50 text-navy-900" : "text-navy-700 hover:bg-navy-50"
                   }`}
                 >
-                  {l.label}
+                  {t(langue, l.cle)}
                 </Link>
               ))}
             </div>
@@ -106,7 +106,7 @@ export function MenuCompte() {
                 }
                 className="w-full rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-danger-700 transition hover:bg-danger-100 disabled:opacity-50"
               >
-                {enCours ? "Déconnexion…" : "Se déconnecter"}
+                {enCours ? "…" : t(langue, "commun.seDeconnecter")}
               </button>
             </div>
           </div>
