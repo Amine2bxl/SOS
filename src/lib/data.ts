@@ -312,33 +312,244 @@ export const DEMANDES_STANDARD = [
 /*  Les 19 communes                                                           */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Note de prudence : le stationnement bruxellois est encadré par le règlement
+ * communal de chaque commune, en vigueur à la date des faits. Les tarifs,
+ * horaires et plages de gratuité changent régulièrement. Ce que le site affirme
+ * ici repose sur le cadre général (zones rouge/verte/bleue, gestion par
+ * parking.brussels) — jamais sur un tarif supposé exact. Chaque fiche renvoie
+ * vers la source officielle à consulter pour le montant précis.
+ */
+
 export type Commune = {
   slug: string;
   nom: string;
+  /** Nature des zones : rouge, verte, bleue. Repère stable, à confirmer. */
   zones: string;
+  /** Plages horaires de paiement, par commune (à vérifier dans le règlement). */
+  heures: string;
+  /** Périodes où le stationnement est généralement libre. */
+  gratuit: string;
+  /** Moyens de paiement reconnus. */
+  moyens: string;
+  /** Régime des cartes de riverain. */
+  riverain: string;
+  /** Point de vigilance pour une contestation. */
   aSavoir: string;
+  /** Site officiel de la commune (source du règlement). */
+  siteOfficiel: string;
 };
 
 export const COMMUNES: Commune[] = [
-  { slug: "anderlecht", nom: "Anderlecht", zones: "Zones vertes et rouges, zones de marché ponctuelles.", aSavoir: "Vérifiez les rues en zone mixte et les horaires de marché." },
-  { slug: "auderghem", nom: "Auderghem", zones: "Zones vertes, zones rouges près des gares et métros.", aSavoir: "Abords de métro : contrôles ScanCar fréquents." },
-  { slug: "berchem-sainte-agathe", nom: "Berchem-Sainte-Agathe", zones: "Zones vertes majoritaires, poches rouges commerciales.", aSavoir: "Règlement communal propre : vérifiez la version applicable." },
-  { slug: "bruxelles-ville", nom: "Bruxelles-Ville", zones: "Zones rouges, vertes et bleues ; le Pentagone est en zone rouge stricte.", aSavoir: "Cartes riverains par secteur : vérifiez la correspondance plaque/secteur." },
-  { slug: "etterbeek", nom: "Etterbeek", zones: "Zones vertes et rouges, quartier des institutions européennes.", aSavoir: "Régimes particuliers près des institutions européennes." },
-  { slug: "evere", nom: "Evere", zones: "Zones vertes et rouges.", aSavoir: "Attention aux rues à la frontière avec Schaerbeek." },
-  { slug: "forest", nom: "Forest", zones: "Zones vertes et rouges, abords de la gare de Forest-Midi.", aSavoir: "Contrôles renforcés autour des salles de spectacle." },
-  { slug: "ganshoren", nom: "Ganshoren", zones: "Zones vertes, poches rouges près de l'hôpital et du Basilix.", aSavoir: "Zones hospitalières à régime spécifique." },
-  { slug: "ixelles", nom: "Ixelles", zones: "Zones rouges et vertes denses, zones bleues résiduelles.", aSavoir: "Très forte densité de ScanCars : conservez vos preuves de session." },
-  { slug: "jette", nom: "Jette", zones: "Zones vertes et rouges, abords de l'hôpital universitaire.", aSavoir: "Zones hospitalières : vérifiez le statut particulier de la rue." },
-  { slug: "koekelberg", nom: "Koekelberg", zones: "Zones vertes, poche rouge autour de la Basilique.", aSavoir: "Signalisation ponctuelle lors des événements à la Basilique." },
-  { slug: "molenbeek-saint-jean", nom: "Molenbeek-Saint-Jean", zones: "Zones vertes et rouges, abords de métro.", aSavoir: "Vérifiez les rues en transition de zone." },
-  { slug: "saint-gilles", nom: "Saint-Gilles", zones: "Zones rouges et vertes denses.", aSavoir: "Stationnement très tendu et contrôles fréquents. Siège de notre association." },
-  { slug: "saint-josse-ten-noode", nom: "Saint-Josse-ten-Noode", zones: "Zone rouge quasi généralisée.", aSavoir: "Zone rouge stricte : vérifiez les dérogations applicables." },
-  { slug: "schaerbeek", nom: "Schaerbeek", zones: "Zones vertes, rouges et bleues étendues.", aSavoir: "Commune très étendue : vérifiez précisément la zone de la rue." },
-  { slug: "uccle", nom: "Uccle", zones: "Zones vertes majoritaires, poches rouges commerciales.", aSavoir: "Certaines voiries sont régionales : le gestionnaire peut différer." },
-  { slug: "watermael-boitsfort", nom: "Watermael-Boitsfort", zones: "Zones vertes, zones étangs en régime particulier.", aSavoir: "Régime spécifique le week-end près des étangs et des bois." },
-  { slug: "woluwe-saint-lambert", nom: "Woluwe-Saint-Lambert", zones: "Zones vertes, poches rouges shopping et métro.", aSavoir: "Zones commerciales à durée limitée." },
-  { slug: "woluwe-saint-pierre", nom: "Woluwe-Saint-Pierre", zones: "Zones vertes, poches rouges sur les avenues commerçantes.", aSavoir: "Vérifiez les avenues à régime mixte." },
+  {
+    slug: "anderlecht",
+    nom: "Anderlecht",
+    zones: "Zones vertes et rouges, avec des poches de stationnement mixte autour des marchés et des commerces.",
+    heures: "Payant selon la zone, généralement en journée en semaine et le samedi ; grille exacte dans le règlement communal.",
+    gratuit: "Souvent libre la nuit et le dimanche et les jours fériés, selon la zone.",
+    moyens: "Application parking.brussels, SMS 4411 et horodateurs. Certaines zones sont en paiement uniquement numérique.",
+    riverain: "Cartes de riverain délivrées par la commune, avec enregistrement de la plaque.",
+    aSavoir: "Vérifiez les rues en zone mixte et les horaires de marché : le régime peut changer à quelques rues près.",
+    siteOfficiel: "https://www.anderlecht.be",
+  },
+  {
+    slug: "auderghem",
+    nom: "Auderghem",
+    zones: "Zones vertes, et zones rouges à proximité des gares et des métros (Herrmann-Debroux notamment).",
+    heures: "Payant en journée en semaine ; le samedi peut être soumis à paiement près des pôles de transport.",
+    gratuit: "Couramment libre la nuit, le dimanche et les jours fériés en zone verte.",
+    moyens: "Application parking.brussels, SMS et horodateurs.",
+    riverain: "Régime de cartes de riverain propre à la commune, soumis à enregistrement de la plaque.",
+    aSavoir: "Abords de métro : contrôles ScanCar fréquents. Conservez la preuve de votre session de paiement.",
+    siteOfficiel: "https://auderghem.be",
+  },
+  {
+    slug: "berchem-sainte-agathe",
+    nom: "Berchem-Sainte-Agathe",
+    zones: "Zones vertes majoritaires, avec des poches rouges le long des axes commerciaux.",
+    heures: "Paiement en journée en semaine dans les zones concernées ; détail dans le règlement communal.",
+    gratuit: "Souvent gratuit la nuit, le dimanche et les jours fériés hors zones rouges.",
+    moyens: "Application parking.brussels, SMS et horodateurs.",
+    riverain: "Cartes de riverain délivrées par la commune pour les résidents.",
+    aSavoir: "Règlement communal propre : vérifiez toujours la version applicable à la date du constat.",
+    siteOfficiel: "https://www.berchem-sainte-agathe.be",
+  },
+  {
+    slug: "bruxelles-ville",
+    nom: "Bruxelles-Ville",
+    zones: "Zones rouges, vertes et bleues ; le Pentagone est en zone rouge stricte et dense.",
+    heures: "Stationnement payant sur de larges plages : en journée et souvent le samedi ; certaines zones en soirée.",
+    gratuit: "La gratuité (nuit, dimanche, jours fériés) varie fort selon la zone — à vérifier impérativement.",
+    moyens: "Application parking.brussels, SMS, horodateurs ; paiement numérique souvent seul accepté en zone rouge.",
+    riverain: "Cartes riverains par secteur du Pentagone : la correspondance plaque/secteur doit être vérifiée.",
+    aSavoir: "Centre-ville à forte pression : une session active mais mal enregistrée justifie souvent de contester avec la capture d'écran.",
+    siteOfficiel: "https://www.bruxelles.be",
+  },
+  {
+    slug: "etterbeek",
+    nom: "Etterbeek",
+    zones: "Zones vertes et rouges, avec un régime particulier autour du quartier des institutions européennes.",
+    heures: "Payant en journée en semaine et souvent le samedi dans les zones rouges.",
+    gratuit: "Nuit, dimanche et jours fériés généralement libres en zones vertes.",
+    moyens: "Application parking.brussels, SMS et horodateurs.",
+    riverain: "Cartes de riverain communales, avec règles propres près des institutions européennes.",
+    aSavoir: "Régimes particuliers près des institutions européennes : vérifiez le statut exact de la rue.",
+    siteOfficiel: "https://etterbeek.be",
+  },
+  {
+    slug: "evere",
+    nom: "Evere",
+    zones: "Zones vertes et rouges, concentrées autour des pôles commerciaux et des nœuds de transport.",
+    heures: "Paiement en journée en semaine ; le samedi selon les zones.",
+    gratuit: "Libre la nuit et le dimanche en général.",
+    moyens: "Application parking.brussels, SMS et horodateurs.",
+    riverain: "Régime de riverain propre à la commune.",
+    aSavoir: "Attention aux rues à la frontière avec Schaerbeek : la commune du constat peut être l'une ou l'autre.",
+    siteOfficiel: "https://evere.be",
+  },
+  {
+    slug: "forest",
+    nom: "Forest",
+    zones: "Zones vertes et rouges, renforcées autour de la gare de Forest-Midi.",
+    heures: "Payant en journée en semaine et près de la gare.",
+    gratuit: "Nuit, dimanche et jours fériés généralement libres.",
+    moyens: "Application parking.brussels, SMS et horodateurs.",
+    riverain: "Cartes de riverain délivrées par la commune.",
+    aSavoir: "Contrôles renforcés autour des salles de spectacle (Forest National) lors des événements.",
+    siteOfficiel: "https://forest.brussels",
+  },
+  {
+    slug: "ganshoren",
+    nom: "Ganshoren",
+    zones: "Zones vertes, avec des poches rouges près de l'hôpital et du Basilix.",
+    heures: "Paiement en journée en semaine dans les zones concernées.",
+    gratuit: "Libre la nuit et le dimanche en général.",
+    moyens: "Application parking.brussels, SMS et horodateurs.",
+    riverain: "Régime de riverain de la commune.",
+    aSavoir: "Zones hospitalières à régime spécifique : vérifiez les panneaux et le règlement.",
+    siteOfficiel: "https://www.ganshoren.be",
+  },
+  {
+    slug: "ixelles",
+    nom: "Ixelles",
+    zones: "Zones rouges et vertes denses, zones bleues résiduelles.",
+    heures: "Payant sur de larges plages, en semaine et souvent le samedi ; proximité des campus et commerces.",
+    gratuit: "Nuit, dimanche et jours fériés généralement libres, selon zone.",
+    moyens: "Application parking.brussels, SMS, horodateurs ; paiement numérique souvent privilégié.",
+    riverain: "Réseau dense de cartes de riverain, avec secteurs précis.",
+    aSavoir: "Très forte densité de ScanCars : conservez vos preuves de session et demandez les photos du contrôle.",
+    siteOfficiel: "https://www.ixelles.be",
+  },
+  {
+    slug: "jette",
+    nom: "Jette",
+    zones: "Zones vertes et rouges, avec un régime propre autour de l'hôpital universitaire.",
+    heures: "Payant en journée en semaine ; le samedi selon les zones.",
+    gratuit: "Libre la nuit, le dimanche et les jours fériés hors zones rouges.",
+    moyens: "Application parking.brussels, SMS et horodateurs.",
+    riverain: "Régime de riverain communal.",
+    aSavoir: "Zones hospitalières : vérifiez le statut particulier de la rue et des panneaux.",
+    siteOfficiel: "https://www.jette.be",
+  },
+  {
+    slug: "koekelberg",
+    nom: "Koekelberg",
+    zones: "Zones vertes, avec une poche rouge autour de la Basilique et du pôle touristique.",
+    heures: "Payant en journée en semaine dans les zones concernées.",
+    gratuit: "Libre la nuit et le dimanche en général.",
+    moyens: "Application parking.brussels, SMS et horodateurs.",
+    riverain: "Cartes de riverain délivrées par la commune.",
+    aSavoir: "Signalisation ponctuelle lors des événements à la Basilique : photographiez le cadre du stationnement.",
+    siteOfficiel: "https://www.koekelberg.be",
+  },
+  {
+    slug: "molenbeek-saint-jean",
+    nom: "Molenbeek-Saint-Jean",
+    zones: "Zones vertes et rouges, avec des zones denses autour des métros et axes commerçants.",
+    heures: "Payant en journée en semaine et souvent le samedi dans les zones rouges.",
+    gratuit: "Nuit, dimanche et jours fériés généralement libres.",
+    moyens: "Application parking.brussels, SMS et horodateurs.",
+    riverain: "Régime de riverain propre à la commune.",
+    aSavoir: "Vérifiez les rues en transition de zone : une frontière mal posée peut fonder une contestation.",
+    siteOfficiel: "https://www.molenbeek.be",
+  },
+  {
+    slug: "saint-gilles",
+    nom: "Saint-Gilles",
+    zones: "Zones rouges et vertes denses ; le Quartier Louise est en zone rouge.",
+    heures: "Payant sur de larges plages en semaine et le samedi.",
+    gratuit: "Nuit, dimanche et jours fériés généralement libres, selon zone.",
+    moyens: "Application parking.brussels, SMS, horodateurs.",
+    riverain: "Cartes de riverain par secteur, avec enregistrement de plaque.",
+    aSavoir: "Stationnement très tendu et contrôles fréquents. Siège de notre association.",
+    siteOfficiel: "https://stgilles.brussels",
+  },
+  {
+    slug: "saint-josse-ten-noode",
+    nom: "Saint-Josse-ten-Noode",
+    zones: "Zone rouge quasi généralisée, très dense.",
+    heures: "Paiement quasi permanent en journée, y compris souvent le samedi.",
+    gratuit: "Plages de gratuité limitées : vérifiez impérativement le règlement.",
+    moyens: "Application parking.brussels, SMS et horodateurs.",
+    riverain: "Régime de riverain strict dû à la densité.",
+    aSavoir: "Zone rouge stricte : vérifiez les dérogations et cartes applicables avant de contester.",
+    siteOfficiel: "https://www.saint-josse.irisnet.be",
+  },
+  {
+    slug: "schaerbeek",
+    nom: "Schaerbeek",
+    zones: "Zones vertes, rouges et bleues sur un territoire étendu et hétérogène.",
+    heures: "Payant en journée en semaine, selon la zone ; grand axe commerçant sous paiement élargi.",
+    gratuit: "Nuit, dimanche et jours fériés généralement libres hors zones rouges.",
+    moyens: "Application parking.brussels, SMS et horodateurs.",
+    riverain: "Régime de riverain avec secteurs précis.",
+    aSavoir: "Commune très étendue : vérifiez précisément la zone de la rue exacte du constat.",
+    siteOfficiel: "https://www.schaerbeek.be",
+  },
+  {
+    slug: "uccle",
+    nom: "Uccle",
+    zones: "Zones vertes majoritaires, poches rouges commerciales (Chaussée d'Alsemberg, place Saint-Job).",
+    heures: "Payant en journée en semaine dans les zones concernées.",
+    gratuit: "Libre la nuit et le dimanche en général.",
+    moyens: "Application parking.brussels, SMS et horodateurs.",
+    riverain: "Cartes de riverain selon secteurs.",
+    aSavoir: "Certaines voiries sont régionales : le gestionnaire (commune ou Région) peut différer et importe pour la contestation.",
+    siteOfficiel: "https://www.uccle.be",
+  },
+  {
+    slug: "watermael-boitsfort",
+    nom: "Watermael-Boitsfort",
+    zones: "Zones vertes, et un régime particulier autour des étangs et des bois.",
+    heures: "Payant en journée en semaine dans les zones concernées.",
+    gratuit: "Régime spécifique le week-end près des étangs et des bois : à vérifier.",
+    moyens: "Application parking.brussels, SMS et horodateurs.",
+    riverain: "Régime de riverain communal.",
+    aSavoir: "Le week-end près des étangs change le régime : photographiez la signalisation du jour du constat.",
+    siteOfficiel: "https://www.watermael-boitsfort.be",
+  },
+  {
+    slug: "woluwe-saint-lambert",
+    nom: "Woluwe-Saint-Lambert",
+    zones: "Zones vertes, poches rouges sur les pôles shopping et métro (Tomberg, Roodebeek).",
+    heures: "Payant en journée en semaine et souvent le samedi dans les zones rouges.",
+    gratuit: "Nuit, dimanche et jours fériés généralement libres.",
+    moyens: "Application parking.brussels, SMS et horodateurs.",
+    riverain: "Régime de riverain par secteur.",
+    aSavoir: "Zones commerciales à durée limitée : une session validée mais hors plage exacte mérite vérification.",
+    siteOfficiel: "https://www.woluwe1200.be",
+  },
+  {
+    slug: "woluwe-saint-pierre",
+    nom: "Woluwe-Saint-Pierre",
+    zones: "Zones vertes, poches rouges sur les avenues commerçantes.",
+    heures: "Payant en journée en semaine dans les zones concernées.",
+    gratuit: "Libre la nuit, le dimanche et les jours fériés en général.",
+    moyens: "Application parking.brussels, SMS et horodateurs.",
+    riverain: "Régime de riverain communal.",
+    aSavoir: "Vérifiez les avenues à régime mixte : la règle peut changer d'un côté à l'autre de la rue.",
+    siteOfficiel: "https://www.woluwe1150.be",
+  },
 ];
 
 /* -------------------------------------------------------------------------- */

@@ -12,10 +12,16 @@ const LIENS = [
   { href: "/contact", label: "Nous contacter" },
 ];
 
+const LIENS_LEGAUX = [
+  { href: "/mentions-legales", label: "Mentions légales" },
+  { href: "/confidentialite", label: "Confidentialité & RGPD" },
+  { href: "/conditions-utilisation", label: "Conditions d'utilisation" },
+];
+
 export function Footer() {
   return (
     <footer className="mt-20 bg-navy-950 text-navy-100 print:hidden">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.4fr_1fr_1fr]">
+      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div>
           <Logo />
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-navy-100/80">
@@ -36,6 +42,21 @@ export function Footer() {
             ))}
           </ul>
         </nav>
+
+        <div>
+          <h2 className="font-display text-sm font-bold uppercase tracking-wider text-gold-300">
+            Informations légales
+          </h2>
+          <ul className="mt-4 space-y-2 text-sm">
+            {LIENS_LEGAUX.map((l) => (
+              <li key={l.href + l.label}>
+                <Link href={l.href} className="text-navy-100/90 transition hover:text-gold-300">
+                  {l.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
 
         <div>
           <h2 className="font-display text-sm font-bold uppercase tracking-wider text-gold-300">

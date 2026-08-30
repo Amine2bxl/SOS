@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { PageHead, Card, Field, TextInput, TextArea, LinkBtn, Check } from "@/components/ui";
 import { PhoneIcon, MailIcon } from "@/components/Logo";
 import { ASSO } from "@/lib/data";
@@ -105,10 +106,9 @@ export default function ContactPage() {
       {/* L'ASSOCIATION */}
       <Card title="L'association" className="mt-6">
         <p className="text-sm leading-relaxed text-ink-soft">
-          {ASSO.nom} est une association sans but lucratif bruxelloise, créée le {ASSO.constitution}.
-          Beaucoup de gens sont renvoyés vers un avocat sans en avoir les moyens ni l&apos;envie. Nous
-          existons pour qu&apos;ils puissent se défendre seuls. Avec un numéro de téléphone et une
-          adresse e-mail, nous avons accompagné entre 220 et 250 dossiers.
+          {ASSO.nom} est une association sans but lucratif bruxelloise, créée le {ASSO.constitution},
+          qui aide les habitants à se défendre seuls face à une redevance de stationnement. Identité
+          ci-dessous ; notre rôle exact est décrit dans les mentions légales.
         </p>
 
         <dl className="mt-5 grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
@@ -159,6 +159,11 @@ export default function ContactPage() {
             {ASSO.email}
           </a>
           .
+        </p>
+        <p className="mt-3 text-sm">
+          <Link href="/confidentialite" className="font-semibold text-navy-700 underline">
+            Voir notre politique de confidentialité (RGPD)
+          </Link>
         </p>
       </Card>
 

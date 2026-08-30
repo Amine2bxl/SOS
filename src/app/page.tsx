@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Card, LinkBtn, Check, Cross, KeyBox } from "@/components/ui";
+import { Card, LinkBtn, Check, Cross } from "@/components/ui";
 import { PhoneIcon, MailIcon } from "@/components/Logo";
 import { ASSO, CHIFFRES, ETAPES, NOUS_FAISONS, NOUS_NE_FAISONS_PAS, ALERTE } from "@/lib/data";
 
@@ -150,22 +150,8 @@ export default function HomePage() {
                 </li>
               ))}
             </ul>
-            <p className="mt-4 text-xs leading-relaxed text-ink-soft">
-              Personne ne peut garantir l&apos;annulation d&apos;une redevance, et méfiez-vous de
-              qui vous le promet. Nous vous donnons les moyens de vous défendre, et le délai pour
-              le faire.
-            </p>
           </Card>
         </div>
-      </section>
-
-      {/* LE POINT LE PLUS IMPORTANT */}
-      <section className="mx-auto max-w-3xl px-4 pb-14 sm:px-6">
-        <KeyBox title="Si vous ne deviez retenir qu'une chose">
-          Ne payez pas avant d&apos;avoir décidé. Payer vaut reconnaissance des faits et clôture le
-          dossier. Regardez le délai inscrit sur votre courrier, puis répondez par écrit en gardant
-          une preuve d&apos;envoi.
-        </KeyBox>
       </section>
 
       {/* CONTACT FINAL */}
@@ -175,8 +161,8 @@ export default function HomePage() {
             Parlons de votre dossier
           </h2>
           <p className="mx-auto mt-4 max-w-xl leading-relaxed text-navy-100">
-            Beaucoup de gens sont renvoyés vers un avocat sans en avoir les moyens. Nous existons
-            pour que vous puissiez vous défendre seul. Décrivez-nous votre situation, nous répondons.
+            Décrivez-nous votre situation : nous vous disons ce qui reste possible, sans jargon ni
+            fausse promesse.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <LinkBtn href={`tel:${ASSO.telephoneLien}`} variant="gold" className="w-full px-6 py-3.5 text-base sm:w-auto">
