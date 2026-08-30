@@ -1,27 +1,35 @@
 import Link from "next/link";
 import { Logo, MailIcon } from "@/components/Logo";
-import { WhatsAppIcon, BoutonContact } from "@/components/Contact";
+import { WhatsAppIcon } from "@/components/Contact";
 import { ASSO } from "@/lib/data";
 
-const LIENS_SITE = [
-  { href: "/contester", label: "Contester mon amende" },
-  { href: "/comprendre", label: "Comprendre la procédure" },
-  { href: "/communes", label: "Les 19 communes" },
-  { href: "/tarifs", label: "Tarifs et adhésion" },
-  { href: "/contact", label: "Nous contacter" },
-];
-
-const LIENS_MEMBRE = [
-  { href: "/tableau-de-bord", label: "Mon tableau de bord" },
-  { href: "/tableau-de-bord/nouveau", label: "Nouvelle contestation" },
-  { href: "/tableau-de-bord/abonnement", label: "Mon abonnement" },
-  { href: "/tableau-de-bord/compte", label: "Mon compte" },
-];
-
-const LIENS_LEGAUX = [
-  { href: "/mentions-legales", label: "Mentions légales" },
-  { href: "/confidentialite", label: "Confidentialité & RGPD" },
-  { href: "/conditions-utilisation", label: "Conditions d'utilisation" },
+const COLONNES: { titre: string; liens: { href: string; label: string }[] }[] = [
+  {
+    titre: "Découvrir",
+    liens: [
+      { href: "/contester", label: "Contester" },
+      { href: "/comprendre", label: "Comprendre" },
+      { href: "/communes", label: "Communes" },
+      { href: "/tarifs", label: "Tarifs" },
+      { href: "/contact", label: "Contact" },
+    ],
+  },
+  {
+    titre: "Espace membre",
+    liens: [
+      { href: "/tableau-de-bord", label: "Mon tableau de bord" },
+      { href: "/tableau-de-bord/abonnement", label: "Mon abonnement" },
+      { href: "/tableau-de-bord/compte", label: "Mon compte" },
+    ],
+  },
+  {
+    titre: "Légal",
+    liens: [
+      { href: "/mentions-legales", label: "Mentions légales" },
+      { href: "/confidentialite", label: "Confidentialité" },
+      { href: "/conditions-utilisation", label: "Conditions d'utilisation" },
+    ],
+  },
 ];
 
 const LIEN_WHATSAPP = `https://wa.me/${ASSO.whatsapp}?text=${encodeURIComponent(
@@ -30,99 +38,65 @@ const LIEN_WHATSAPP = `https://wa.me/${ASSO.whatsapp}?text=${encodeURIComponent(
 
 export function Footer() {
   return (
-    <footer className="mt-20 bg-navy-950 text-navy-100 print:hidden">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
-        <div>
-          <Logo />
-          <p className="mt-4 max-w-sm text-sm leading-relaxed text-navy-100/80">
-            Association citoyenne bruxelloise. Nous aidons les habitants à comprendre et contester
-            les redevances de stationnement et les sanctions administratives.
-          </p>
-          <div className="mt-5 flex flex-wrap gap-2">
-            <a
-              href={LIEN_WHATSAPP}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-md bg-[#25d366] px-3 py-2 text-sm font-bold text-white transition hover:bg-[#1da851]"
-            >
-              <WhatsAppIcon className="h-4 w-4" />
-              WhatsApp
-            </a>
-            <a
-              href={`mailto:${ASSO.email}`}
-              className="inline-flex items-center gap-2 rounded-md border border-navy-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-navy-800"
-            >
-              <MailIcon className="h-4 w-4" />
-              E-mail
-            </a>
-            <BoutonContact variante="outline" />
+    <footer className="mt-16 border-t border-navy-800 bg-navy-950 text-navy-100 print:hidden">
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+        <div className="flex flex-col gap-10 lg:flex-row lg:justify-between">
+          <div className="max-w-xs">
+            <Logo />
+            <p className="mt-3 text-sm leading-relaxed text-navy-100/70">
+              Association citoyenne bruxelloise qui aide à comprendre et contester les redevances
+              de stationnement.
+            </p>
+            <div className="mt-4 flex gap-2">
+              <a
+                href={LIEN_WHATSAPP}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Nous contacter sur WhatsApp"
+                className="inline-flex items-center gap-2 rounded-md bg-[#25d366] px-3 py-2 text-sm font-bold text-white transition hover:bg-[#1da851]"
+              >
+                <WhatsAppIcon className="h-4 w-4" />
+                WhatsApp
+              </a>
+              <a
+                href={`mailto:${ASSO.email}`}
+                aria-label="Nous écrire par e-mail"
+                className="inline-flex items-center gap-2 rounded-md border border-navy-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-navy-800"
+              >
+                <MailIcon className="h-4 w-4" />
+                E-mail
+              </a>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+            {COLONNES.map((col) => (
+              <nav key={col.titre} aria-label={col.titre}>
+                <h2 className="text-xs font-bold uppercase tracking-wider text-gold-300">
+                  {col.titre}
+                </h2>
+                <ul className="mt-3 space-y-2 text-sm">
+                  {col.liens.map((l) => (
+                    <li key={l.href + l.label}>
+                      <Link href={l.href} className="text-navy-100/80 transition hover:text-gold-300">
+                        {l.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            ))}
           </div>
         </div>
 
-        <nav aria-label="Liens du site">
-          <h2 className="font-display text-sm font-bold uppercase tracking-wider text-gold-300">
-            Le site
-          </h2>
-          <ul className="mt-4 space-y-2 text-sm">
-            {LIENS_SITE.map((l) => (
-              <li key={l.href + l.label}>
-                <Link href={l.href} className="text-navy-100/90 transition hover:text-gold-300">
-                  {l.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        <nav aria-label="Espace membre">
-          <h2 className="font-display text-sm font-bold uppercase tracking-wider text-gold-300">
-            Espace membre
-          </h2>
-          <ul className="mt-4 space-y-2 text-sm">
-            {LIENS_MEMBRE.map((l) => (
-              <li key={l.href + l.label}>
-                <Link href={l.href} className="text-navy-100/90 transition hover:text-gold-300">
-                  {l.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        <div>
-          <h2 className="font-display text-sm font-bold uppercase tracking-wider text-gold-300">
-            Informations
-          </h2>
-          <ul className="mt-4 space-y-2 text-sm">
-            {LIENS_LEGAUX.map((l) => (
-              <li key={l.href + l.label}>
-                <Link href={l.href} className="text-navy-100/90 transition hover:text-gold-300">
-                  {l.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-          <address className="mt-4 space-y-1 border-t border-navy-800 pt-4 text-sm not-italic text-navy-100/90">
-            <p>
-              {ASSO.rue}
-              <br />
-              {ASSO.codePostal} {ASSO.ville}
-            </p>
-          </address>
-        </div>
-      </div>
-
-      <div className="border-t border-navy-800">
-        <div className="mx-auto max-w-6xl space-y-2 px-4 py-5 text-xs leading-relaxed text-navy-100/70 sm:px-6">
+        <div className="mt-10 space-y-1 border-t border-navy-800 pt-4 text-xs leading-relaxed text-navy-100/60">
           <p>
-            <strong className="text-navy-100">{ASSO.nom}</strong> — {ASSO.formeJuridique} — Numéro
-            d&apos;entreprise {ASSO.bce} — Constituée le {ASSO.constitution} — Président :{" "}
-            {ASSO.president}.
+            <strong className="text-navy-100">{ASSO.nom}</strong> — {ASSO.formeJuridique} — BCE{" "}
+            {ASSO.bce} — {ASSO.rue}, {ASSO.codePostal} {ASSO.ville}.
           </p>
           <p>
-            Nous sommes une association d&apos;information et d&apos;accompagnement citoyen, et non un
-            cabinet d&apos;avocats. Nous ne garantissons aucune annulation : chaque dossier dépend des
-            faits, des preuves et du règlement applicable.
+            Association d&apos;information et d&apos;accompagnement citoyen, non un cabinet d&apos;avocats :
+            aucune annulation n&apos;est garantie.
           </p>
         </div>
       </div>

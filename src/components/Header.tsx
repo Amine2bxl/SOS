@@ -9,9 +9,9 @@ import { BoutonContact } from "@/components/Contact";
 import { useSession } from "@/components/useSession";
 
 const NAV = [
-  { href: "/contester", label: "Contester mon amende" },
+  { href: "/contester", label: "Contester" },
   { href: "/comprendre", label: "Comprendre" },
-  { href: "/communes", label: "Ma commune" },
+  { href: "/communes", label: "Communes" },
   { href: "/tarifs", label: "Tarifs" },
   { href: "/contact", label: "Contact" },
 ];
@@ -30,13 +30,13 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 print:hidden">
       <div className="border-b border-navy-800/80 bg-navy-950 text-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-3 py-2.5 sm:px-5">
           <Link href="/" aria-label="SOS Citizens ASBL — Accueil" className="shrink-0">
             <Logo />
           </Link>
 
           <nav
-            className="hidden items-center gap-1 lg:flex"
+            className="hidden items-center gap-0.5 lg:flex"
             aria-label="Navigation principale"
           >
             {navigation.map((item) => {
@@ -49,7 +49,7 @@ export function Header() {
                   key={item.href}
                   href={item.href}
                   aria-current={actif ? "page" : undefined}
-                  className={`relative rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                  className={`whitespace-nowrap rounded-md px-2.5 py-2 text-[13.5px] font-medium transition-colors ${
                     actif
                       ? "bg-navy-800 text-gold-300"
                       : "text-navy-100 hover:bg-navy-800/70 hover:text-white"
@@ -61,8 +61,8 @@ export function Header() {
             })}
           </nav>
 
-          <div className="flex items-center gap-2">
-            <BoutonContact variante="gold" className="px-3 py-2" />
+          <div className="flex items-center gap-1.5">
+            <BoutonContact variante="gold" className="hidden px-3 py-2 sm:inline-flex" />
             <MenuCompte />
 
             <button

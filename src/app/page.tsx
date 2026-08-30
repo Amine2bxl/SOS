@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Card, LinkBtn, Check, Cross } from "@/components/ui";
 import { MailIcon } from "@/components/Logo";
 import { BoutonContact } from "@/components/Contact";
+import { CtaHero } from "@/components/CtaHero";
 import { ZonesVisuel } from "@/components/visuels";
 import { ASSO, CHIFFRES, ETAPES, NOUS_FAISONS, NOUS_NE_FAISONS_PAS, ALERTE } from "@/lib/data";
 
@@ -35,23 +36,21 @@ export default function HomePage() {
             <span className="text-gold-400">Vous n&apos;êtes pas seul.</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-navy-100">
-            Nous sommes une association bruxelloise. Nous décryptons votre courrier avec vous et
-            vous aidons à le contester quand c&apos;est justifié. Un appel suffit pour commencer, et
-            il ne vous coûte <strong className="text-white">rien</strong>.
+            Nous sommes une association bruxelloise. Découvrez nos guides gratuits pour comprendre
+            votre courrier — puis créez un compte pour scanner vos documents, générer votre
+            contestation et suivre vos dossiers <strong className="text-white">en ligne</strong>.
           </p>
 
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <CtaHero />
             <BoutonContact
-              variante="gold"
-              className="w-full px-6 py-3.5 text-base sm:w-auto"
+              variante="outline"
+              className="w-full px-6 py-4 text-base sm:w-auto"
             />
-            <LinkBtn href="/contester" variant="outline" className="w-full px-6 py-3.5 text-base sm:w-auto">
-              Préparer ma contestation en ligne
-            </LinkBtn>
           </div>
 
           <p className="mt-6 text-sm text-navy-100/80">
-            Gratuit · Sans engagement · Une réponse écrite, par WhatsApp ou e-mail
+            Gratuit · Sans engagement · La contestation se passe une fois connecté
           </p>
         </div>
       </section>

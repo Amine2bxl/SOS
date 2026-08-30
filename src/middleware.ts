@@ -1,8 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-/** Pages qui exigent d'être connecté. */
-const PAGES_PROTEGEES = ["/tableau-de-bord", "/adherer"];
+/** Pages qui exigent d'être connecté. Hors connexion, le site reste purement informatif. */
+const PAGES_PROTEGEES = ["/tableau-de-bord", "/adherer", "/contester"];
 
 export async function middleware(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -56,5 +56,5 @@ export const config = {
   // Le middleware n'est utile que là où l'authentification compte : l'espace
   // membre et les pages d'accès. Les pages publiques restent statiques et
   // rapides, sans appel Supabase à chaque visite.
-  matcher: ["/tableau-de-bord/:path*", "/adherer/:path*", "/connexion", "/inscription"],
+  matcher: ["/contester", "/tableau-de-bord/:path*", "/adherer/:path*", "/connexion", "/inscription"],
 };

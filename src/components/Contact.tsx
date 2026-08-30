@@ -19,7 +19,8 @@ const LIEN_WHATSAPP = `https://wa.me/${ASSO.whatsapp}?text=${encodeURIComponent(
 type Variante = "gold" | "secondaire" | "outline" | "fantome" | "lien";
 
 const STYLES: Record<Variante, string> = {
-  gold: "bg-gold-400 text-navy-950 hover:bg-gold-300 shadow-sm font-bold",
+  gold:
+    "bg-gold-400 text-navy-950 hover:bg-gold-300 shadow-lg shadow-gold-500/25 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-gold-400/40 font-bold",
   secondaire: "border border-line bg-white text-navy-900 hover:border-navy-600/50 hover:bg-navy-50",
   outline: "border border-navy-600 bg-transparent text-white hover:bg-navy-800",
   fantome: "text-navy-700 hover:bg-navy-50",
