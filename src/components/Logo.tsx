@@ -1,4 +1,13 @@
-export function Logo({ compact = false }: { compact?: boolean }) {
+export function Logo({
+  compact = false,
+  surClair = false,
+}: {
+  compact?: boolean;
+  /** Variante pour les fonds clairs (barre d'application connectée). */
+  surClair?: boolean;
+}) {
+  // Sur fond clair, les éléments « papier » du logo passent en bleu marine.
+  const secondaire = surClair ? "#0b2545" : "#f6f4ee";
   return (
     <span className="flex items-center gap-2.5">
       <svg viewBox="0 0 48 52" className="h-9 w-9 shrink-0" aria-hidden="true">
@@ -9,16 +18,21 @@ export function Logo({ compact = false }: { compact?: boolean }) {
           strokeWidth="2.5"
         />
         <circle cx="18" cy="20" r="4.2" fill="#f2b705" />
-        <circle cx="30" cy="20" r="4.2" fill="#f6f4ee" />
+        <circle cx="30" cy="20" r="4.2" fill={secondaire} />
         <path d="M11 34c0-4.6 3.4-7.5 7-7.5s7 2.9 7 7.5" fill="none" stroke="#f2b705" strokeWidth="2.6" strokeLinecap="round" />
-        <path d="M24 34c0-4.6 3.4-7.5 7-7.5s7 2.9 7 7.5" fill="none" stroke="#f6f4ee" strokeWidth="2.6" strokeLinecap="round" />
+        <path d="M24 34c0-4.6 3.4-7.5 7-7.5s7 2.9 7 7.5" fill="none" stroke={secondaire} strokeWidth="2.6" strokeLinecap="round" />
       </svg>
       {!compact && (
         <span className="leading-none">
           <span className="block font-display text-lg font-bold tracking-tight">
-            <span className="text-gold-400">SOS</span> <span className="text-white">CITIZENS</span>
+            <span className="text-gold-500">SOS</span>{" "}
+            <span className={surClair ? "text-navy-900" : "text-white"}>CITIZENS</span>
           </span>
-          <span className="block text-[10px] font-semibold uppercase tracking-[0.28em] text-navy-100/80">
+          <span
+            className={`block text-[10px] font-semibold uppercase tracking-[0.28em] ${
+              surClair ? "text-navy-700/70" : "text-navy-100/80"
+            }`}
+          >
             ASBL
           </span>
         </span>
