@@ -1,103 +1,136 @@
-import { PageHead, SectionCard, EduBox, LinkBtn } from "@/components/ui";
+import type { Metadata } from "next";
+import { PageHead, Card, KeyBox, LinkBtn, Check } from "@/components/ui";
+import { PhoneIcon } from "@/components/Logo";
+import { ASSO, DOCUMENTS, NOTIONS, PREUVES, FAQS } from "@/lib/data";
 
-const DOC_TYPES = [
-  {
-    t: "Notification initiale",
-    d: "Premier courrier réclamant une redevance après un constat (ScanCar, agent, caméra). Elle indique la référence, le lieu, la date, le montant et les voies de recours. C'est le point de départ des délais de contestation.",
-  },
-  {
-    t: "Rappel (premier / deuxième)",
-    d: "Courrier envoyé en l'absence de paiement ou de réponse. Il majore parfois le montant. Un rappel émis pendant l'examen d'une contestation doit être examiné avec attention.",
-  },
-  {
-    t: "Mise en demeure préalable",
-    d: "Acte formel exigeant le paiement dans un délai déterminé avant le recouvrement forcé. Ne jamais l'ignorer : c'est le dernier stade amiable.",
-  },
-  {
-    t: "Contrainte / titre exécutoire",
-    d: "Acte qui rend la créance exécutoire. Des recours spécifiques existent, avec des délais courts. Vérifiez la signification et le fondement.",
-  },
-  {
-    t: "Courrier d'huissier / mesure d'exécution",
-    d: "Intervention d'un huissier de justice (saisie, citation). À ce stade, un accompagnement individualisé et, le cas échéant, un conseil juridique sont recommandés.",
-  },
-];
+export const metadata: Metadata = {
+  title: "Comprendre votre amende de stationnement",
+  description:
+    "Notification, rappel, mise en demeure, contrainte, huissier : ce que chaque courrier signifie, ce que vous risquez et ce qu'il faut faire à chaque étape.",
+};
 
-const REGLES = [
-  ["La zone payante", "Chaque commune découpe son territoire en zones (verte, rouge, bleue…) avec des tarifs, horaires et durées propres. Le régime applicable est celui de la zone exacte du constat, à la date des faits."],
-  ["La ScanCar", "Véhicule équipé de caméras lisant les plaques et les comparant aux paiements et autorisations enregistrés. Un horodatage et une géolocalisation sont associés à chaque contrôle."],
-  ["Le contrôle de plaque", "La plaque lue est confrontée à la base des sessions de paiement et des cartes. Une erreur de lecture, de plaque ou de zone peut produire un constat erroné : d'où l'importance des photographies et métadonnées."],
-  ["L'absence de titre", "L'absence de paiement ou de carte valable au moment du contrôle fonde la redevance. Mais une session active, une carte valable ou un horodateur hors service peuvent renverser la présomption, à condition d'être prouvés."],
-  ["L'arrêt vs le stationnement", "L'immobilisation momentanée pour embarquement, débarquement ou chargement peut, selon les règlements, ne pas constituer un stationnement. La preuve de la situation (durée, présence au volant) est déterminante."],
-  ["Les données personnelles", "Les photographies et journaux de contrôle sont des données personnelles. Vous pouvez en demander l'accès au titre du RGPD, indépendamment de la contestation."],
-];
+const COULEURS = {
+  info: "border-navy-600/30 bg-navy-50",
+  attention: "border-warn-600/40 bg-warn-100/60",
+  urgent: "border-danger-600/40 bg-danger-100/60",
+} as const;
+
+const ETIQUETTES = {
+  info: { texte: "Vous avez le temps d'agir", classe: "bg-navy-700 text-white" },
+  attention: { texte: "Réagissez maintenant", classe: "bg-warn-600 text-white" },
+  urgent: { texte: "Urgent — appelez-nous", classe: "bg-danger-600 text-white" },
+} as const;
 
 export default function ComprendrePage() {
   return (
-    <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
+    <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
       <PageHead
-        kicker="Pédagogie"
-        title="Comprendre le stationnement avant d'agir"
-        intro="La plateforme ne se contente pas de générer un courrier : elle vous apprend à lire votre dossier, à comprendre la procédure et à identifier les preuves utiles."
+        kicker="Guide"
+        title="Comprendre votre courrier"
+        intro="Tout part du courrier que vous avez reçu. Trouvez-le dans la liste : vous saurez où vous en êtes et ce qu'il vous reste à faire."
       />
 
-      <div className="mt-10 space-y-6">
-        <SectionCard title="Les documents de la procédure, du plus doux au plus sévère">
-          <ol className="space-y-4">
-            {DOC_TYPES.map((x, i) => (
-              <li key={x.t} className="flex gap-4">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-navy-900 font-display text-sm font-bold text-gold-300">{i + 1}</span>
-                <div>
-                  <p className="font-bold text-navy-900">{x.t}</p>
-                  <p className="mt-1 text-sm leading-relaxed text-ink-soft">{x.d}</p>
+      {/* LES 5 ÉTAPES DE LA PROCÉDURE */}
+      <section className="mt-12">
+        <h2 className="font-display text-2xl font-bold text-navy-900">
+          Quel courrier avez-vous reçu ?
+        </h2>
+        <p className="mt-2 text-ink-soft">
+          Ils arrivent dans cet ordre. Plus vous réagissez tôt, moins cela vous coûte.
+        </p>
+
+        <ol className="mt-7 space-y-4">
+          {DOCUMENTS.map((d) => {
+            const etiquette = ETIQUETTES[d.gravite];
+            return (
+              <li key={d.titre} className={`rounded-xl border-2 p-5 ${COULEURS[d.gravite]}`}>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="font-display text-lg font-bold text-navy-900">{d.titre}</h3>
+                  <span className={`rounded-full px-3 py-1 text-xs font-bold ${etiquette.classe}`}>
+                    {etiquette.texte}
+                  </span>
                 </div>
+                <p className="mt-3 text-sm leading-relaxed text-ink">
+                  <strong className="text-navy-900">C&apos;est quoi ?</strong> {d.cestQuoi}
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-ink">
+                  <strong className="text-navy-900">À faire :</strong> {d.aFaire}
+                </p>
               </li>
-            ))}
-          </ol>
-        </SectionCard>
+            );
+          })}
+        </ol>
+      </section>
 
-        <EduBox title="Payer ou contester ?">
-          Le paiement d'une redevance peut être interprété comme une reconnaissance des faits et clôturer le
-          dossier. Si vous entendez contester, agissez dans les délais, par écrit, avec preuve d'envoi, et
-          demandez la suspension du recouvrement pendant l'examen.
-        </EduBox>
+      <section className="mt-10">
+        <KeyBox title="Payer ou contester : décidez avant de payer">
+          Payer vaut reconnaissance des faits et referme le dossier. Si vous comptez contester,
+          faites-le <strong>par écrit, dans le délai indiqué, avec une preuve d&apos;envoi</strong>,
+          et demandez la suspension du recouvrement pendant l&apos;examen.
+        </KeyBox>
+      </section>
 
-        <SectionCard title="Les mécanismes à comprendre">
-          <div className="grid gap-4 sm:grid-cols-2">
-            {REGLES.map(([t, d]) => (
-              <div key={t} className="rounded-lg border border-line bg-white p-4">
-                <p className="font-display font-bold text-navy-900">{t}</p>
-                <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">{d}</p>
-              </div>
-            ))}
-          </div>
-        </SectionCard>
+      {/* LES NOTIONS DE BASE */}
+      <section className="mt-14">
+        <h2 className="font-display text-2xl font-bold text-navy-900">Les notions à connaître</h2>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          {NOTIONS.map((n) => (
+            <div key={n.titre} className="rounded-xl border border-line bg-card p-5 shadow-sm">
+              <h3 className="font-display text-base font-bold text-navy-900">{n.titre}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-ink-soft">{n.texte}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
-        <SectionCard title="Les preuves qui font la différence">
-          <ul className="grid gap-2 text-sm sm:grid-cols-2">
-            {[
-              "Reçu de paiement horodaté mentionnant plaque et zone",
-              "Capture d'application montrant la session active",
-              "Relevé bancaire concordant",
-              "Photographies du lieu, de la signalisation et du véhicule",
-              "Copie de la carte riverain, professionnelle ou PMR",
-              "Preuve d'enregistrement de plaque",
-              "Accusés de réception et copies des courriers envoyés",
-              "Document de vente, contrat de location ou plainte selon le cas",
-            ].map((p) => (
-              <li key={p} className="flex gap-2 rounded-md bg-paper p-2.5">
-                <svg viewBox="0 0 20 20" className="mt-0.5 h-4 w-4 shrink-0 text-ok-600" fill="currentColor"><path d="M10 0a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm4.7 7.7-5.4 6a1 1 0 0 1-1.5 0l-2.5-2.8a1 1 0 1 1 1.5-1.3l1.7 2 4.7-5.2a1 1 0 0 1 1.5 1.3Z"/></svg>
+      {/* LES PREUVES */}
+      <section className="mt-14">
+        <Card title="Les preuves qui font la différence" subtitle="Sans preuve, une contestation aboutit rarement.">
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {PREUVES.map((p) => (
+              <li key={p} className="flex gap-2.5 rounded-md bg-paper p-3 text-sm text-ink">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-ok-600" />
                 {p}
               </li>
             ))}
           </ul>
-        </SectionCard>
+        </Card>
+      </section>
 
-        <div className="flex justify-center gap-3">
-          <LinkBtn href="/analyser" variant="gold">Analyser mon dossier</LinkBtn>
-          <LinkBtn href="/communes" variant="secondary">Les règles de ma commune</LinkBtn>
+      {/* FAQ */}
+      <section id="faq" className="mt-14 scroll-mt-28">
+        <h2 className="font-display text-2xl font-bold text-navy-900">Questions fréquentes</h2>
+        <div className="mt-6 divide-y divide-line-soft overflow-hidden rounded-xl border border-line bg-card">
+          {FAQS.map((faq) => (
+            <details key={faq.question} className="group px-5 py-4">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-semibold text-navy-900">
+                {faq.question}
+                <span className="shrink-0 text-xl leading-none text-navy-700 transition group-open:rotate-45">
+                  +
+                </span>
+              </summary>
+              <p className="mt-3 text-sm leading-relaxed text-ink-soft">{faq.reponse}</p>
+            </details>
+          ))}
         </div>
-      </div>
+      </section>
+
+      {/* CTA */}
+      <section className="mt-14 rounded-xl bg-navy-900 p-8 text-center text-white">
+        <h2 className="font-display text-xl font-bold">Prêt à passer à l&apos;action ?</h2>
+        <p className="mx-auto mt-3 max-w-lg text-navy-100">
+          Préparez votre lettre en quelques minutes. Ou appelez-nous, si vous préférez en parler.
+        </p>
+        <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <LinkBtn href="/contester" variant="gold">
+            Préparer ma lettre
+          </LinkBtn>
+          <LinkBtn href={`tel:${ASSO.telephoneLien}`} variant="outline">
+            <PhoneIcon className="h-4 w-4" />
+            {ASSO.telephone}
+          </LinkBtn>
+        </div>
+      </section>
     </div>
   );
 }
