@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { FormulaireInscription } from "./FormulaireInscription";
 import { supabaseConfigure } from "@/lib/supabase/config";
 import { ServiceIndisponible } from "@/components/ServiceIndisponible";
@@ -32,7 +33,9 @@ export default function InscriptionPage() {
         ))}
       </ul>
 
-      <FormulaireInscription />
+      <Suspense fallback={null}>
+        <FormulaireInscription />
+      </Suspense>
 
       <p className="mt-6 text-center text-sm text-ink-soft">
         Vous avez déjà un compte ?{" "}

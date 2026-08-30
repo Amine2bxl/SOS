@@ -28,3 +28,4 @@ next-env.d.ts
 
 # sortie de compilation des tests
 /.test-build/
+.env*
