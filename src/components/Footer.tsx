@@ -7,6 +7,7 @@ const LIENS = [
   { href: "/comprendre", label: "Comprendre la procédure" },
   { href: "/comprendre#faq", label: "Questions fréquentes" },
   { href: "/communes", label: "Les 19 communes" },
+  { href: "/tarifs", label: "Tarifs et adhésion" },
   { href: "/contact", label: "Nous contacter" },
 ];
 

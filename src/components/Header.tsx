@@ -4,13 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Logo, PhoneIcon } from "@/components/Logo";
+import { EtatCompte } from "@/components/EtatCompte";
 import { ASSO } from "@/lib/data";
 
 const NAV = [
   { href: "/contester", label: "Contester mon amende" },
   { href: "/comprendre", label: "Comprendre" },
   { href: "/communes", label: "Ma commune" },
-  { href: "/contact", label: "Nous contacter" },
+  { href: "/tarifs", label: "Tarifs" },
+  { href: "/contact", label: "Contact" },
 ];
 
 export function Header() {
@@ -53,6 +55,9 @@ export function Header() {
               <span className="hidden sm:inline">{ASSO.telephone}</span>
               <span className="sm:hidden">Appeler</span>
             </a>
+            <span className="hidden lg:inline-flex">
+              <EtatCompte />
+            </span>
             <button
               onClick={() => setOpen(!open)}
               className="rounded-md border border-navy-700 p-2 text-navy-100 lg:hidden"
@@ -79,6 +84,9 @@ export function Header() {
                   {item.label}
                 </Link>
               ))}
+              <span className="mt-2 grid">
+                <EtatCompte surNavigation={() => setOpen(false)} />
+              </span>
             </div>
           </nav>
         )}
