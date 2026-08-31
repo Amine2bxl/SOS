@@ -8,7 +8,6 @@ const COLONNES: { titreCle: string; liens: { href: string; cle?: string; label?:
   {
     titreCle: "footer.decouvrir",
     liens: [
-      { href: "/contester", cle: "nav.contester" },
       { href: "/comprendre", cle: "nav.comprendre" },
       { href: "/communes", cle: "nav.communes" },
       { href: "/tarifs", cle: "nav.tarifs" },
@@ -18,9 +17,9 @@ const COLONNES: { titreCle: string; liens: { href: string; cle?: string; label?:
   {
     titreCle: "footer.espaceMembre",
     liens: [
-      { href: "/tableau-de-bord", cle: "menu.mesDossiers" },
-      { href: "/tableau-de-bord/abonnement", cle: "menu.monAbonnement" },
-      { href: "/tableau-de-bord/compte", cle: "menu.mesParametres" },
+      { href: "/inscription", cle: "commun.creerCompte" },
+      { href: "/connexion", cle: "commun.seConnecter" },
+      { href: "/tableau-de-bord", cle: "commun.monEspace" },
     ],
   },
   {

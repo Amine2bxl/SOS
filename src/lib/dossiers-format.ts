@@ -94,3 +94,101 @@ export const formatMontant = (m: number | null) =>
 
 export const formatDate = (d: string | null) =>
   d ? new Date(d + (d.length === 10 ? "T00:00:00Z" : "")).toLocaleDateString("fr-BE") : "—";
+
+/**
+ * La prochaine chose à faire sur un dossier.
+ *
+ * C'est le cœur de la valeur du tableau de bord : un utilisateur ne veut pas
+ * lire un statut, il veut savoir quoi faire maintenant. La règle combine le
+ * statut du dossier et le temps qui reste, l'urgence primant toujours sur
+ * l'étape théorique — un délai raté ne se rattrape pas.
+ */
+export type ProchaineAction = {
+  /** Ce qu'il faut faire, à l'impératif. */
+  action: string;
+  /** Pourquoi maintenant, en une ligne. */
+  raison: string;
+  lien: string;
+  libelleLien: string;
+  ton: "urgent" | "attention" | "neutre" | "termine";
+};
+
+export function prochaineAction(
+  dossier: Pick<Dossier, "id" | "statut" | "date_echeance" | "lettre">,
+): ProchaineAction {
+  const jours = joursAvantEcheance(dossier.date_echeance);
+  const fiche = `/tableau-de-bord/${dossier.id}`;
+  const lettre = `/tableau-de-bord/lettre?dossier=${dossier.id}`;
+
+  if (dossier.statut === "accepte")
+    return {
+      action: "Rien à faire",
+      raison: "La contestation a été acceptée : le dossier est clos en votre faveur.",
+      lien: fiche,
+      libelleLien: "Revoir le dossier",
+      ton: "termine",
+    };
+
+  if (dossier.statut === "clos")
+    return {
+      action: "Rien à faire",
+      raison: "Ce dossier est clôturé.",
+      lien: fiche,
+      libelleLien: "Revoir le dossier",
+      ton: "termine",
+    };
+
+  if (dossier.statut === "rejete")
+    return {
+      action: "Décider de la suite",
+      raison: "La contestation a été rejetée. Faites-nous relire le dossier avant de payer.",
+      lien: fiche,
+      libelleLien: "Ouvrir le dossier",
+      ton: "attention",
+    };
+
+  const envoye = dossier.statut === "contestation_envoyee" || dossier.statut === "en_attente_reponse";
+
+  // Un délai dépassé passe devant tout le reste — sauf si la contestation est
+  // déjà partie, auquel cas le délai a été tenu.
+  if (jours !== null && jours < 0 && !envoye)
+    return {
+      action: "Nous contacter sans attendre",
+      raison: `Le délai indiqué sur le courrier est dépassé depuis ${-jours} jour${-jours > 1 ? "s" : ""}. Il reste souvent une voie.`,
+      lien: fiche,
+      libelleLien: "Ouvrir le dossier",
+      ton: "urgent",
+    };
+
+  if (envoye)
+    return {
+      action: "Attendre la réponse",
+      raison: "Votre contestation est partie. Sans réponse d'ici un mois, relancez l'autorité.",
+      lien: fiche,
+      libelleLien: "Voir le suivi",
+      ton: "neutre",
+    };
+
+  if (dossier.statut === "a_contester" || dossier.lettre)
+    return {
+      action: "Envoyer votre contestation",
+      raison:
+        jours !== null && jours <= 7
+          ? `Votre lettre est prête et il ne reste que ${jours} jour${jours > 1 ? "s" : ""}.`
+          : "Votre lettre est prête : il ne manque que l'envoi et la preuve de dépôt.",
+      lien: fiche,
+      libelleLien: "Reprendre le dossier",
+      ton: jours !== null && jours <= 7 ? "urgent" : "attention",
+    };
+
+  return {
+    action: "Rédiger votre contestation",
+    raison:
+      jours !== null && jours <= 7
+        ? `Il ne reste que ${jours} jour${jours > 1 ? "s" : ""} avant la date limite.`
+        : "Le dossier est enregistré : il faut maintenant écrire la lettre.",
+    lien: lettre,
+    libelleLien: "Rédiger ma lettre",
+    ton: jours !== null && jours <= 7 ? "urgent" : "attention",
+  };
+}

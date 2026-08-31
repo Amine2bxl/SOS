@@ -10,7 +10,7 @@
  */
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { extraireDonnees, tauxDeReconnaissance } = require("../.test-build/extraction.js");
+const { extraireDonnees, tauxDeReconnaissance } = require("../.test-build/lib/extraction.js");
 
 test("redevance parking.brussels en français", () => {
   const d = extraireDonnees(`parking.brussels

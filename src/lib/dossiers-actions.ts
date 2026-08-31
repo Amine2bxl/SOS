@@ -157,3 +157,60 @@ export async function demanderAdhesion(formule: string): Promise<{ erreur?: stri
   revalidatePath("/tableau-de-bord");
   return { ok: true };
 }
+
+/**
+ * Enregistre la lettre rédigée dans le module « Rédiger ma lettre ».
+ *
+ * La lettre est rattachée au dossier : on la retrouve dans sa fiche, et le
+ * dossier passe au statut « lettre prête », ce qui fait remonter la bonne
+ * prochaine action sur le tableau de bord (envoyer, plutôt que rédiger).
+ */
+export async function enregistrerLettre({
+  dossierId,
+  lettre,
+  motif,
+  explication,
+}: {
+  dossierId: string;
+  lettre: string;
+  motif: string;
+  explication: string;
+}): Promise<{ erreur?: string; ok?: boolean }> {
+  const supabase = await creerClientServeur();
+  if (!supabase) return { erreur: "Service indisponible." };
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { erreur: "Vous devez être connecté." };
+
+  const { data: avant } = await supabase
+    .from("dossiers")
+    .select("statut, lettre")
+    .eq("id", dossierId)
+    .single();
+  if (!avant) return { erreur: "Ce dossier est introuvable." };
+
+  // On ne fait pas reculer un dossier déjà envoyé ou clôturé.
+  const fige = ["contestation_envoyee", "en_attente_reponse", "accepte", "rejete", "clos"];
+  const statut = fige.includes(avant.statut as string) ? (avant.statut as string) : "a_contester";
+
+  const { error } = await supabase
+    .from("dossiers")
+    .update({ lettre, motif: motif || null, explication: explication || null, statut })
+    .eq("id", dossierId);
+
+  if (error) return { erreur: "La lettre n'a pas pu être enregistrée. Réessayez." };
+
+  await supabase.from("evenements").insert({
+    dossier_id: dossierId,
+    user_id: user.id,
+    type: "lettre",
+    titre: avant.lettre ? "Lettre de contestation mise à jour" : "Lettre de contestation rédigée",
+    note: "Il reste à l'envoyer par le canal indiqué sur votre courrier, et à garder une preuve.",
+  });
+
+  revalidatePath("/tableau-de-bord");
+  revalidatePath(`/tableau-de-bord/${dossierId}`);
+  return { ok: true };
+}

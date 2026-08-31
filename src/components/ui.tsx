@@ -206,3 +206,112 @@ export function LinkBtn({
     </Link>
   );
 }
+
+/**
+ * Carte de module : icône, nom, une phrase qui dit à quoi il sert, un bouton.
+ * Utilisée partout où l'on doit faire comprendre la différence entre deux
+ * fonctionnalités sans avoir à cliquer.
+ */
+export function CarteModule({
+  href,
+  titre,
+  phrase,
+  cta,
+  icone,
+  accent = false,
+}: {
+  href: string;
+  titre: string;
+  phrase: string;
+  cta: string;
+  icone?: ReactNode;
+  accent?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`group flex flex-col rounded-xl border p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+        accent ? "border-gold-400 bg-gold-100/50" : "border-line bg-card hover:border-navy-600/40"
+      }`}
+    >
+      {icone && (
+        <span
+          className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+            accent ? "bg-gold-400 text-navy-950" : "bg-navy-900 text-gold-300"
+          }`}
+        >
+          {icone}
+        </span>
+      )}
+      <h3 className="mt-3.5 font-display text-base font-bold text-navy-900">{titre}</h3>
+      <p className="mt-1.5 flex-1 text-sm leading-relaxed text-ink-soft">{phrase}</p>
+      <span className="mt-4 text-sm font-semibold text-navy-700 group-hover:text-navy-900">
+        {cta} <span aria-hidden="true">→</span>
+      </span>
+    </Link>
+  );
+}
+
+/** Chiffre clé, avec son libellé. */
+export function Stat({
+  valeur,
+  label,
+  detail,
+}: {
+  valeur: string;
+  label: string;
+  detail?: string;
+}) {
+  return (
+    <div className="rounded-xl border border-line bg-card p-5">
+      <p className="font-display text-3xl font-black text-navy-900">{valeur}</p>
+      <p className="mt-1 text-sm font-semibold text-ink">{label}</p>
+      {detail && <p className="mt-0.5 text-xs text-ink-soft">{detail}</p>}
+    </div>
+  );
+}
+
+/** Titre de section dans l'espace membre : un intitulé, une phrase, une action. */
+export function SectionApp({
+  titre,
+  intro,
+  action,
+  children,
+}: {
+  titre: string;
+  intro?: string;
+  action?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <section className="mt-9">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="font-display text-xl font-bold text-navy-900">{titre}</h2>
+          {intro && <p className="mt-1 text-sm text-ink-soft">{intro}</p>}
+        </div>
+        {action}
+      </div>
+      <div className="mt-4">{children}</div>
+    </section>
+  );
+}
+
+/** État vide : on explique et on propose la première action, jamais un écran nu. */
+export function EtatVide({
+  titre,
+  texte,
+  children,
+}: {
+  titre: string;
+  texte: string;
+  children?: ReactNode;
+}) {
+  return (
+    <div className="rounded-xl border border-dashed border-line bg-card/60 p-8 text-center">
+      <p className="font-display text-lg font-bold text-navy-900">{titre}</p>
+      <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-ink-soft">{texte}</p>
+      {children && <div className="mt-5 flex flex-wrap justify-center gap-3">{children}</div>}
+    </div>
+  );
+}
