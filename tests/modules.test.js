@@ -17,15 +17,29 @@ const {
   MODULES_COMPTE,
 } = require("../.test-build/components/app/modules.js");
 
-test("une fiche de dossier reste rattachée au tableau de bord", () => {
-  assert.equal(moduleActif("/tableau-de-bord").titre, "Tableau de bord");
+test("une fiche de dossier reste rattachée à Mes dossiers", () => {
+  assert.equal(moduleActif("/tableau-de-bord").titre, "Mes dossiers");
   // Sans cela, l'utilisateur ouvrant un dossier ne serait plus nulle part :
   // aucune entrée surlignée et un titre générique en haut de l'application.
-  assert.equal(moduleActif("/tableau-de-bord/abc-123").titre, "Tableau de bord");
+  assert.equal(moduleActif("/tableau-de-bord/abc-123").titre, "Mes dossiers");
+});
+
+test("le scan appartient au chemin guidé, pas à la liste des dossiers", () => {
+  assert.equal(moduleActif("/tableau-de-bord/nouveau").titre, "Contester ma redevance");
+});
+
+test("aucune entrée de la barre latérale ne sort de l'application", () => {
+  // Un module qui renverrait vers la vitrine ferait quitter l'espace membre
+  // sans prévenir : toutes les adresses doivent rester internes.
+  for (const m of TOUS_LES_MODULES) {
+    assert.ok(
+      m.href.startsWith("/tableau-de-bord"),
+      `${m.titre} pointe hors de l'application : ${m.href}`,
+    );
+  }
 });
 
 test("le chemin le plus précis l'emporte sur le tableau de bord", () => {
-  assert.equal(moduleActif("/tableau-de-bord/nouveau").titre, "Scanner un courrier");
   assert.equal(moduleActif("/tableau-de-bord/lettre").titre, "Rédiger ma lettre");
   assert.equal(moduleActif("/tableau-de-bord/regles").titre, "Règles de ma commune");
   assert.equal(moduleActif("/tableau-de-bord/abonnement").titre, "Mon abonnement");

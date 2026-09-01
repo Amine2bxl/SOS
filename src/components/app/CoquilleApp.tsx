@@ -117,7 +117,7 @@ function ContenuLateral({
       <div className="space-y-2 border-t border-navy-800 px-3 py-3">
         {membre.estGratuit && (
           <Link
-            href="/tarifs"
+            href="/tableau-de-bord/abonnement"
             onClick={onNavigue}
             className="block rounded-lg bg-gold-400/10 p-3 ring-1 ring-gold-400/30 transition hover:bg-gold-400/20"
           >
@@ -279,7 +279,7 @@ export function CoquilleApp({
             </div>
 
             <Link
-              href={membre.estGratuit ? "/tarifs" : "/tableau-de-bord/abonnement"}
+              href="/tableau-de-bord/abonnement"
               className={`hidden items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold transition sm:inline-flex ${
                 membre.estGratuit
                   ? "bg-gold-400 text-navy-950 hover:bg-gold-300"

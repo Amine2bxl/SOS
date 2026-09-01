@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { PageHead, Card, LinkBtn, Check, KeyBox } from "@/components/ui";
+import { PageHead, Card, KeyBox } from "@/components/ui";
 import { BoutonContact } from "@/components/Contact";
-import { PLANS, formatPrix } from "@/lib/plans";
+import { CarteFormule } from "@/components/formules";
+import { PLANS } from "@/lib/plans";
 import { FAQS } from "@/lib/data";
 
 export const metadata: Metadata = {
@@ -19,49 +20,9 @@ export default function TarifsPage() {
         intro="Vos deux premières contestations ne coûtent rien. Au-delà, l'adhésion finance l'outil, la veille réglementaire et l'accompagnement des dossiers."
       />
 
-      <div className="mt-12 grid gap-5 lg:grid-cols-4">
+      <div className="mt-12 grid items-start gap-5 lg:grid-cols-4">
         {PLANS.map((plan) => (
-          <div
-            key={plan.id}
-            className={`flex flex-col rounded-xl border bg-card p-6 shadow-sm ${
-              plan.miseEnAvant ? "border-2 border-gold-400 lg:-mt-3 lg:pb-9" : "border-line"
-            }`}
-          >
-            {plan.miseEnAvant && (
-              <p className="mb-3 inline-block self-start rounded-full bg-gold-400 px-3 py-1 text-xs font-bold text-navy-950">
-                Le plus choisi
-              </p>
-            )}
-
-            <h2 className="font-display text-xl font-bold text-navy-900">{plan.nom}</h2>
-            <p className="mt-1 text-sm text-ink-soft">{plan.pour}</p>
-
-            <p className="mt-5">
-              <span className="font-display text-4xl font-black text-navy-900">
-                {formatPrix(plan.prixAnnuel)}
-              </span>
-              {plan.prixAnnuel > 0 && (
-                <span className="ml-1 text-sm text-ink-soft">/ an</span>
-              )}
-            </p>
-
-            <ul className="mt-6 flex-1 space-y-2.5">
-              {plan.avantages.map((a) => (
-                <li key={a} className="flex gap-2.5 text-sm text-ink">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-ok-600" />
-                  {a}
-                </li>
-              ))}
-            </ul>
-
-            <LinkBtn
-              href={plan.id === "gratuit" ? "/inscription" : `/adherer?formule=${plan.id}`}
-              variant={plan.miseEnAvant ? "gold" : "secondary"}
-              className="mt-7 w-full"
-            >
-              {plan.id === "gratuit" ? "Créer un compte gratuit" : `Adhérer — ${plan.nom}`}
-            </LinkBtn>
-          </div>
+          <CarteFormule key={plan.id} plan={plan} />
         ))}
       </div>
 

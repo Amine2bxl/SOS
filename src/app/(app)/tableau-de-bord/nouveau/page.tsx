@@ -24,7 +24,7 @@ export default async function NouveauDossierPage() {
             les contestations illimitées.
           </p>
           <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-            <LinkBtn href="/tarifs" variant="gold">Voir les formules</LinkBtn>
+            <LinkBtn href="/tableau-de-bord/abonnement" variant="gold">Voir les formules</LinkBtn>
             <LinkBtn href="/tableau-de-bord" variant="secondary">Retour au tableau de bord</LinkBtn>
           </div>
         </Card>

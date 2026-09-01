@@ -368,7 +368,7 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
         <div role="alert" className="mt-5 rounded-md bg-danger-100 p-4 text-sm text-danger-700">
           <p className="font-semibold">{erreur}</p>
           {erreur.includes("gratuites") && (
-            <LinkBtn href="/tarifs" variant="gold" className="mt-3">Voir les formules</LinkBtn>
+            <LinkBtn href="/tableau-de-bord/abonnement" variant="gold" className="mt-3">Voir les formules</LinkBtn>
           )}
         </div>
       )}

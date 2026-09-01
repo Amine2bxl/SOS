@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { listerDossiers } from "@/lib/dossiers";
 import { COMMUNES } from "@/lib/data";
-import { KeyBox, LinkBtn } from "@/components/ui";
+import { LinkBtn } from "@/components/ui";
+import { CadreReglementaire } from "@/components/guide";
 import { BoutonContact } from "@/components/Contact";
 import { ExplorateurCommunes } from "@/components/ExplorateurCommunes";
 
@@ -34,12 +35,7 @@ export default async function ReglesPage() {
       </div>
 
       <div className="mx-auto mt-7 max-w-3xl">
-        <KeyBox title="Le cadre, valable partout en Région bruxelloise">
-          Le stationnement est réglementé par chaque commune dans son règlement-redevance, et géré
-          en pratique par <strong className="text-navy-900">parking.brussels</strong>. Ne pas payer
-          donne lieu à une <strong className="text-navy-900">redevance de stationnement</strong> :
-          une dette administrative locale, distincte d&apos;une amende pénale de police.
-        </KeyBox>
+        <CadreReglementaire />
       </div>
 
       <ExplorateurCommunes slugInitial={slugInitial} />
@@ -54,7 +50,7 @@ export default async function ReglesPage() {
         <LinkBtn href="/tableau-de-bord/lettre" variant="gold">
           Rédiger ma lettre de contestation
         </LinkBtn>
-        <LinkBtn href="/comprendre" variant="secondary">
+        <LinkBtn href="/tableau-de-bord/guides" variant="secondary">
           Comprendre mon courrier
         </LinkBtn>
       </div>

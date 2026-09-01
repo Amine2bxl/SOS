@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { lireProfil, listerDossiers } from "@/lib/dossiers";
 import { planById, contestationsRestantes, formatPrix } from "@/lib/plans";
-import { Card, LinkBtn, Check, BarreProgression } from "@/components/ui";
+import { Card, LinkBtn, BarreProgression } from "@/components/ui";
 import { BoutonContact } from "@/components/Contact";
+import { CarteFormule } from "@/components/formules";
+import { PLANS } from "@/lib/plans";
 
 export const metadata: Metadata = { title: "Mon abonnement" };
 export const dynamic = "force-dynamic";
@@ -33,14 +35,14 @@ export default async function AbonnementPage() {
           </p>
         </div>
 
-        <ul className="mt-5 space-y-2 border-t border-line-soft pt-4">
-          {plan.avantages.map((a) => (
-            <li key={a} className="flex gap-2.5 text-sm text-ink">
-              <Check className="mt-0.5 h-4 w-4 shrink-0 text-ok-600" />
-              {a}
-            </li>
-          ))}
-        </ul>
+        <p className="mt-5 border-t border-line-soft pt-4 text-sm leading-relaxed text-ink-soft">
+          {plan.id === "gratuit"
+            ? "Deux contestations, le scan, la lettre et le suivi des délais. L'aide par écrit reste gratuite sans limite."
+            : "Contestations illimitées, relecture de vos lettres et alertes réglementaires."}{" "}
+          <a href="#formules" className="ml-1 font-semibold text-navy-700 underline">
+            Comparer les formules →
+          </a>
+        </p>
       </Card>
 
       <div className="mt-6 grid gap-5 sm:grid-cols-2">
@@ -94,7 +96,7 @@ export default async function AbonnementPage() {
                 Vous utilisez l&apos;accès gratuit. L&apos;adhésion ouvre les contestations illimitées et
                 le suivi prioritaire de vos dossiers.
               </p>
-              <LinkBtn href="/tarifs" variant="gold" className="mt-2">
+              <LinkBtn href="#formules" variant="gold" className="mt-2">
                 Voir les formules d&apos;adhésion
               </LinkBtn>
             </div>
@@ -106,6 +108,27 @@ export default async function AbonnementPage() {
           )}
         </Card>
       </div>
+
+      {/* La comparaison complète, ici plutôt que sur la vitrine : un membre
+          connecté n'a aucune raison d'être renvoyé vers la page publique. */}
+      <section id="formules" className="mt-10 scroll-mt-24">
+        <h3 className="font-display text-xl font-bold text-navy-900">Toutes les formules</h3>
+        <p className="mt-1.5 text-sm text-ink-soft">
+          L&apos;adhésion finance l&apos;outil et la veille réglementaire. L&apos;aide par écrit
+          reste gratuite sans limite, quelle que soit votre formule.
+        </p>
+        <div className="mt-5 grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {PLANS.map((p) => (
+            <CarteFormule
+              key={p.id}
+              plan={p}
+              sansAction={p.id === plan.id}
+              libelleAction={p.id === "gratuit" ? "Formule de départ" : `Adhérer — ${p.nom}`}
+              href={p.id === "gratuit" ? "/tableau-de-bord" : `/adherer?formule=${p.id}`}
+            />
+          ))}
+        </div>
+      </section>
 
       <Card title="Comment se règle l'adhésion ?" className="mt-6">
         <p className="text-sm leading-relaxed text-ink-soft">

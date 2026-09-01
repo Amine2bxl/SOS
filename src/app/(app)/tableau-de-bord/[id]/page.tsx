@@ -14,8 +14,8 @@ import {
   echeanceContestation,
   DELAI_CONTESTATION_JOURS,
   CONTESTER_NE_SUSPEND_PAS_LE_PAIEMENT,
-  PROCEDURE_RECOUVREMENT,
 } from "@/lib/contestation";
+import { EscalierProcedure, SourceProcedure } from "@/components/guide";
 import { Card, Check } from "@/components/ui";
 import { BadgeStatut, PastilleEcheance } from "@/components/dossier-ui";
 import { RafraichirEnTempsReel } from "@/components/RafraichirEnTempsReel";
@@ -203,26 +203,13 @@ export default async function DossierPage({ params }: { params: Promise<{ id: st
       {!termine && (
         <Card
           title="Ce qui se passe si rien n'est fait"
-          subtitle="Procédure publiée par parking.brussels. Les montants et délais communaux peuvent différer."
+          subtitle="La note grimpe à chaque étape."
           className="mt-6 print:hidden"
         >
-          <ol className="space-y-3">
-            {PROCEDURE_RECOUVREMENT.map((etape, i) => (
-              <li key={etape.titre} className="flex gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-navy-900 text-xs font-bold text-gold-300">
-                  {i + 1}
-                </span>
-                <div>
-                  <p className="text-sm font-bold text-navy-900">
-                    {etape.titre}{" "}
-                    <span className="font-medium text-ink-soft">— {etape.quand}</span>
-                  </p>
-                  <p className="text-sm text-danger-700">{etape.cout}</p>
-                  <p className="mt-0.5 text-sm leading-relaxed text-ink-soft">{etape.aFaire}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
+          <EscalierProcedure />
+          <div className="mt-4">
+            <SourceProcedure />
+          </div>
         </Card>
       )}
 

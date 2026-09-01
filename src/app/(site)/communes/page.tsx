@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { PageHead, KeyBox, LinkBtn } from "@/components/ui";
+import { PageHead, LinkBtn } from "@/components/ui";
+import { CadreReglementaire } from "@/components/guide";
 import { BoutonContact } from "@/components/Contact";
 import { ExplorateurCommunes } from "@/components/ExplorateurCommunes";
 
@@ -19,13 +20,7 @@ export default function CommunesPage() {
       />
 
       <div className="mx-auto mt-8 max-w-3xl">
-        <KeyBox title="Le cadre, valable partout en Région bruxelloise">
-          Le stationnement est réglementé par chaque commune dans un règlement communal (le
-          « règlement-redevance »), et géré en pratique par{" "}
-          <strong className="text-navy-900">parking.brussels</strong>. Ne pas payer donne lieu à une{" "}
-          <strong className="text-navy-900">redevance de stationnement</strong> : une dette
-          administrative locale, distincte d&apos;une amende pénale de police.
-        </KeyBox>
+        <CadreReglementaire />
       </div>
 
       <ExplorateurCommunes />

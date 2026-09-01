@@ -13,20 +13,25 @@ export type Module = {
   /** Une phrase, à la deuxième personne, qui dit à quoi sert le module. */
   phrase: string;
   icone: "boussole" | "scan" | "lettre" | "livre" | "carte" | "reglages";
+  /** Autres chemins qui appartiennent à ce module (étapes internes). */
+  alias?: string[];
 };
 
 export const MODULES_DOSSIERS: Module[] = [
   {
-    href: "/tableau-de-bord",
-    titre: "Tableau de bord",
-    phrase: "Vos dossiers, vos échéances et la prochaine chose à faire.",
-    icone: "boussole",
+    href: "/tableau-de-bord/contester",
+    titre: "Contester ma redevance",
+    phrase: "Le chemin guidé, en trois étapes. À tout moment, une seule chose à faire.",
+    icone: "scan",
+    // Le scan est la première étape du chemin : il ne mérite pas sa propre
+    // entrée de menu, mais il doit allumer celle-ci.
+    alias: ["/tableau-de-bord/nouveau"],
   },
   {
-    href: "/tableau-de-bord/nouveau",
-    titre: "Scanner un courrier",
-    phrase: "Photographiez votre document : on en extrait la référence, le montant et la date limite.",
-    icone: "scan",
+    href: "/tableau-de-bord",
+    titre: "Mes dossiers",
+    phrase: "La vue d'ensemble : vos échéances, vos montants en jeu, l'avancement de chacun.",
+    icone: "boussole",
   },
 ];
 
@@ -44,9 +49,9 @@ export const MODULES_OUTILS: Module[] = [
     icone: "carte",
   },
   {
-    href: "/comprendre",
+    href: "/tableau-de-bord/guides",
     titre: "Guides",
-    phrase: "Décoder votre courrier, connaître vos délais et les preuves qui comptent.",
+    phrase: "Décoder votre courrier, ce que coûte chaque étape et les preuves qui comptent.",
     icone: "livre",
   },
 ];
@@ -76,7 +81,16 @@ export const TOUS_LES_MODULES = [...MODULES_DOSSIERS, ...MODULES_OUTILS, ...MODU
  * rattachée au tableau de bord — on n'est jamais nulle part.
  */
 export function moduleActif(chemin: string): Module | undefined {
-  return TOUS_LES_MODULES.filter(
-    (m) => chemin === m.href || chemin.startsWith(m.href + "/"),
-  ).sort((a, b) => b.href.length - a.href.length)[0];
+  const correspond = (base: string) => chemin === base || chemin.startsWith(base + "/");
+
+  // Un alias l'emporte sur la correspondance par préfixe : /tableau-de-bord/nouveau
+  // appartient à « Contester », pas à « Mes dossiers ».
+  const parAlias = TOUS_LES_MODULES.find((m) => m.alias?.some(correspond));
+  if (parAlias) return parAlias;
+
+  // Sinon le chemin le plus long gagne, et une fiche de dossier reste
+  // rattachée à « Mes dossiers » — on n'est jamais nulle part.
+  return TOUS_LES_MODULES.filter((m) => correspond(m.href)).sort(
+    (a, b) => b.href.length - a.href.length,
+  )[0];
 }

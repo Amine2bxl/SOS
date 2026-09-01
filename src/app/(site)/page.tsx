@@ -3,11 +3,13 @@ import { Card, LinkBtn, Check, Cross } from "@/components/ui";
 import { MailIcon } from "@/components/Logo";
 import { BoutonContact } from "@/components/Contact";
 import { ZonesVisuel, ApercuEspaceMembre } from "@/components/visuels";
+import { EscalierProcedure, SourceProcedure } from "@/components/guide";
 import { IconeModule } from "@/components/app/IconeModule";
 import { MODULES_DOSSIERS, MODULES_OUTILS } from "@/components/app/modules";
-import { PROCEDURE_RECOUVREMENT, DELAI_CONTESTATION_JOURS } from "@/lib/contestation";
-import { PLANS, formatPrix } from "@/lib/plans";
-import { ASSO, CHIFFRES, NOUS_FAISONS, NOUS_NE_FAISONS_PAS, ALERTE, FAQS } from "@/lib/data";
+import { DELAI_CONTESTATION_JOURS } from "@/lib/contestation";
+import { CarteFormule } from "@/components/formules";
+import { PLANS } from "@/lib/plans";
+import { ASSO, CHIFFRES, NOUS_FAISONS, NOUS_NE_FAISONS_PAS, ALERTE } from "@/lib/data";
 
 /** Les situations les plus fréquentes : le visiteur doit se reconnaître en 5 secondes. */
 const SITUATIONS = [
@@ -68,7 +70,13 @@ const OBJECTIONS = [
   },
 ];
 
-const MODULES_VITRINE = [MODULES_DOSSIERS[1], MODULES_OUTILS[0], MODULES_DOSSIERS[0], MODULES_OUTILS[1]];
+/** Les quatre modules mis en vitrine, dans l'ordre où on les rencontre. */
+const MODULES_VITRINE = [
+  MODULES_DOSSIERS[0], // Contester : le chemin guidé
+  MODULES_OUTILS[0], // Rédiger ma lettre
+  MODULES_DOSSIERS[1], // Mes dossiers
+  MODULES_OUTILS[1], // Règles de ma commune
+];
 
 export default function HomePage() {
   const gratuit = PLANS[0];
@@ -160,37 +168,17 @@ export default function HomePage() {
           se termine chez un huissier.
         </p>
 
-        <ol className="mt-9 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          {PROCEDURE_RECOUVREMENT.map((etape, i) => (
-            <li
-              key={etape.titre}
-              className={`rounded-xl border p-4 ${
-                i === 0 ? "border-ok-600/40 bg-ok-100/50" : "border-line bg-card"
-              }`}
-            >
-              <span
-                className={`flex h-7 w-7 items-center justify-center rounded-full font-display text-xs font-black ${
-                  i === 0 ? "bg-ok-600 text-white" : "bg-navy-900 text-gold-300"
-                }`}
-              >
-                {i + 1}
-              </span>
-              <p className="mt-3 font-display text-sm font-bold text-navy-900">{etape.titre}</p>
-              <p className="mt-1 text-[11.5px] leading-snug text-ink-soft">{etape.quand}</p>
-              <p
-                className={`mt-2 text-xs font-bold ${i === 0 ? "text-ok-700" : "text-danger-700"}`}
-              >
-                {etape.cout}
-              </p>
-            </li>
-          ))}
-        </ol>
+        <div className="mt-9">
+          <EscalierProcedure />
+        </div>
 
-        <p className="mt-6 text-center text-xs leading-relaxed text-ink-soft">
-          Procédure publiée par parking.brussels ; les montants et délais communaux peuvent
-          différer. Contester ne suspend pas l&apos;obligation de payer dans le délai indiqué : si
-          la contestation aboutit, les sommes versées sont remboursées.
-        </p>
+        <div className="mt-6 text-center">
+          <SourceProcedure />
+          <p className="mt-2 text-xs leading-relaxed text-ink-soft">
+            Contester ne suspend pas l&apos;obligation de payer dans le délai indiqué : si la
+            contestation aboutit, les sommes versées sont remboursées.
+          </p>
+        </div>
 
         <div className="mt-8 flex justify-center">
           <LinkBtn href="/inscription" variant="gold" className="px-6 py-3.5 text-base">
@@ -303,6 +291,11 @@ export default function HomePage() {
             </div>
           ))}
         </div>
+        <p className="mt-6 text-center text-sm text-ink-soft">
+          <Link href="/comprendre#faq" className="font-semibold text-navy-700 underline">
+            Voir les douze questions fréquentes et les sources officielles
+          </Link>
+        </p>
       </section>
 
       {/* LES ZONES */}
@@ -335,38 +328,17 @@ export default function HomePage() {
           Deux contestations offertes, sans carte bancaire. L&apos;adhésion vient après, si vous en
           avez besoin.
         </p>
-        <div className="mt-8 grid gap-5 sm:grid-cols-2">
+        <div className="mt-8 grid items-start gap-5 sm:grid-cols-2">
           {[gratuit, membre].map((plan) => (
-            <div
+            <CarteFormule
               key={plan.id}
-              className={`flex flex-col rounded-xl border p-6 shadow-sm ${
-                plan.miseEnAvant ? "border-gold-400 bg-gold-100/40" : "border-line bg-card"
-              }`}
-            >
-              <h3 className="font-display text-xl font-bold text-navy-900">{plan.nom}</h3>
-              <p className="mt-0.5 text-sm text-ink-soft">{plan.pour}</p>
-              <p className="mt-3 font-display text-3xl font-black text-navy-900">
-                {formatPrix(plan.prixAnnuel)}
-                {plan.prixAnnuel > 0 && (
-                  <span className="text-sm font-semibold text-ink-soft"> / an</span>
-                )}
-              </p>
-              <ul className="mt-4 flex-1 space-y-2">
-                {plan.avantages.slice(0, 4).map((a) => (
-                  <li key={a} className="flex gap-2.5 text-sm text-ink">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-ok-600" />
-                    {a}
-                  </li>
-                ))}
-              </ul>
-              <LinkBtn
-                href={plan.id === "gratuit" ? "/inscription" : "/tarifs"}
-                variant={plan.miseEnAvant ? "gold" : "secondary"}
-                className="mt-5 w-full"
-              >
-                {plan.id === "gratuit" ? "Commencer gratuitement" : "Voir toutes les formules"}
-              </LinkBtn>
-            </div>
+              plan={plan}
+              courte
+              href={plan.id === "gratuit" ? "/inscription" : "/tarifs"}
+              libelleAction={
+                plan.id === "gratuit" ? "Commencer gratuitement" : "Voir toutes les formules"
+              }
+            />
           ))}
         </div>
       </section>
@@ -394,36 +366,6 @@ export default function HomePage() {
               ))}
             </ul>
           </Card>
-        </div>
-      </section>
-
-      {/* QUESTIONS FRÉQUENTES */}
-      <section className="border-t border-line bg-card py-14">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6">
-          <h2 className="text-center font-display text-2xl font-bold text-navy-900 sm:text-3xl">
-            Questions fréquentes
-          </h2>
-          <div className="mt-8 divide-y divide-line-soft rounded-xl border border-line bg-paper">
-            {FAQS.slice(0, 6).map((f) => (
-              <details key={f.question} className="group p-5">
-                <summary className="flex cursor-pointer items-start justify-between gap-4 font-display text-base font-bold text-navy-900">
-                  {f.question}
-                  <span
-                    className="mt-1 shrink-0 text-gold-600 transition-transform group-open:rotate-45"
-                    aria-hidden="true"
-                  >
-                    +
-                  </span>
-                </summary>
-                <p className="mt-3 text-sm leading-relaxed text-ink-soft">{f.reponse}</p>
-              </details>
-            ))}
-          </div>
-          <p className="mt-5 text-center text-sm text-ink-soft">
-            <Link href="/comprendre" className="font-semibold text-navy-700 underline">
-              Voir tous les guides et les sources officielles
-            </Link>
-          </p>
         </div>
       </section>
 

@@ -129,8 +129,8 @@ export default async function TableauDeBordPage() {
                 : `${enCours.length} dossier${enCours.length > 1 ? "s" : ""} en cours, aucune échéance serrée.`}
           </p>
         </div>
-        <LinkBtn href="/tableau-de-bord/nouveau" variant="gold">
-          + Scanner un courrier
+        <LinkBtn href="/tableau-de-bord/contester" variant="gold">
+          Contester une redevance →
         </LinkBtn>
       </div>
 
@@ -278,7 +278,7 @@ export default async function TableauDeBordPage() {
               </>
             )}
             <LinkBtn
-              href={plan.id === "gratuit" ? "/tarifs" : "/tableau-de-bord/abonnement"}
+              href="/tableau-de-bord/abonnement"
               variant={plan.id === "gratuit" ? "gold" : "secondary"}
               className="mt-4"
             >
@@ -295,7 +295,7 @@ export default async function TableauDeBordPage() {
         action={
           dossiers.length > 0 ? (
             <LinkBtn href="/tableau-de-bord/nouveau" variant="secondary">
-              Ajouter un dossier
+              Ajouter un courrier
             </LinkBtn>
           ) : undefined
         }
@@ -305,10 +305,10 @@ export default async function TableauDeBordPage() {
             titre="Votre premier dossier commence ici"
             texte="Prenez votre courrier en photo ou collez une capture d'écran. Nous en extrayons la référence, le montant et la date limite ; vous n'avez plus qu'à vérifier."
           >
-            <LinkBtn href="/tableau-de-bord/nouveau" variant="gold">
-              Scanner mon document
+            <LinkBtn href="/tableau-de-bord/contester" variant="gold">
+              Contester ma redevance
             </LinkBtn>
-            <LinkBtn href="/comprendre" variant="secondary">
+            <LinkBtn href="/tableau-de-bord/guides" variant="secondary">
               D&apos;abord comprendre mon courrier
             </LinkBtn>
           </EtatVide>
@@ -327,7 +327,7 @@ export default async function TableauDeBordPage() {
         intro="Chaque module fait une chose précise. Voici laquelle."
       >
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[...MODULES_DOSSIERS.slice(1), ...MODULES_OUTILS].map((m) => (
+          {[MODULES_DOSSIERS[0], ...MODULES_OUTILS].map((m) => (
             <CarteModule
               key={m.href}
               href={m.href}

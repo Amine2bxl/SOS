@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { lireProfil } from "@/lib/dossiers";
 import { planById, PLANS, formatPrix } from "@/lib/plans";
-import { Card, LinkBtn, Check } from "@/components/ui";
+import { Card, LinkBtn } from "@/components/ui";
+import { CarteFormule } from "@/components/formules";
 import { BoutonContact } from "@/components/Contact";
 import { FormulaireAdhesion } from "./FormulaireAdhesion";
 
@@ -43,17 +44,9 @@ export default async function AdhererPage({
         {choisie.pour} — {formatPrix(choisie.prixAnnuel)} par an.
       </p>
 
-      <Card className="mt-8">
-        <h2 className="font-display text-lg font-bold text-navy-900">Ce que comprend cette formule</h2>
-        <ul className="mt-4 space-y-2.5">
-          {choisie.avantages.map((a) => (
-            <li key={a} className="flex gap-2.5 text-sm text-ink">
-              <Check className="mt-0.5 h-4 w-4 shrink-0 text-ok-600" />
-              {a}
-            </li>
-          ))}
-        </ul>
-      </Card>
+      <div className="mt-8">
+        <CarteFormule plan={choisie} sansAction />
+      </div>
 
       {profil?.plan_demande ? (
         <Card className="mt-6 border-ok-600/40 bg-ok-100/50">
