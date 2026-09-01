@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Fraunces, Public_Sans } from "next/font/google";
 import "./globals.css";
-import { Header } from "@/components/Header";
-import { FooterSurSite } from "@/components/FooterSurSite";
 import { SessionProvider } from "@/components/useSession";
 import { LanguageProvider } from "@/lib/i18n";
 import { ASSO } from "@/lib/data";
@@ -76,13 +74,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           >
             Aller au contenu
           </a>
-          <LanguageProvider>
-            <Header />
-            <main id="contenu" className="flex-1">
-              {children}
-            </main>
-            <FooterSurSite />
-          </LanguageProvider>
+          {/* Aucun en-tête ni pied de page ici : chaque coquille — site public,
+              écrans d'accès, espace membre — apporte le sien. C'est ce qui rend
+              la frontière nette entre le site et l'application. */}
+          <LanguageProvider>{children}</LanguageProvider>
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

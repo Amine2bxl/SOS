@@ -15,7 +15,13 @@ export type NouveauDossier = {
   plaque: string;
   montant: string;
   dateConstat: string;
+  heureConstat: string;
   dateEcheance: string;
+  dateEnvoi: string;
+  lieuConstat: string;
+  zone: string;
+  communication: string;
+  iban: string;
   ocrTexte: string;
   ocrConfiance: Record<string, string>;
 };
@@ -42,7 +48,13 @@ export async function creerDossier(saisie: NouveauDossier): Promise<EtatDossier 
       plaque: saisie.plaque.trim().toUpperCase() || null,
       montant: montant !== null && !Number.isNaN(montant) ? montant : null,
       date_constat: saisie.dateConstat || null,
+      heure_constat: saisie.heureConstat.trim() || null,
       date_echeance: saisie.dateEcheance || null,
+      date_envoi: saisie.dateEnvoi || null,
+      lieu_constat: saisie.lieuConstat.trim() || null,
+      zone: saisie.zone.trim() || null,
+      communication: saisie.communication.trim() || null,
+      iban: saisie.iban.trim() || null,
       // Le texte OCR brut est conservé pour que l'utilisateur puisse
       // revérifier ce qui avait été lu sur son document.
       ocr_texte: saisie.ocrTexte.slice(0, 20000) || null,
@@ -155,5 +167,62 @@ export async function demanderAdhesion(formule: string): Promise<{ erreur?: stri
   if (error) return { erreur: "La demande n'a pas pu être enregistrée." };
 
   revalidatePath("/tableau-de-bord");
+  return { ok: true };
+}
+
+/**
+ * Enregistre la lettre rédigée dans le module « Rédiger ma lettre ».
+ *
+ * La lettre est rattachée au dossier : on la retrouve dans sa fiche, et le
+ * dossier passe au statut « lettre prête », ce qui fait remonter la bonne
+ * prochaine action sur le tableau de bord (envoyer, plutôt que rédiger).
+ */
+export async function enregistrerLettre({
+  dossierId,
+  lettre,
+  motif,
+  explication,
+}: {
+  dossierId: string;
+  lettre: string;
+  motif: string;
+  explication: string;
+}): Promise<{ erreur?: string; ok?: boolean }> {
+  const supabase = await creerClientServeur();
+  if (!supabase) return { erreur: "Service indisponible." };
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { erreur: "Vous devez être connecté." };
+
+  const { data: avant } = await supabase
+    .from("dossiers")
+    .select("statut, lettre")
+    .eq("id", dossierId)
+    .single();
+  if (!avant) return { erreur: "Ce dossier est introuvable." };
+
+  // On ne fait pas reculer un dossier déjà envoyé ou clôturé.
+  const fige = ["contestation_envoyee", "en_attente_reponse", "accepte", "rejete", "clos"];
+  const statut = fige.includes(avant.statut as string) ? (avant.statut as string) : "a_contester";
+
+  const { error } = await supabase
+    .from("dossiers")
+    .update({ lettre, motif: motif || null, explication: explication || null, statut })
+    .eq("id", dossierId);
+
+  if (error) return { erreur: "La lettre n'a pas pu être enregistrée. Réessayez." };
+
+  await supabase.from("evenements").insert({
+    dossier_id: dossierId,
+    user_id: user.id,
+    type: "lettre",
+    titre: avant.lettre ? "Lettre de contestation mise à jour" : "Lettre de contestation rédigée",
+    note: "Il reste à l'envoyer par le canal indiqué sur votre courrier, et à garder une preuve.",
+  });
+
+  revalidatePath("/tableau-de-bord");
+  revalidatePath(`/tableau-de-bord/${dossierId}`);
   return { ok: true };
 }

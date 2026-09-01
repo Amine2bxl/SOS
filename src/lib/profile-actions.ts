@@ -17,6 +17,7 @@ export async function enregistrerProfil(_precedent: EtatProfil, donnees: FormDat
 
   const prenom = String(donnees.get("prenom") ?? "").trim().slice(0, 60);
   const nom = String(donnees.get("nom") ?? "").trim().slice(0, 60);
+  const telephone = String(donnees.get("telephone") ?? "").trim().slice(0, 30);
   const adresse = String(donnees.get("adresse") ?? "").trim().slice(0, 120);
   const codePostal = String(donnees.get("codePostal") ?? "").trim().slice(0, 10);
   const commune = String(donnees.get("commune") ?? "").trim().slice(0, 60);
@@ -25,7 +26,7 @@ export async function enregistrerProfil(_precedent: EtatProfil, donnees: FormDat
 
   const { error } = await supabase
     .from("profiles")
-    .update({ prenom, nom, adresse, code_postal: codePostal, commune })
+    .update({ prenom, nom, telephone, adresse, code_postal: codePostal, commune })
     .eq("id", user.id);
   if (error) return { erreur: "L'enregistrement a échoué. Réessayez." };
 
@@ -34,6 +35,7 @@ export async function enregistrerProfil(_precedent: EtatProfil, donnees: FormDat
 
   revalidatePath("/tableau-de-bord");
   revalidatePath("/tableau-de-bord/compte");
+  revalidatePath("/tableau-de-bord/lettre");
   return { message: "Vos informations sont enregistrées." };
 }
 

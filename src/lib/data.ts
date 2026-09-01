@@ -622,6 +622,11 @@ export type Faq = { question: string; reponse: string };
 
 export const FAQS: Faq[] = [
   {
+    question: "Contester me dispense-t-il de payer ?",
+    reponse:
+      "Non, et c'est le piège le plus fréquent. Introduire une contestation ne suspend pas l'obligation de payer dans le délai indiqué sur votre courrier. Si votre contestation aboutit, la procédure est annulée et les sommes déjà versées vous sont remboursées. Décidez donc en connaissance de cause, et gardez la preuve de tout ce que vous envoyez.",
+  },
+  {
     question: "Combien coûte votre aide ?",
     reponse:
       "L'aide par téléphone et par e-mail ne coûte rien, sans limite de dossiers. Sur le site, vos deux premières contestations sont gratuites ; au-delà, l'adhésion ouvre les contestations illimitées. Nous sommes une ASBL, pas un cabinet : personne ne prend de commission sur ce que vous récupérez.",
@@ -639,7 +644,7 @@ export const FAQS: Faq[] = [
   {
     question: "Quel est le délai pour contester ?",
     reponse:
-      "Le délai figure sur le document que vous avez reçu et varie selon la commune et le type de document (souvent entre 14 et 30 jours). C'est cette mention-là qui fait foi. En cas de doute, agissez le plus tôt possible : un courrier envoyé tôt est toujours plus solide qu'un courrier tardif.",
+      "Il est plus court qu'on ne le croit. parking.brussels prévoit 10 jours calendrier à compter de la réception de l'invitation à payer ; les communes fixent leur propre délai, parfois plus long. C'est toujours la mention portée sur votre courrier qui fait foi. En cas de doute, agissez le jour même : un courrier envoyé tôt est toujours plus solide qu'un courrier tardif.",
   },
   {
     question: "Ma session d'application était active, et j'ai quand même reçu une redevance.",
@@ -654,7 +659,7 @@ export const FAQS: Faq[] = [
   {
     question: "Que se passe-t-il si je ne réponds pas ?",
     reponse:
-      "Le dossier avance sans vous : rappel, mise en demeure, puis contrainte et enfin huissier, avec des frais qui s'ajoutent à chaque étape. Répondre par écrit, même pour contester, stoppe cette mécanique et laisse une trace.",
+      "Le dossier avance sans vous, et la note grimpe : un rappel s'ajoute au plus tôt 40 jours après le premier courrier, avec 15 € de frais administratifs. Viennent ensuite la mise en demeure, puis une contrainte 30 jours plus tard, signifiée par un huissier — à ce stade les frais dépassent largement la redevance de départ. Répondre par écrit, même pour contester, stoppe cette mécanique et laisse une trace.",
   },
   {
     question: "Un huissier me contacte déjà. Est-ce trop tard ?",

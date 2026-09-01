@@ -12,12 +12,13 @@ export const LANGUES = [
 export type Langue = (typeof LANGUES)[number]["code"];
 
 const FR = {
-  "nav.contester": "Contester",
   "nav.comprendre": "Comprendre",
   "nav.communes": "Communes",
   "nav.tarifs": "Tarifs",
   "nav.contact": "Contact",
   "commun.creerCompte": "Créer mon compte gratuit",
+  "commun.creerCompteCourt": "Créer un compte",
+  "commun.monEspace": "Mon espace",
   "commun.ouvrirContestation": "Ouvrir une contestation",
   "commun.contacter": "Nous contacter",
   "commun.voirSite": "Voir le site",
@@ -42,12 +43,13 @@ const FR = {
 };
 
 const EN: Record<string, string> = {
-  "nav.contester": "Dispute",
   "nav.comprendre": "Understand",
   "nav.communes": "Municipalities",
   "nav.tarifs": "Pricing",
   "nav.contact": "Contact",
   "commun.creerCompte": "Create my free account",
+  "commun.creerCompteCourt": "Create an account",
+  "commun.monEspace": "My area",
   "commun.ouvrirContestation": "Open a dispute",
   "commun.contacter": "Contact us",
   "commun.voirSite": "View the site",
@@ -73,12 +75,13 @@ const EN: Record<string, string> = {
 };
 
 const NL: Record<string, string> = {
-  "nav.contester": "Betwisten",
   "nav.comprendre": "Begrijpen",
   "nav.communes": "Gemeenten",
   "nav.tarifs": "Tarieven",
   "nav.contact": "Contact",
   "commun.creerCompte": "Gratis account aanmaken",
+  "commun.creerCompteCourt": "Account aanmaken",
+  "commun.monEspace": "Mijn ruimte",
   "commun.ouvrirContestation": "Bezwaar indienen",
   "commun.contacter": "Contacteer ons",
   "commun.voirSite": "Bekijk de site",
@@ -104,12 +107,13 @@ const NL: Record<string, string> = {
 };
 
 const DE: Record<string, string> = {
-  "nav.contester": "Einspruch",
   "nav.comprendre": "Verstehen",
   "nav.communes": "Gemeinden",
   "nav.tarifs": "Preise",
   "nav.contact": "Kontakt",
   "commun.creerCompte": "Kostenloses Konto erstellen",
+  "commun.creerCompteCourt": "Konto erstellen",
+  "commun.monEspace": "Mein Bereich",
   "commun.ouvrirContestation": "Einspruch erheben",
   "commun.contacter": "Kontaktieren Sie uns",
   "commun.voirSite": "Website ansehen",

@@ -7,8 +7,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "pretest": "tsc src/lib/extraction.ts --outDir .test-build --module commonjs --target es2022 --moduleResolution node --skipLibCheck",
-    "test": "node --test tests/extraction.test.js"
+    "pretest": "tsc src/lib/extraction.ts src/lib/mail/gabarits.ts src/lib/dossiers-format.ts src/lib/contestation.ts src/lib/lettre.ts src/components/app/modules.ts --rootDir src --outDir .test-build --module commonjs --target es2022 --moduleResolution node --skipLibCheck",
+    "test": "node --test \"tests/**/*.test.js\""
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",
