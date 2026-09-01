@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { sInscrire, type EtatAuth } from "@/lib/auth-actions";
 import { Card, Field, TextInput, Btn } from "@/components/ui";
@@ -47,10 +48,28 @@ export function FormulaireInscription() {
             <MotDePasseInput name="confirmation" required minLength={8} autoComplete="new-password" />
           </Field>
 
-          {etat.erreur && !etat.otpEnvoye && (
-            <p role="alert" className="rounded-md bg-danger-100 p-3 text-sm font-medium text-danger-700">
-              {etat.erreur}
-            </p>
+          {/* Adresse déjà inscrite : la seule issue utile est la connexion. */}
+          {etat.compteExistant ? (
+            <div role="alert" className="rounded-md bg-warn-100 p-3.5 text-sm text-warn-700">
+              <p className="font-semibold">{etat.erreur}</p>
+              <p className="mt-1 leading-relaxed text-ink">
+                Connectez-vous plutôt. Si vous n&apos;aviez jamais confirmé cette adresse, la
+                connexion vous proposera un nouveau code.
+              </p>
+              <Link
+                href={`/connexion?suite=${encodeURIComponent(suite)}`}
+                className="mt-2 inline-block font-bold text-navy-700 underline"
+              >
+                Aller à la connexion →
+              </Link>
+            </div>
+          ) : (
+            etat.erreur &&
+            !etat.otpEnvoye && (
+              <p role="alert" className="rounded-md bg-danger-100 p-3 text-sm font-medium text-danger-700">
+                {etat.erreur}
+              </p>
+            )
           )}
 
           <Btn type="submit" variant="gold" className="w-full" disabled={enCours}>
@@ -64,7 +83,7 @@ export function FormulaireInscription() {
         </form>
       </Card>
 
-      {etat.otpEnvoye && (
+      {etat.otpEnvoye && !etat.compteExistant && (
         <FenetreCodeEmail
           email={etat.email ?? email}
           suite={suite}

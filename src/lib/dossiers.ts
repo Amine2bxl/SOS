@@ -1,20 +1,26 @@
 import "server-only";
-import { creerClientServeur } from "@/lib/supabase/server";
+import { cache } from "react";
+import { creerClientServeur, lireUtilisateur } from "@/lib/supabase/server";
 import type { Dossier, Evenement, Profil, Alerte } from "@/lib/dossiers-format";
 
-export async function lireProfil(): Promise<Profil | null> {
-  const supabase = await creerClientServeur();
-  if (!supabase) return null;
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+/**
+ * Ces lectures sont mises en cache pour la durée d'une requête.
+ *
+ * La coquille de l'espace membre et la page qu'elle contient ont besoin des
+ * mêmes données — le profil pour la formule, les dossiers pour le quota. Sans
+ * cache, chacune interrogeait la base de son côté : deux fois la même requête
+ * à chaque affichage. À 50 000 comptes, c'est la moitié du trafic base pour
+ * rien.
+ */
+export const lireProfil = cache(async (): Promise<Profil | null> => {
+  const [supabase, user] = await Promise.all([creerClientServeur(), lireUtilisateur()]);
+  if (!supabase || !user) return null;
 
   const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
   return (data as Profil) ?? null;
-}
+});
 
-export async function listerDossiers(): Promise<Dossier[]> {
+export const listerDossiers = cache(async (): Promise<Dossier[]> => {
   const supabase = await creerClientServeur();
   if (!supabase) return [];
   const { data } = await supabase
@@ -22,14 +28,14 @@ export async function listerDossiers(): Promise<Dossier[]> {
     .select("*")
     .order("created_at", { ascending: false });
   return (data as Dossier[]) ?? [];
-}
+});
 
-export async function lireDossier(id: string): Promise<Dossier | null> {
+export const lireDossier = cache(async (id: string): Promise<Dossier | null> => {
   const supabase = await creerClientServeur();
   if (!supabase) return null;
   const { data } = await supabase.from("dossiers").select("*").eq("id", id).single();
   return (data as Dossier) ?? null;
-}
+});
 
 export async function listerEvenements(dossierId: string): Promise<Evenement[]> {
   const supabase = await creerClientServeur();
@@ -43,13 +49,9 @@ export async function listerEvenements(dossierId: string): Promise<Evenement[]> 
 }
 
 /** Alertes réglementaires que l'utilisateur n'a pas encore acquittées. */
-export async function lireAlertesNonVues(): Promise<Alerte[]> {
-  const supabase = await creerClientServeur();
-  if (!supabase) return [];
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return [];
+export const lireAlertesNonVues = cache(async (): Promise<Alerte[]> => {
+  const [supabase, user] = await Promise.all([creerClientServeur(), lireUtilisateur()]);
+  if (!supabase || !user) return [];
 
   const { data: vues } = await supabase
     .from("alertes_vues")
@@ -68,4 +70,4 @@ export async function lireAlertesNonVues(): Promise<Alerte[]> {
 
   const { data } = await requete;
   return (data as Alerte[]) ?? [];
-}
+});

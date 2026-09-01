@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Modale, EnTeteModale } from "@/components/Modale";
 import { ASSO } from "@/lib/data";
 import { MailIcon } from "@/components/Logo";
 import { useLangue, t } from "@/lib/i18n";
@@ -62,80 +63,55 @@ export function BoutonContact({
         )}
       </button>
 
-      {ouvert && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="titre-contact"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-navy-950/70 p-4 backdrop-blur-sm"
-        >
-          <div
-            className="w-full max-w-sm animate-rise rounded-xl border border-line bg-card p-6 shadow-2xl"
+      <Modale ouverte={ouvert} onFermer={() => setOuvert(false)} titre="Nous contacter">
+        <EnTeteModale titre="Nous contacter" onFermer={() => setOuvert(false)} />
+
+        <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+          Nous répondons par écrit, comme vous préférez : c&apos;est le plus simple pour garder une
+          trace de votre dossier.
+        </p>
+
+        <div className="mt-5 space-y-3">
+          <a
+            href={LIEN_WHATSAPP}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between gap-3 rounded-xl border border-line bg-white p-4 transition hover:border-[#25d366]/60 hover:shadow-sm"
           >
-            <div className="flex items-start justify-between gap-4">
-              <h2 id="titre-contact" className="font-display text-xl font-bold text-navy-900">
-                Nous contacter
-              </h2>
-              <button
-                type="button"
-                onClick={() => setOuvert(false)}
-                aria-label="Fermer"
-                className="rounded-md p-1.5 text-navy-600 transition hover:bg-navy-50 hover:text-navy-900"
-              >
-                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
-                </svg>
-              </button>
-            </div>
+            <span className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#25d366]/15 text-[#1da851]">
+                <WhatsAppIcon className="h-5 w-5" />
+              </span>
+              <span>
+                <span className="block text-sm font-bold text-navy-900">WhatsApp</span>
+                <span className="block text-xs text-ink-soft">Réponse en général rapide</span>
+              </span>
+            </span>
+            <span className="text-xl text-navy-700">→</span>
+          </a>
 
-            <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-              Nous répondons par écrit, comme vous préférez : c&apos;est le plus simple pour garder
-              une trace de votre dossier.
-            </p>
-
-            <div className="mt-5 space-y-3">
-              <a
-                href={LIEN_WHATSAPP}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-between gap-3 rounded-xl border border-line bg-white p-4 transition hover:border-[#25d366]/60 hover:shadow-sm"
-              >
-                <span className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#25d366]/15 text-[#1da851]">
-                    <WhatsAppIcon className="h-5 w-5" />
-                  </span>
-                  <span>
-                    <span className="block text-sm font-bold text-navy-900">WhatsApp</span>
-                    <span className="block text-xs text-ink-soft">Réponse en général rapide</span>
-                  </span>
-                </span>
-                <span className="text-xl text-navy-700">→</span>
-              </a>
-
-              <a
-                href={`mailto:${ASSO.email}`}
-                className="flex items-center justify-between gap-3 rounded-xl border border-line bg-white p-4 transition hover:border-navy-600/50 hover:shadow-sm"
-              >
-                <span className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-navy-100 text-navy-800">
-                    <MailIcon className="h-5 w-5" />
-                  </span>
-                  <span>
-                    <span className="block text-sm font-bold text-navy-900">Par e-mail</span>
-                    <span className="block text-xs text-ink-soft">{ASSO.email}</span>
-                  </span>
-                </span>
-                <span className="text-xl text-navy-700">→</span>
-              </a>
-            </div>
-
-            <p className="mt-5 text-center text-xs leading-relaxed text-ink-soft">
-              Pas d&apos;appel direct : nous répondons surtout par écrit. Si c&apos;est urgent,
-              précisez-le, nous vous rappelons si nécessaire.
-            </p>
-          </div>
+          <a
+            href={`mailto:${ASSO.email}`}
+            className="flex items-center justify-between gap-3 rounded-xl border border-line bg-white p-4 transition hover:border-navy-600/50 hover:shadow-sm"
+          >
+            <span className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-navy-100 text-navy-800">
+                <MailIcon className="h-5 w-5" />
+              </span>
+              <span>
+                <span className="block text-sm font-bold text-navy-900">Par e-mail</span>
+                <span className="block text-xs text-ink-soft">{ASSO.email}</span>
+              </span>
+            </span>
+            <span className="text-xl text-navy-700">→</span>
+          </a>
         </div>
-      )}
+
+        <p className="mt-5 text-center text-xs leading-relaxed text-ink-soft">
+          Pas d&apos;appel direct : nous répondons surtout par écrit. Si c&apos;est urgent,
+          précisez-le, nous vous rappelons si nécessaire.
+        </p>
+      </Modale>
     </>
   );
 }

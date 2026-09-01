@@ -15,6 +15,8 @@ export type EtatAuth = {
   verifie?: boolean;
   /** Adresse à laquelle le code vient d'être envoyé (réaffichée dans la fenêtre). */
   email?: string;
+  /** L'adresse a déjà un compte : on oriente vers la connexion, pas vers un code. */
+  compteExistant?: boolean;
 };
 
 /**
@@ -127,6 +129,16 @@ export async function sInscrire(_precedent: EtatAuth, donnees: FormData): Promis
     revalidatePath("/", "layout");
     redirect("/tableau-de-bord");
   }
+
+  // Adresse déjà inscrite : Supabase répond 200 sans rien créer ni envoyer,
+  // pour ne pas révéler quels e-mails ont un compte. La marque de ce cas est
+  // une liste d'identités vide. Sans ce contrôle, on ouvrait la fenêtre de
+  // code et l'utilisateur attendait un e-mail qui ne partirait jamais — c'est
+  // exactement la panne constatée en production.
+  if (data.user && (data.user.identities?.length ?? 0) === 0) {
+    return { erreur: "Un compte existe déjà avec cette adresse.", compteExistant: true, email };
+  }
+
   return { otpEnvoye: true, email };
 }
 
