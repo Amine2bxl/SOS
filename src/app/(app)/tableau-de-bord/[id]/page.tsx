@@ -10,6 +10,12 @@ import {
   prochaineAction,
 } from "@/lib/dossiers-format";
 import { MOTIFS, COMMUNES } from "@/lib/data";
+import {
+  echeanceContestation,
+  DELAI_CONTESTATION_JOURS,
+  CONTESTER_NE_SUSPEND_PAS_LE_PAIEMENT,
+  PROCEDURE_RECOUVREMENT,
+} from "@/lib/contestation";
 import { Card, Check } from "@/components/ui";
 import { BadgeStatut, PastilleEcheance } from "@/components/dossier-ui";
 import { RafraichirEnTempsReel } from "@/components/RafraichirEnTempsReel";
@@ -38,6 +44,8 @@ export default async function DossierPage({ params }: { params: Promise<{ id: st
   const suite = prochaineAction(dossier);
   const motif = MOTIFS.find((m) => m.value === dossier.motif);
   const commune = COMMUNES.find((c) => c.nom === dossier.commune);
+  const delai = echeanceContestation(dossier.date_envoi ?? "");
+  const termine = ["accepte", "rejete", "clos"].includes(dossier.statut);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
@@ -88,8 +96,14 @@ export default async function DossierPage({ params }: { params: Promise<{ id: st
             ["Plaque", dossier.plaque ?? "—"],
             ["Autorité", dossier.autorite ?? "—"],
             ["Date du constat", formatDate(dossier.date_constat)],
+            ["Heure du constat", dossier.heure_constat ?? "—"],
             ["Date limite", formatDate(dossier.date_echeance)],
+            ["Lieu du constat", dossier.lieu_constat ?? "—"],
             ["Commune", dossier.commune ?? "—"],
+            ["Zone", dossier.zone ?? "—"],
+            ["Communication structurée", dossier.communication ?? "—"],
+            ["Courrier envoyé le", formatDate(dossier.date_envoi)],
+            ["IBAN du courrier", dossier.iban ?? "—"],
           ].map(([label, valeur]) => (
             <div key={label}>
               <dt className="text-xs font-semibold uppercase tracking-wide text-ink-soft">{label}</dt>
@@ -103,6 +117,31 @@ export default async function DossierPage({ params }: { params: Promise<{ id: st
           </div>
         )}
       </Card>
+
+      {/* Le délai de contestation, calculé depuis la date d'envoi du courrier. */}
+      {delai && !termine && (
+        <Card
+          title="Votre délai pour contester"
+          className={`mt-6 print:hidden ${delai.depasse ? "border-danger-600/40" : "border-navy-600/30"}`}
+        >
+          <p className="font-display text-lg font-bold text-navy-900">
+            {delai.depasse
+              ? `Dépassé depuis ${-delai.joursRestants} jour${-delai.joursRestants > 1 ? "s" : ""}`
+              : `${delai.joursRestants} jour${delai.joursRestants > 1 ? "s" : ""} restant${delai.joursRestants > 1 ? "s" : ""}`}
+          </p>
+          <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">
+            Calcul indicatif : {DELAI_CONTESTATION_JOURS} jours à compter du{" "}
+            {formatDate(dossier.date_envoi)}, soit jusqu&apos;au {formatDate(delai.limite)}.{" "}
+            <strong className="text-navy-900">
+              C&apos;est la mention portée sur votre courrier qui fait foi
+            </strong>{" "}
+            — les délais varient d&apos;une commune à l&apos;autre.
+          </p>
+          <p className="mt-3 rounded-md bg-navy-50 p-3 text-sm leading-relaxed text-ink">
+            {CONTESTER_NE_SUSPEND_PAS_LE_PAIEMENT}
+          </p>
+        </Card>
+      )}
 
       {/* Pièces attendues pour le motif retenu : la contestation vit ou meurt là-dessus. */}
       {motif && (
@@ -157,6 +196,33 @@ export default async function DossierPage({ params }: { params: Promise<{ id: st
           >
             Source officielle — parking.brussels ↗
           </a>
+        </Card>
+      )}
+
+      {/* Ce qui arrive si rien n'est fait : la note grimpe à chaque étape. */}
+      {!termine && (
+        <Card
+          title="Ce qui se passe si rien n'est fait"
+          subtitle="Procédure publiée par parking.brussels. Les montants et délais communaux peuvent différer."
+          className="mt-6 print:hidden"
+        >
+          <ol className="space-y-3">
+            {PROCEDURE_RECOUVREMENT.map((etape, i) => (
+              <li key={etape.titre} className="flex gap-3">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-navy-900 text-xs font-bold text-gold-300">
+                  {i + 1}
+                </span>
+                <div>
+                  <p className="text-sm font-bold text-navy-900">
+                    {etape.titre}{" "}
+                    <span className="font-medium text-ink-soft">— {etape.quand}</span>
+                  </p>
+                  <p className="text-sm text-danger-700">{etape.cout}</p>
+                  <p className="mt-0.5 text-sm leading-relaxed text-ink-soft">{etape.aFaire}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
         </Card>
       )}
 

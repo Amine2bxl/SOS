@@ -33,7 +33,12 @@ export default async function LettrePage({
       plaque: d.plaque ?? "",
       montant: d.montant !== null ? String(d.montant) : "",
       dateConstat: d.date_constat ?? "",
+      heureConstat: d.heure_constat ?? "",
+      dateEcheance: d.date_echeance ?? "",
+      lieuConstat: d.lieu_constat ?? "",
       commune: d.commune ?? "",
+      zone: d.zone ?? "",
+      communication: d.communication ?? "",
       motif: d.motif ?? "",
       explication: d.explication ?? "",
       dejaRedigee: Boolean(d.lettre),
@@ -50,6 +55,7 @@ export default async function LettrePage({
         codePostal: profil?.code_postal ?? "",
         ville: profil?.commune ?? "",
         email: profil?.email ?? "",
+        telephone: profil?.telephone ?? "",
       }}
     />
   );

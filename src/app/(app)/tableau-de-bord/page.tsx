@@ -11,6 +11,7 @@ import {
   type ProchaineAction,
 } from "@/lib/dossiers-format";
 import { planById, contestationsRestantes } from "@/lib/plans";
+import { completudeProfil } from "@/lib/contestation";
 import { LinkBtn, Card, Stat, SectionApp, EtatVide, CarteModule, BarreProgression } from "@/components/ui";
 import { BadgeStatut, PastilleEcheance } from "@/components/dossier-ui";
 import { AlerteReglementaire } from "@/components/AlerteReglementaire";
@@ -84,6 +85,12 @@ export default async function TableauDeBordPage() {
 
   const plan = planById(profil?.plan);
   const restantes = contestationsRestantes(profil?.plan, dossiers.length);
+  const profilComplet = completudeProfil(profil);
+
+  // Un bonjour qui colle au moment de la journée : l'espace membre doit se
+  // sentir habité, pas administratif.
+  const heure = new Date().getUTCHours() + 1; // Bruxelles, approximation suffisante
+  const salutation = heure < 12 ? "Bonjour" : heure < 18 ? "Bon après-midi" : "Bonsoir";
 
   const enCours = dossiers.filter((d) => !["accepte", "rejete", "clos"].includes(d.statut));
   const totalEnJeu = enCours.reduce((s, d) => s + (d.montant ?? 0), 0);
@@ -111,7 +118,8 @@ export default async function TableauDeBordPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h2 className="font-display text-3xl font-bold text-navy-900">
-            Bonjour{profil?.prenom ? ` ${profil.prenom}` : ""}
+            {salutation}
+            {profil?.prenom ? ` ${profil.prenom}` : ""}
           </h2>
           <p className="mt-1 text-ink-soft">
             {enCours.length === 0
@@ -161,6 +169,33 @@ export default async function TableauDeBordPage() {
             })}
           </ul>
         </div>
+      )}
+
+      {/* PROFIL INCOMPLET — chaque champ manquant sera à retaper dans chaque lettre. */}
+      {!profilComplet.complet && (
+        <Card className="mt-6 border-navy-600/30 bg-navy-50/60">
+          <div className="sm:flex sm:items-center sm:justify-between sm:gap-5">
+            <div className="min-w-0">
+              <p className="font-display text-lg font-bold text-navy-900">
+                Complétez votre profil une bonne fois
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-ink-soft">
+                Il manque{" "}
+                <strong className="text-navy-900">
+                  {profilComplet.manquants.map((m) => m.libelle.toLowerCase()).join(", ")}
+                </strong>
+                . Ces coordonnées sont exigées sur toute contestation : renseignées ici, elles
+                remplissent automatiquement chacune de vos lettres.
+              </p>
+            </div>
+            <LinkBtn href="/tableau-de-bord/compte" variant="gold" className="mt-4 shrink-0 sm:mt-0">
+              Compléter mon profil
+            </LinkBtn>
+          </div>
+          <div className="mt-4">
+            <BarreProgression utilise={profilComplet.score} total={100} label="Profil renseigné" />
+          </div>
+        </Card>
       )}
 
       {/* CHIFFRES CLÉS */}

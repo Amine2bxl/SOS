@@ -17,7 +17,14 @@ export type Dossier = {
   plaque: string | null;
   montant: number | null;
   date_constat: string | null;
+  heure_constat: string | null;
   date_echeance: string | null;
+  /** Date d'envoi du courrier : le délai de contestation court depuis elle. */
+  date_envoi: string | null;
+  lieu_constat: string | null;
+  zone: string | null;
+  communication: string | null;
+  iban: string | null;
   statut: string;
   motif: string | null;
   explication: string | null;
@@ -41,6 +48,7 @@ export type Profil = {
   email: string | null;
   prenom: string | null;
   nom: string | null;
+  telephone: string | null;
   adresse: string | null;
   code_postal: string | null;
   commune: string | null;

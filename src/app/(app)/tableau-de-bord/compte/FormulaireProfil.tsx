@@ -8,6 +8,7 @@ import { COMMUNES } from "@/lib/data";
 export function FormulaireProfil(props: {
   prenom: string;
   nom: string;
+  telephone: string;
   adresse: string;
   codePostal: string;
   commune: string;
@@ -24,6 +25,13 @@ export function FormulaireProfil(props: {
           <TextInput name="nom" defaultValue={props.nom} autoComplete="family-name" required />
         </Field>
       </div>
+
+      <Field
+        label="Téléphone"
+        hint="Le service de contestation s'en sert pour vous joindre quand un point demande à être éclairci."
+      >
+        <TextInput name="telephone" type="tel" defaultValue={props.telephone} autoComplete="tel" placeholder="+32 470 00 00 00" />
+      </Field>
 
       <Field label="Adresse" hint="Utilisée pour générer vos lettres de contestation.">
         <TextInput name="adresse" defaultValue={props.adresse} autoComplete="street-address" />

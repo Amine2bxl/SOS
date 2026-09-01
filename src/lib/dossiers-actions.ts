@@ -15,7 +15,13 @@ export type NouveauDossier = {
   plaque: string;
   montant: string;
   dateConstat: string;
+  heureConstat: string;
   dateEcheance: string;
+  dateEnvoi: string;
+  lieuConstat: string;
+  zone: string;
+  communication: string;
+  iban: string;
   ocrTexte: string;
   ocrConfiance: Record<string, string>;
 };
@@ -42,7 +48,13 @@ export async function creerDossier(saisie: NouveauDossier): Promise<EtatDossier 
       plaque: saisie.plaque.trim().toUpperCase() || null,
       montant: montant !== null && !Number.isNaN(montant) ? montant : null,
       date_constat: saisie.dateConstat || null,
+      heure_constat: saisie.heureConstat.trim() || null,
       date_echeance: saisie.dateEcheance || null,
+      date_envoi: saisie.dateEnvoi || null,
+      lieu_constat: saisie.lieuConstat.trim() || null,
+      zone: saisie.zone.trim() || null,
+      communication: saisie.communication.trim() || null,
+      iban: saisie.iban.trim() || null,
       // Le texte OCR brut est conservé pour que l'utilisateur puisse
       // revérifier ce qui avait été lu sur son document.
       ocr_texte: saisie.ocrTexte.slice(0, 20000) || null,

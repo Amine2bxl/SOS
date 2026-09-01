@@ -2,12 +2,25 @@
 
 import { useRef, useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { lireDocument, FORMATS_ACCEPTES, TAILLE_MAX_OCTETS, type ProgressionOCR } from "@/lib/ocr";
-import { extraireDonnees, tauxDeReconnaissance, type DonneesExtraites, type Confiance } from "@/lib/extraction";
+import {
+  lireDocument,
+  FORMATS_ACCEPTES,
+  TAILLE_MAX_OCTETS,
+  type ProgressionOCR,
+  type ResultatLecture,
+} from "@/lib/ocr";
+import {
+  extraireDonnees,
+  tauxDeReconnaissance,
+  champsAVerifier,
+  type DonneesExtraites,
+  type Confiance,
+} from "@/lib/extraction";
+import { echeanceContestation, DELAI_CONTESTATION_JOURS } from "@/lib/contestation";
 import { creerDossier } from "@/lib/dossiers-actions";
 import { Card, Field, TextInput, SelectInput, Btn, LinkBtn, KeyBox } from "@/components/ui";
 import { COMMUNES } from "@/lib/data";
-import { TYPES_DOCUMENT } from "@/lib/dossiers-format";
+import { TYPES_DOCUMENT, formatDate } from "@/lib/dossiers-format";
 
 type Etape = "depot" | "analyse" | "verification";
 
@@ -17,27 +30,27 @@ const CONFIANCE_STYLE: Record<Confiance, { texte: string; classe: string }> = {
   faible: { texte: "Peu sûr — vérifiez", classe: "bg-danger-100 text-danger-700" },
 };
 
+const ZONES = ["Rouge", "Verte", "Bleue", "Grise", "Jaune", "Événement"];
+
 /** Champ du formulaire de vérification, avec son indice de confiance. */
 function ChampVerifie({
   label,
   confiance,
   contexte,
-  obligatoire,
+  aide,
   children,
 }: {
   label: string;
   confiance?: Confiance;
   contexte?: string;
-  obligatoire?: boolean;
+  aide?: string;
   children: React.ReactNode;
 }) {
   const style = confiance ? CONFIANCE_STYLE[confiance] : null;
   return (
     <div>
       <div className="mb-1.5 flex flex-wrap items-center gap-2">
-        <span className="text-sm font-semibold text-navy-900">
-          {label} {obligatoire && <span className="text-danger-600">*</span>}
-        </span>
+        <span className="text-sm font-semibold text-navy-900">{label}</span>
         {style && (
           <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${style.classe}`}>
             {style.texte}
@@ -45,6 +58,7 @@ function ChampVerifie({
         )}
       </div>
       {children}
+      {aide && <p className="mt-1 text-xs text-ink-soft">{aide}</p>}
       {contexte && (
         <p className="mt-1 truncate text-xs italic text-ink-soft" title={contexte}>
           Lu sur votre document : « {contexte} »
@@ -54,6 +68,12 @@ function ChampVerifie({
   );
 }
 
+const FORM_VIDE = {
+  reference: "", typeDocument: "notification", autorite: "", commune: "",
+  plaque: "", montant: "", dateConstat: "", heureConstat: "", dateEcheance: "",
+  dateEnvoi: "", lieuConstat: "", zone: "", communication: "", iban: "",
+};
+
 export function ScannerDocument({ formule }: { formule: string; profil: { prenom: string; nom: string } }) {
   const router = useRouter();
   const fichierRef = useRef<HTMLInputElement>(null);
@@ -62,21 +82,18 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
   const [progression, setProgression] = useState<ProgressionOCR>({ etape: "", pourcentage: 0 });
   const [erreur, setErreur] = useState<string | null>(null);
   const [extrait, setExtrait] = useState<DonneesExtraites | null>(null);
-  const [texteBrut, setTexteBrut] = useState("");
+  const [lecture, setLecture] = useState<ResultatLecture | null>(null);
   const [nomFichier, setNomFichier] = useState("");
   const [enregistrement, demarrerEnregistrement] = useTransition();
 
-  // Valeurs confirmées par l'utilisateur : pré-remplies par l'OCR, modifiables.
-  const [form, setForm] = useState({
-    reference: "", typeDocument: "notification", autorite: "", commune: "",
-    plaque: "", montant: "", dateConstat: "", dateEcheance: "",
-  });
+  // Valeurs confirmées par l'utilisateur : pré-remplies par la lecture, modifiables.
+  const [form, setForm] = useState(FORM_VIDE);
 
   const traiterFichier = async (fichier: File) => {
     setErreur(null);
 
     if (fichier.size > TAILLE_MAX_OCTETS) {
-      setErreur("Ce fichier dépasse 15 Mo. Prenez une photo un peu moins lourde.");
+      setErreur("Ce fichier dépasse 20 Mo. Reprenez la photo en qualité un peu moindre.");
       return;
     }
 
@@ -85,16 +102,16 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
     setProgression({ etape: "Préparation…", pourcentage: 0 });
 
     try {
-      const texte = await lireDocument(fichier, setProgression);
+      const resultat = await lireDocument(fichier, setProgression);
 
-      if (texte.trim().length < 20) {
+      if (resultat.texte.trim().length < 20) {
         setErreur(
-          "Nous n'avons pas réussi à lire ce document. Reprenez la photo à plat, bien éclairée et sans reflet. Ou saisissez les informations vous-même, juste en dessous.",
+          "Nous n'avons pas réussi à lire ce document. Reprenez la photo à plat, bien éclairée et sans reflet — ou saisissez les informations vous-même, juste en dessous.",
         );
       }
 
-      const donnees = extraireDonnees(texte);
-      setTexteBrut(texte);
+      const donnees = extraireDonnees(resultat.texte);
+      setLecture(resultat);
       setExtrait(donnees);
       setForm({
         reference: donnees.reference.valeur ?? "",
@@ -104,12 +121,18 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
         plaque: donnees.plaque.valeur ?? "",
         montant: donnees.montant.valeur !== null ? String(donnees.montant.valeur) : "",
         dateConstat: donnees.dateConstat.valeur ?? "",
+        heureConstat: donnees.heureConstat.valeur ?? "",
         dateEcheance: donnees.dateEcheance.valeur ?? "",
+        dateEnvoi: donnees.dateEnvoi.valeur ?? "",
+        lieuConstat: donnees.lieuConstat.valeur ?? "",
+        zone: donnees.zone.valeur ?? "",
+        communication: donnees.communication.valeur ?? "",
+        iban: donnees.iban.valeur ?? "",
       });
       setEtape("verification");
     } catch {
       setErreur(
-        "La lecture a échoué. Réessayez avec une photo, ou saisissez les informations vous-même.",
+        "La lecture a échoué. Si le fichier vient d'un iPhone, exportez-le en JPEG — ou saisissez les informations vous-même.",
       );
       setEtape("depot");
     }
@@ -140,7 +163,8 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
 
   const saisirALaMain = () => {
     setExtrait(null);
-    setTexteBrut("");
+    setLecture(null);
+    setForm(FORM_VIDE);
     setEtape("verification");
   };
 
@@ -149,7 +173,7 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
     demarrerEnregistrement(async () => {
       const resultat = await creerDossier({
         ...form,
-        ocrTexte: texteBrut,
+        ocrTexte: lecture?.texte ?? "",
         ocrConfiance: extrait
           ? Object.fromEntries(
               Object.entries(extrait).map(([cle, champ]) => [cle, champ.confiance]),
@@ -168,14 +192,15 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
   /* ---------------------------------------------------------------- dépôt */
   if (etape === "depot") {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
-        <h1 className="text-center font-display text-3xl font-bold text-navy-900">
+      <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
+        <h2 className="text-center font-display text-3xl font-bold text-navy-900">
           Ajoutez votre document
-        </h1>
-        <p className="mt-3 text-center text-ink-soft">
-          Photographiez votre courrier, collez une capture d&apos;écran (Ctrl+V) ou déposez une photo
-          ou un PDF. Nous en extrayons la référence, le montant, les dates et la plaque. Vous
-          vérifiez, puis c&apos;est enregistré.
+        </h2>
+        <p className="mt-3 text-center leading-relaxed text-ink-soft">
+          Photographiez votre courrier, collez une capture d&apos;écran (Ctrl+V) ou déposez un PDF.
+          Nous en extrayons <strong className="text-navy-900">tout</strong> : référence, montant,
+          dates, heure, lieu, plaque, communication structurée. Vous n&apos;avez plus qu&apos;à
+          vérifier.
         </p>
 
         <button
@@ -205,7 +230,7 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
             Choisir, coller ou déposer un document
           </span>
           <span className="mt-1 text-sm text-ink-soft">
-            Photo, capture d&apos;écran (Ctrl+V) ou PDF — 15 Mo maximum
+            Photo, capture d&apos;écran, PDF de plusieurs pages — 20 Mo maximum
           </span>
         </button>
 
@@ -232,7 +257,25 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
           </button>
         </div>
 
-        <div className="mt-8">
+        <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <div className="rounded-xl border border-line bg-card p-4">
+            <p className="font-display text-sm font-bold text-navy-900">Un PDF ? C&apos;est parfait</p>
+            <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">
+              Nous lisons son texte directement, sans reconnaissance d&apos;image : aucune erreur
+              possible sur la référence ou le montant. Toutes les pages sont lues, pas seulement la
+              première.
+            </p>
+          </div>
+          <div className="rounded-xl border border-line bg-card p-4">
+            <p className="font-display text-sm font-bold text-navy-900">Une photo de travers ?</p>
+            <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">
+              Nous essayons plusieurs réglages et plusieurs orientations, et gardons la meilleure
+              lecture. Un document à l&apos;envers ou mal éclairé passe quand même.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6">
           <KeyBox title="Votre document ne quitte pas votre appareil">
             La lecture se fait dans votre navigateur. Le fichier ne part vers aucun serveur : seules
             les informations que vous confirmez à l&apos;écran rejoignent votre dossier.
@@ -249,7 +292,7 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
     return (
       <div className="mx-auto max-w-md px-4 py-24 text-center sm:px-6">
         <div className="mx-auto h-14 w-14 animate-spin rounded-full border-4 border-navy-100 border-t-navy-800" />
-        <h1 className="mt-8 font-display text-xl font-bold text-navy-900">{progression.etape}</h1>
+        <h2 className="mt-8 font-display text-xl font-bold text-navy-900">{progression.etape}</h2>
         <p className="mt-2 truncate text-sm text-ink-soft">{nomFichier}</p>
 
         <div className="mt-6 h-2.5 overflow-hidden rounded-full bg-line-soft">
@@ -260,8 +303,9 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
         </div>
         <p className="mt-2 text-sm font-semibold text-navy-800">{progression.pourcentage} %</p>
         <p className="mt-6 text-xs leading-relaxed text-ink-soft">
-          La première lecture télécharge le moteur de reconnaissance, comptez une trentaine de
-          secondes. Les suivantes sont bien plus rapides.
+          Sur une photo, la première lecture télécharge le moteur de reconnaissance : comptez une
+          trentaine de secondes. Les suivantes sont bien plus rapides. Un PDF, lui, est lu
+          instantanément.
         </p>
       </div>
     );
@@ -269,20 +313,54 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
 
   /* --------------------------------------------------------- vérification */
   const taux = extrait ? tauxDeReconnaissance(extrait) : 0;
+  const aVerifier = extrait ? champsAVerifier(extrait) : [];
+  const echeance = echeanceContestation(form.dateEnvoi);
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
-      <h1 className="font-display text-3xl font-bold text-navy-900">Vérifiez les informations</h1>
+    <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
+      <h2 className="font-display text-3xl font-bold text-navy-900">Vérifiez les informations</h2>
 
-      {extrait ? (
-        <p className="mt-3 leading-relaxed text-ink-soft">
-          Nous avons reconnu <strong className="text-navy-900">{taux} %</strong> des informations.
-          <strong className="text-navy-900"> Relisez chaque champ</strong> et corrigez ce qui cloche :
-          une date d&apos;échéance mal lue vous ferait rater un délai.
-        </p>
+      {extrait && lecture ? (
+        <>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span
+              className={`rounded-full px-3 py-1 text-xs font-bold ${
+                lecture.source === "texte-pdf" ? "bg-ok-100 text-ok-700" : "bg-navy-50 text-navy-700"
+              }`}
+            >
+              {lecture.source === "texte-pdf"
+                ? `Texte lu directement dans le PDF — aucune erreur de reconnaissance`
+                : `Reconnaissance d'image — confiance ${lecture.confiance} %`}
+            </span>
+            {lecture.pages > 1 && (
+              <span className="rounded-full bg-navy-50 px-3 py-1 text-xs font-bold text-navy-700">
+                {lecture.pages} pages lues
+              </span>
+            )}
+            <span className="rounded-full bg-navy-50 px-3 py-1 text-xs font-bold text-navy-700">
+              {taux} % des champs clés trouvés
+            </span>
+          </div>
+
+          <p className="mt-3 leading-relaxed text-ink-soft">
+            {aVerifier.length > 0 ? (
+              <>
+                Regardez en priorité <strong className="text-navy-900">{aVerifier.join(", ")}</strong>{" "}
+                : ces valeurs ont été lues, mais sans certitude. Une date mal lue vous ferait rater
+                un délai.
+              </>
+            ) : (
+              <>
+                Tout a été lu avec certitude. Un coup d&apos;œil de contrôle et vous pouvez
+                enregistrer.
+              </>
+            )}
+          </p>
+        </>
       ) : (
         <p className="mt-3 text-ink-soft">
-          Recopiez les informations qui figurent sur votre courrier.
+          Recopiez les informations qui figurent sur votre courrier. Tout ce que vous saisissez ici
+          se retrouvera dans votre lettre, vous ne le retaperez pas une seconde fois.
         </p>
       )}
 
@@ -295,9 +373,39 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
         </div>
       )}
 
-      <Card className="mt-6">
+      {/* Le délai, calculé et expliqué : c'est l'information la plus périssable. */}
+      {echeance && (
+        <div
+          className={`mt-5 rounded-xl border-2 p-4 ${
+            echeance.depasse
+              ? "border-danger-600/40 bg-danger-100"
+              : echeance.joursRestants <= 3
+                ? "border-warn-600/40 bg-warn-100"
+                : "border-navy-600/25 bg-navy-50"
+          }`}
+        >
+          <p className="text-sm font-bold text-navy-900">
+            {echeance.depasse
+              ? `Le délai de contestation semble dépassé depuis ${-echeance.joursRestants} jour${-echeance.joursRestants > 1 ? "s" : ""}`
+              : `Il vous resterait ${echeance.joursRestants} jour${echeance.joursRestants > 1 ? "s" : ""} pour contester`}
+          </p>
+          <p className="mt-1 text-sm leading-relaxed text-ink">
+            Calcul indicatif : {DELAI_CONTESTATION_JOURS} jours à compter du{" "}
+            {formatDate(form.dateEnvoi)}, soit jusqu&apos;au {formatDate(echeance.limite)}.{" "}
+            <strong>C&apos;est la mention portée sur votre courrier qui fait foi</strong> — les
+            délais varient d&apos;une commune à l&apos;autre.
+          </p>
+        </div>
+      )}
+
+      <Card title="Le constat" className="mt-6">
         <div className="space-y-5">
-          <ChampVerifie label="Référence du dossier" confiance={extrait?.reference.confiance} contexte={extrait?.reference.contexte}>
+          <ChampVerifie
+            label="Référence du dossier"
+            confiance={extrait?.reference.confiance}
+            contexte={extrait?.reference.contexte}
+            aide="En haut de votre courrier."
+          >
             <TextInput
               value={form.reference}
               onChange={(e) => setForm({ ...form, reference: e.target.value })}
@@ -305,7 +413,25 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
             />
           </ChampVerifie>
 
-          <ChampVerifie label="Type de document" confiance={extrait?.typeDocument.confiance} contexte={extrait?.typeDocument.contexte}>
+          <ChampVerifie
+            label="Communication structurée"
+            confiance={extrait?.communication.confiance}
+            contexte={extrait?.communication.contexte}
+            aide="Elle identifie votre dossier plus sûrement qu'une référence recopiée."
+          >
+            <TextInput
+              value={form.communication}
+              onChange={(e) => setForm({ ...form, communication: e.target.value })}
+              placeholder="+++000/0000/00000+++"
+            />
+          </ChampVerifie>
+
+          <ChampVerifie
+            label="Type de document"
+            confiance={extrait?.typeDocument.confiance}
+            contexte={extrait?.typeDocument.contexte}
+            aide="Il dit où vous en êtes dans la procédure, et donc ce qui presse."
+          >
             <SelectInput
               options={Object.entries(TYPES_DOCUMENT).map(([value, label]) => ({ value, label }))}
               value={form.typeDocument}
@@ -314,7 +440,11 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
           </ChampVerifie>
 
           <div className="grid gap-5 sm:grid-cols-2">
-            <ChampVerifie label="Montant réclamé (€)" confiance={extrait?.montant.confiance} contexte={extrait?.montant.contexte}>
+            <ChampVerifie
+              label="Montant réclamé (€)"
+              confiance={extrait?.montant.confiance}
+              contexte={extrait?.montant.contexte}
+            >
               <TextInput
                 value={form.montant}
                 onChange={(e) => setForm({ ...form, montant: e.target.value })}
@@ -323,7 +453,11 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
               />
             </ChampVerifie>
 
-            <ChampVerifie label="Plaque d'immatriculation" confiance={extrait?.plaque.confiance} contexte={extrait?.plaque.contexte}>
+            <ChampVerifie
+              label="Plaque d'immatriculation"
+              confiance={extrait?.plaque.confiance}
+              contexte={extrait?.plaque.contexte}
+            >
               <TextInput
                 value={form.plaque}
                 onChange={(e) => setForm({ ...form, plaque: e.target.value })}
@@ -331,7 +465,11 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
               />
             </ChampVerifie>
 
-            <ChampVerifie label="Date du constat" confiance={extrait?.dateConstat.confiance} contexte={extrait?.dateConstat.contexte}>
+            <ChampVerifie
+              label="Date du constat"
+              confiance={extrait?.dateConstat.confiance}
+              contexte={extrait?.dateConstat.contexte}
+            >
               <TextInput
                 type="date"
                 value={form.dateConstat}
@@ -339,7 +477,37 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
               />
             </ChampVerifie>
 
-            <ChampVerifie label="Date limite pour réagir" confiance={extrait?.dateEcheance.confiance} contexte={extrait?.dateEcheance.contexte}>
+            <ChampVerifie
+              label="Heure du constat"
+              confiance={extrait?.heureConstat.confiance}
+              contexte={extrait?.heureConstat.contexte}
+              aide="Décisive si vous aviez payé."
+            >
+              <TextInput
+                type="time"
+                value={form.heureConstat}
+                onChange={(e) => setForm({ ...form, heureConstat: e.target.value })}
+              />
+            </ChampVerifie>
+
+            <ChampVerifie
+              label="Date d'envoi du courrier"
+              confiance={extrait?.dateEnvoi.confiance}
+              contexte={extrait?.dateEnvoi.contexte}
+              aide="C'est d'elle que court le délai de contestation."
+            >
+              <TextInput
+                type="date"
+                value={form.dateEnvoi}
+                onChange={(e) => setForm({ ...form, dateEnvoi: e.target.value })}
+              />
+            </ChampVerifie>
+
+            <ChampVerifie
+              label="Date limite pour réagir"
+              confiance={extrait?.dateEcheance.confiance}
+              contexte={extrait?.dateEcheance.contexte}
+            >
               <TextInput
                 type="date"
                 value={form.dateEcheance}
@@ -347,23 +515,70 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
               />
             </ChampVerifie>
           </div>
+        </div>
+      </Card>
 
-          <ChampVerifie label="Commune du constat" confiance={extrait?.commune.confiance} contexte={extrait?.commune.contexte}>
-            <SelectInput
-              options={COMMUNES.map((c) => ({ value: c.nom, label: c.nom }))}
-              placeholder="Choisissez la commune…"
-              value={form.commune}
-              onChange={(e) => setForm({ ...form, commune: e.target.value })}
+      <Card title="Le lieu" subtitle="C'est lui qui détermine la règle qu'on vous oppose." className="mt-5">
+        <div className="space-y-5">
+          <ChampVerifie
+            label="Rue et numéro du constat"
+            confiance={extrait?.lieuConstat.confiance}
+            contexte={extrait?.lieuConstat.contexte}
+          >
+            <TextInput
+              value={form.lieuConstat}
+              onChange={(e) => setForm({ ...form, lieuConstat: e.target.value })}
+              placeholder="Ex. Chaussée d'Ixelles 145"
             />
           </ChampVerifie>
 
-          <ChampVerifie label="Qui vous réclame la somme" confiance={extrait?.autorite.confiance} contexte={extrait?.autorite.contexte}>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <ChampVerifie
+              label="Commune du constat"
+              confiance={extrait?.commune.confiance}
+              contexte={extrait?.commune.contexte}
+            >
+              <SelectInput
+                options={COMMUNES.map((c) => ({ value: c.nom, label: c.nom }))}
+                placeholder="Choisissez la commune…"
+                value={form.commune}
+                onChange={(e) => setForm({ ...form, commune: e.target.value })}
+              />
+            </ChampVerifie>
+
+            <ChampVerifie
+              label="Zone de stationnement"
+              confiance={extrait?.zone.confiance}
+              contexte={extrait?.zone.contexte}
+            >
+              <SelectInput
+                options={ZONES.map((z) => ({ value: z, label: z }))}
+                placeholder="Non précisée"
+                value={form.zone}
+                onChange={(e) => setForm({ ...form, zone: e.target.value })}
+              />
+            </ChampVerifie>
+          </div>
+        </div>
+      </Card>
+
+      <Card title="Qui vous réclame la somme" className="mt-5">
+        <div className="space-y-5">
+          <ChampVerifie confiance={extrait?.autorite.confiance} contexte={extrait?.autorite.contexte} label="Autorité ou service">
             <TextInput
               value={form.autorite}
               onChange={(e) => setForm({ ...form, autorite: e.target.value })}
               placeholder="parking.brussels, commune, huissier…"
             />
           </ChampVerifie>
+
+          <Field label="IBAN indiqué sur le courrier" hint="Utile pour prouver un paiement ou en demander le remboursement.">
+            <TextInput
+              value={form.iban}
+              onChange={(e) => setForm({ ...form, iban: e.target.value })}
+              placeholder="BE00 0000 0000 0000"
+            />
+          </Field>
         </div>
 
         <div className="mt-7 flex flex-col gap-3 sm:flex-row">
@@ -376,13 +591,13 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
         </div>
       </Card>
 
-      {texteBrut && (
+      {lecture?.texte && (
         <details className="mt-5 rounded-xl border border-line bg-card p-4">
           <summary className="cursor-pointer text-sm font-semibold text-navy-900">
-            Voir le texte brut lu sur le document
+            Voir le texte lu sur le document
           </summary>
           <pre className="mt-3 max-h-64 overflow-auto whitespace-pre-wrap text-xs text-ink-soft">
-            {texteBrut}
+            {lecture.texte}
           </pre>
         </details>
       )}

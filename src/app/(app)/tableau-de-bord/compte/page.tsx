@@ -24,6 +24,7 @@ export default async function ComptePage() {
         <FormulaireProfil
           prenom={profil?.prenom ?? ""}
           nom={profil?.nom ?? ""}
+          telephone={profil?.telephone ?? ""}
           adresse={profil?.adresse ?? ""}
           codePostal={profil?.code_postal ?? ""}
           commune={profil?.commune ?? ""}
