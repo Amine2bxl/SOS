@@ -7,6 +7,7 @@ import { sInscrire, type EtatAuth } from "@/lib/auth-actions";
 import { Card, Field, TextInput, Btn } from "@/components/ui";
 import { MotDePasseInput } from "@/components/MotDePasseInput";
 import { FenetreCodeEmail } from "@/components/FenetreCodeEmail";
+import { VerifierBoiteMail } from "@/components/VerifierBoiteMail";
 
 export function FormulaireInscription() {
   const parametres = useSearchParams();
@@ -83,12 +84,17 @@ export function FormulaireInscription() {
         </form>
       </Card>
 
-      {etat.otpEnvoye && !etat.compteExistant && (
+      {/* Deux modes, deux fenêtres. Le mode « lien » n'affiche jamais de grille
+          de saisie : l'e-mail par défaut de Supabase ne contient aucun code. */}
+      {etat.otpEnvoye && !etat.compteExistant && etat.mode === "code" && (
         <FenetreCodeEmail
           email={etat.email ?? email}
           suite={suite}
           erreurInitiale={etat.erreur}
         />
+      )}
+      {etat.otpEnvoye && !etat.compteExistant && etat.mode === "lien" && (
+        <VerifierBoiteMail email={etat.email ?? email} />
       )}
     </>
   );

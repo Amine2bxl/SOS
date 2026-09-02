@@ -29,9 +29,9 @@ export const ADRESSE_COMPLETE = `${ASSO.rue}, ${ASSO.codePostal} ${ASSO.ville}`;
 /** Chiffres clés mis en avant sur la page d'accueil. */
 export const CHIFFRES: { valeur: string; label: string; detail: string }[] = [
   {
-    valeur: "220-250",
+    valeur: "+200",
     label: "dossiers accompagnés",
-    detail: "Depuis la création de l'association en 2024.",
+    detail: "Depuis la création de l'association en août 2024.",
   },
   {
     valeur: "19",
@@ -41,7 +41,7 @@ export const CHIFFRES: { valeur: string; label: string; detail: string }[] = [
   {
     valeur: "2",
     label: "contestations gratuites",
-    detail: "Et le téléphone reste gratuit, sans limite.",
+    detail: "L'aide par écrit reste gratuite, sans limite de dossiers.",
   },
 ];
 
@@ -629,7 +629,7 @@ export const FAQS: Faq[] = [
   {
     question: "Combien coûte votre aide ?",
     reponse:
-      "L'aide par téléphone et par e-mail ne coûte rien, sans limite de dossiers. Sur le site, vos deux premières contestations sont gratuites ; au-delà, l'adhésion ouvre les contestations illimitées. Nous sommes une ASBL, pas un cabinet : personne ne prend de commission sur ce que vous récupérez.",
+      "L'aide par écrit — WhatsApp ou e-mail — ne coûte rien, sans limite de dossiers ; nous vous rappelons si votre situation le demande. Sur le site, vos deux premières contestations sont gratuites ; au-delà, l'adhésion ouvre les contestations illimitées. Nous sommes une ASBL, pas un cabinet : personne ne prend de commission sur ce que vous récupérez.",
   },
   {
     question: "Je viens de recevoir un courrier. Que dois-je faire en premier ?",

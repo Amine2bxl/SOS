@@ -17,7 +17,27 @@ export type EtatAuth = {
   email?: string;
   /** L'adresse a déjà un compte : on oriente vers la connexion, pas vers un code. */
   compteExistant?: boolean;
+  /** Comment l'utilisateur doit confirmer : saisir un code, ou cliquer un lien. */
+  mode?: ModeConfirmation;
 };
+
+/**
+ * Deux façons de confirmer une adresse, selon ce qui est configuré.
+ *
+ * - `code` : nous fabriquons le code et envoyons notre propre e-mail. C'est le
+ *   mode voulu, et le seul qui affiche une fenêtre de saisie à 6 chiffres.
+ * - `lien` : repli sur le mailer de Supabase. Son gabarit par défaut ne
+ *   contient **que** le lien de confirmation, jamais de code — afficher une
+ *   fenêtre de saisie dans ce mode revient à demander un code qui n'existe
+ *   nulle part. On demande donc de cliquer sur le lien, ce qui fonctionne sans
+ *   aucune configuration.
+ */
+export type ModeConfirmation = "code" | "lien";
+
+/** Le mode réellement actif, décidé par les variables d'environnement. */
+export async function modeConfirmation(): Promise<ModeConfirmation> {
+  return creerClientAdmin() && mailConfigure() ? "code" : "lien";
+}
 
 /**
  * Envoi maison du code de confirmation.
@@ -112,8 +132,8 @@ export async function sInscrire(_precedent: EtatAuth, donnees: FormData): Promis
   if (maison) {
     // Le compte existe désormais : la fenêtre de code reste ouverte même en
     // cas d'échec d'envoi, pour que l'utilisateur puisse demander un renvoi.
-    if (!maison.ok) return { otpEnvoye: true, email, erreur: maison.erreur };
-    return { otpEnvoye: true, email };
+    if (!maison.ok) return { otpEnvoye: true, email, mode: "code", erreur: maison.erreur };
+    return { otpEnvoye: true, email, mode: "code" };
   }
 
   // Repli tant que Resend et la clé service_role ne sont pas configurés :
@@ -139,7 +159,9 @@ export async function sInscrire(_precedent: EtatAuth, donnees: FormData): Promis
     return { erreur: "Un compte existe déjà avec cette adresse.", compteExistant: true, email };
   }
 
-  return { otpEnvoye: true, email };
+  // Mode lien : le gabarit par défaut de Supabase ne porte pas de code. On
+  // n'ouvre donc aucune fenêtre de saisie, on renvoie vers la boîte mail.
+  return { otpEnvoye: true, email, mode: "lien" };
 }
 
 /** Vérifie le code à 6 chiffres reçu par e-mail et ouvre la session. */
@@ -177,14 +199,18 @@ export async function renvoyerCode(_precedent: EtatAuth, donnees: FormData): Pro
   // qui produit lui aussi un code à 6 chiffres.
   const maison = await envoyerCodeMaison({ type: "magiclink", email });
   if (maison) {
-    if (!maison.ok) return { erreur: maison.erreur, email };
-    return { message: "Un nouveau code vient d'être envoyé.", email };
+    if (!maison.ok) return { erreur: maison.erreur, email, mode: "code" };
+    return { message: "Un nouveau code vient d'être envoyé.", email, mode: "code" };
   }
 
   const { error } = await supabase.auth.resend({ type: "signup", email });
-  if (error) return { erreur: traduireErreur(error.message) };
+  if (error) return { erreur: traduireErreur(error.message), mode: "lien" };
 
-  return { message: "Un nouveau code vient d'être envoyé.", email };
+  return {
+    message: "Un nouveau lien de confirmation vient d'être envoyé.",
+    email,
+    mode: "lien",
+  };
 }
 
 export async function seDeconnecter() {

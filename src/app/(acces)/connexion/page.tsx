@@ -3,12 +3,18 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { FormulaireConnexion } from "./FormulaireConnexion";
 import { supabaseConfigure } from "@/lib/supabase/config";
+import { modeConfirmation } from "@/lib/auth-actions";
 import { ServiceIndisponible } from "@/components/ServiceIndisponible";
 
 export const metadata: Metadata = { title: "Connexion" };
 
-export default function ConnexionPage() {
+export default async function ConnexionPage() {
   if (!supabaseConfigure()) return <ServiceIndisponible />;
+
+  // Le formulaire doit savoir comment une adresse se confirme ici : par code
+  // saisi, ou par lien cliqué. Sans cela il proposerait une grille de saisie
+  // même quand aucun code n'est envoyé.
+  const mode = await modeConfirmation();
 
   return (
     <div className="mx-auto max-w-md px-4 py-16 sm:px-6">
@@ -20,7 +26,7 @@ export default function ConnexionPage() {
       </p>
 
       <Suspense fallback={null}>
-        <FormulaireConnexion />
+        <FormulaireConnexion mode={mode} />
       </Suspense>
 
       <p className="mt-6 text-center text-sm text-ink-soft">

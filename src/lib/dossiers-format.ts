@@ -61,8 +61,11 @@ export type Alerte = {
   commune_slug: string | null;
   titre: string;
   resume: string;
+  /** `urgent` déclenche une fenêtre modale ; le reste, un encadré. */
   importance: string;
   publie_le: string;
+  /** Texte officiel qui fait foi : toujours proposé à la lecture. */
+  source_url: string | null;
 };
 
 export const STATUTS: Record<string, { label: string; ton: "neutre" | "attention" | "ok" | "risque" }> = {
