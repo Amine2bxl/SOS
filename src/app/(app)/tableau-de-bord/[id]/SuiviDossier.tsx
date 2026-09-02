@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { changerStatut, supprimerDossier } from "@/lib/dossiers-actions";
 import { Card, Btn, LinkBtn } from "@/components/ui";
+import { Modale } from "@/components/Modale";
 
 type DossierLeger = { id: string; statut: string; lettre: string | null };
 
@@ -132,46 +133,41 @@ export function SuiviDossier({ dossier }: { dossier: DossierLeger }) {
         </div>
       </Card>
 
-      {confirmationSuppression && (
-        <div
-          role="alertdialog"
-          aria-modal="true"
-          aria-labelledby="titre-suppression"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-navy-950/70 p-4 backdrop-blur-sm"
-        >
-          <Card className="w-full max-w-sm animate-rise border-navy-950/10 shadow-2xl">
-            <h2 id="titre-suppression" className="font-display text-xl font-bold text-navy-900">
-              Supprimer ce dossier ?
-            </h2>
-            <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-              Le dossier, la lettre de contestation et sa chronologie seront définitivement
-              supprimés. Cette action ne peut pas être annulée.
-            </p>
-            <div className="mt-6 flex flex-col gap-2 sm:flex-row">
-              <Btn
-                variant="primary"
-                className="btn-danger flex-1"
-                disabled={enCours}
-                onClick={() =>
-                  demarrer(() => {
-                    supprimerDossier(dossier.id);
-                  })
-                }
-              >
-                {enCours ? "Suppression…" : "Supprimer définitivement"}
-              </Btn>
-              <Btn
-                variant="secondary"
-                className="flex-1"
-                disabled={enCours}
-                onClick={() => setConfirmationSuppression(false)}
-              >
-                Annuler
-              </Btn>
-            </div>
-          </Card>
+      <Modale
+        ouverte={confirmationSuppression}
+        onFermer={() => setConfirmationSuppression(false)}
+        titre="Supprimer ce dossier ?"
+        variante="alerte"
+        fermable={!enCours}
+      >
+        <h2 className="font-display text-xl font-bold text-navy-900">Supprimer ce dossier ?</h2>
+        <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+          Le dossier, la lettre de contestation et sa chronologie seront définitivement supprimés.
+          Cette action ne peut pas être annulée.
+        </p>
+        <div className="mt-6 flex flex-col gap-2 sm:flex-row">
+          <Btn
+            variant="primary"
+            className="btn-danger flex-1"
+            disabled={enCours}
+            onClick={() =>
+              demarrer(() => {
+                supprimerDossier(dossier.id);
+              })
+            }
+          >
+            {enCours ? "Suppression…" : "Supprimer définitivement"}
+          </Btn>
+          <Btn
+            variant="secondary"
+            className="flex-1"
+            disabled={enCours}
+            onClick={() => setConfirmationSuppression(false)}
+          >
+            Annuler
+          </Btn>
         </div>
-      )}
+      </Modale>
 
       <p className="mt-4 text-center text-xs text-ink-soft print:hidden">
         Besoin d&apos;un point de repère sur les règles applicables ?{" "}

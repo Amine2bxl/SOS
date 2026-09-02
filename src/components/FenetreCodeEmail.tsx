@@ -2,7 +2,8 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { verifierOtp, renvoyerCode, type EtatAuth } from "@/lib/auth-actions";
-import { Card, Btn } from "@/components/ui";
+import { Btn } from "@/components/ui";
+import { Modale } from "@/components/Modale";
 
 /** Six cases de saisie du code, avec avance automatique et collage accepté. */
 function SaisieCode({ valeur, onChange }: { valeur: string; onChange: (v: string) => void }) {
@@ -112,13 +113,16 @@ export function FenetreCodeEmail({
   const erreur = etatCode.erreur ?? erreurInitiale;
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="titre-code"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-navy-950/70 p-4 backdrop-blur-sm"
+    <Modale
+      ouverte
+      // Tant que le code n'est pas saisi, le compte reste inactif : fermer par
+      // mégarde laisserait l'utilisateur dans une impasse. On ne ferme que par
+      // le bouton explicite, quand il existe.
+      fermable={Boolean(onFermer) && !etatCode.verifie}
+      onFermer={() => onFermer?.()}
+      titre="Confirmez votre adresse e-mail"
     >
-      <Card className="w-full max-w-sm animate-rise border-navy-950/10 shadow-2xl">
+      <>
         {etatCode.verifie ? (
           <div className="py-4 text-center">
             <span
@@ -222,7 +226,7 @@ export function FenetreCodeEmail({
             </p>
           </>
         )}
-      </Card>
-    </div>
+      </>
+    </Modale>
   );
 }

@@ -7,7 +7,9 @@ import { traduireErreur } from "@/lib/auth-erreurs";
 import { Card, Field, TextInput, Btn } from "@/components/ui";
 import { MotDePasseInput } from "@/components/MotDePasseInput";
 import { FenetreCodeEmail } from "@/components/FenetreCodeEmail";
+import { VerifierBoiteMail } from "@/components/VerifierBoiteMail";
 import { EcranTransition } from "@/components/EcranTransition";
+import type { ModeConfirmation } from "@/lib/auth-actions";
 
 /**
  * Connexion directement dans le navigateur : la session s'ouvre côté client,
@@ -15,7 +17,7 @@ import { EcranTransition } from "@/components/EcranTransition";
  * volontaire : le serveur voit ainsi le cookie tout juste écrit et rend la
  * coquille de l'application du premier coup, sans état intermédiaire.
  */
-export function FormulaireConnexion() {
+export function FormulaireConnexion({ mode }: { mode: ModeConfirmation }) {
   const parametres = useSearchParams();
   const brute = parametres.get("suite") ?? "/tableau-de-bord";
   const suite = brute.startsWith("/") ? brute : "/tableau-de-bord";
@@ -93,7 +95,9 @@ export function FormulaireConnexion() {
         </form>
       </Card>
 
-      {aConfirmer && (
+      {/* Adresse jamais confirmée : on rattrape, avec la bonne fenêtre selon
+          ce que le site sait réellement envoyer. */}
+      {aConfirmer && mode === "code" && (
         <FenetreCodeEmail
           email={email}
           suite={suite}
@@ -101,6 +105,7 @@ export function FormulaireConnexion() {
           onFermer={() => setAConfirmer(false)}
         />
       )}
+      {aConfirmer && mode === "lien" && <VerifierBoiteMail email={email} />}
     </>
   );
 }

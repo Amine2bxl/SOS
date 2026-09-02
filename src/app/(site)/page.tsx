@@ -96,13 +96,14 @@ export default function HomePage() {
               Association citoyenne — Bruxelles
             </p>
             <h1 className="mt-4 font-display text-4xl font-black leading-[1.08] tracking-tight sm:text-5xl">
-              Une amende de stationnement&nbsp;?{" "}
-              <span className="text-gold-400">Ne la payez pas sans avoir lu ceci.</span>
+              Payer votre redevance,{" "}
+              <span className="text-gold-400">c&apos;est renoncer à la contester.</span>
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-navy-100">
-              Photographiez votre courrier. Nous en extrayons tout, nous écrivons votre
-              contestation avec les bons arguments, et nous suivons vos délais à votre place.
-              Les deux premières sont gratuites.
+              Avant de régler, prenez trois minutes. Photographiez votre courrier&nbsp;: nous en
+              lisons la référence, le montant, la date et l&apos;heure du constat, le lieu et la
+              plaque. Votre lettre s&apos;écrit, vos délais sont suivis. Les deux premières
+              contestations sont gratuites.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -182,7 +183,7 @@ export default function HomePage() {
 
         <div className="mt-8 flex justify-center">
           <LinkBtn href="/inscription" variant="gold" className="px-6 py-3.5 text-base">
-            Arrêter la mécanique maintenant →
+            Ouvrir mon dossier maintenant →
           </LinkBtn>
         </div>
       </section>
@@ -212,10 +213,11 @@ export default function HomePage() {
       {/* COMMENT ÇA MARCHE */}
       <section className="mx-auto max-w-5xl px-4 py-14 sm:px-6">
         <h2 className="text-center font-display text-2xl font-bold text-navy-900 sm:text-3xl">
-          Trois minutes, trois étapes
+          Trois étapes, et vous ne tapez presque rien
         </h2>
         <p className="mx-auto mt-3 max-w-xl text-center text-ink-soft">
-          Vous ne tapez rien : vous vérifiez ce que nous avons lu.
+          Ce que le courrier contient, nous le lisons. Vous corrigez ce qui cloche, et c&apos;est
+          tout.
         </p>
         <ol className="mt-9 grid gap-5 lg:grid-cols-3">
           {PARCOURS.map((p, i) => (
@@ -240,7 +242,8 @@ export default function HomePage() {
             Quatre modules, quatre rôles distincts
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-center leading-relaxed text-navy-100/80">
-            Vos informations circulent de l&apos;un à l&apos;autre sans jamais être retapées.
+            Ce que le scan a lu remplit la lettre. Ce que la lettre contient nourrit le suivi.
+            Rien n&apos;est saisi deux fois.
           </p>
 
           <div className="mt-9 grid gap-4 sm:grid-cols-2">
@@ -373,11 +376,11 @@ export default function HomePage() {
       <section className="bg-navy-900 py-16 text-white">
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
           <h2 className="font-display text-2xl font-black sm:text-3xl">
-            Votre délai court déjà.
+            Chez parking.brussels, le délai est de dix jours.
           </h2>
           <p className="mx-auto mt-4 max-w-xl leading-relaxed text-navy-100">
-            Créez votre compte, scannez votre courrier, et sachez en trois minutes ce qui reste
-            possible — sans jargon ni fausse promesse.
+            Créez votre compte, scannez votre courrier, et sachez ce qui reste possible — sans
+            jargon ni promesse d&apos;annulation.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <LinkBtn href="/inscription" variant="gold" className="w-full px-7 py-4 text-base sm:w-auto">
