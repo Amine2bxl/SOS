@@ -8,11 +8,8 @@ function expediteur(): string {
   return process.env.EMAIL_EXPEDITEUR ?? `${ASSO.nom} <onboarding@resend.dev>`;
 }
 
-/** URL publique du site, utilisée dans les e-mails (logo, liens). */
-export function urlDuSite(): string {
-  const brute = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  return brute.replace(/\/+$/, "");
-}
+/** URL publique du site, utilisée dans les e-mails (logo, liens) : voir `lib/url-site.ts`. */
+export { urlDuSite } from "@/lib/url-site";
 
 /** Vrai quand l'envoi d'e-mails est branché. */
 export const mailConfigure = (): boolean => Boolean(process.env.RESEND_API_KEY);

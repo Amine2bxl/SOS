@@ -4,6 +4,7 @@ import "./globals.css";
 import { SessionProvider } from "@/components/useSession";
 import { LanguageProvider } from "@/lib/i18n";
 import { ASSO } from "@/lib/data";
+import { urlDuSite } from "@/lib/url-site";
 
 /*
  * Deux familles, deux rôles.
@@ -27,7 +28,7 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   // Les liens d'aperçu (réseaux sociaux, messageries) ont besoin d'adresses
   // absolues : elles partent de l'URL publique du site.
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(urlDuSite()),
   title: {
     default: "SOS Citizens — Contestez votre redevance de stationnement",
     template: "%s — SOS Citizens",

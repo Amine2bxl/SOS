@@ -158,3 +158,31 @@ test("l'adresse de retour reste sur le site", () => {
     assert.equal(cheminSur(piege), "/tableau-de-bord", `devrait refuser ${JSON.stringify(piege)}`);
   }
 });
+
+/* --------------------------------------------------- adresse du site */
+
+const { urlDuSite } = require("../.test-build/lib/url-site.js");
+
+test("une prévisualisation renvoie ses liens vers elle-même, pas vers la production", () => {
+  const env = {
+    VERCEL_ENV: "preview",
+    VERCEL_BRANCH_URL: "sos-git-refonte-amine-nq.vercel.app",
+    VERCEL_URL: "sos-abc123-amine-nq.vercel.app",
+    NEXT_PUBLIC_SITE_URL: "https://soscitizens.vercel.app",
+    VERCEL_PROJECT_PRODUCTION_URL: "soscitizens.vercel.app",
+  };
+  assert.equal(urlDuSite(env), "https://sos-git-refonte-amine-nq.vercel.app");
+  assert.equal(urlDuSite({ ...env, VERCEL_BRANCH_URL: undefined }), "https://sos-abc123-amine-nq.vercel.app");
+});
+
+test("en production, l'adresse configurée, sinon le domaine fourni par Vercel — jamais localhost", () => {
+  assert.equal(
+    urlDuSite({ VERCEL_ENV: "production", NEXT_PUBLIC_SITE_URL: "https://sos-citizens.be/", VERCEL_PROJECT_PRODUCTION_URL: "soscitizens.vercel.app" }),
+    "https://sos-citizens.be",
+  );
+  assert.equal(
+    urlDuSite({ VERCEL_ENV: "production", VERCEL_PROJECT_PRODUCTION_URL: "soscitizens.vercel.app" }),
+    "https://soscitizens.vercel.app",
+  );
+  assert.equal(urlDuSite({}), "http://localhost:3000");
+});

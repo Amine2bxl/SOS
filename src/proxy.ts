@@ -11,6 +11,19 @@ const PAGES_PROTEGEES = ["/tableau-de-bord", "/adherer"];
 export async function proxy(request: NextRequest) {
   const chemin = request.nextUrl.pathname;
 
+  // Un lien de connexion qui retombe sur la page d'accueil : quand l'adresse de
+  // retour demandée n'est pas dans sa liste, Supabase renvoie vers l'adresse
+  // du site, avec le code de connexion en paramètre. Sans ce relais, la page
+  // d'accueil s'affichait et la personne n'était pas connectée.
+  if (chemin === "/") {
+    const p = request.nextUrl.searchParams;
+    if (p.has("code") || (p.has("token_hash") && p.has("type")) || p.has("error_description")) {
+      const confirmation = request.nextUrl.clone();
+      confirmation.pathname = "/auth/confirm";
+      return NextResponse.redirect(confirmation);
+    }
+  }
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 

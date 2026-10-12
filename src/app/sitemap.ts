@@ -1,11 +1,12 @@
 import type { MetadataRoute } from "next";
+import { urlDuSite } from "@/lib/url-site";
 
 /**
  * Le plan du site public, pour les moteurs de recherche. L'espace membre n'y
  * figure pas : il est privé, et `robots.ts` le tient à l'écart.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const site = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/+$/, "");
+  const site = urlDuSite();
   const pages: { chemin: string; priorite: number; frequence: "weekly" | "monthly" | "yearly" }[] = [
     { chemin: "", priorite: 1, frequence: "weekly" },
     { chemin: "/comprendre", priorite: 0.8, frequence: "monthly" },
