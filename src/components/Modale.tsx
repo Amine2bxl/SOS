@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useSyncExternalStore, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { IconeFermer } from "@/components/icones";
 
 /**
  * La règle unique des fenêtres modales du site.
@@ -155,7 +156,7 @@ export function Modale({
         tabIndex={-1}
         // `my-auto` garde la fenêtre centrée tant qu'elle tient à l'écran, et
         // la laisse défiler avec le fond dès qu'elle est plus haute.
-        className={`animate-rise my-auto w-full ${largeur} rounded-xl border border-line bg-card p-6 shadow-2xl outline-none`}
+        className={`animate-rise my-auto w-full ${largeur} rounded-[1.5rem] border border-line bg-card p-6 shadow-flotte outline-none`}
       >
         {children}
       </div>
@@ -180,18 +181,9 @@ export function EnTeteModale({
           type="button"
           onClick={onFermer}
           aria-label="Fermer"
-          className="-mr-1.5 -mt-1.5 rounded-md p-1.5 text-navy-600 transition hover:bg-navy-50 hover:text-navy-900"
+          className="-mr-1.5 -mt-1.5 rounded-full p-2 text-navy-700 transition hover:bg-navy-50 hover:text-navy-900"
         >
-          <svg
-            viewBox="0 0 24 24"
-            className="h-5 w-5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            aria-hidden="true"
-          >
-            <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
-          </svg>
+          <IconeFermer className="h-5 w-5" />
         </button>
       )}
     </div>

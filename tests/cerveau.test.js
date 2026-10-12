@@ -215,6 +215,26 @@ test("un champ inconnu reste visible entre crochets", () => {
   assert.match(l.texte, /\[référence figurant sur votre courrier\]/);
 });
 
+test("la contestation situe le constat : jour, heure, rue et commune", () => {
+  const faits = base({ lieu: "Rue du Bailli 42", commune: "Ixelles", heureConstat: "14:10" });
+  const l = composerLettre({ type: "contestation", langue: "fr", faits, identite, date: AUJ });
+  assert.match(l.texte, /à 14h10/);
+  assert.match(l.texte, /Rue du Bailli 42 à Ixelles/);
+});
+
+test("la demande de remboursement porte l'IBAN et la preuve du paiement", () => {
+  const l = composerLettre({
+    type: "remboursement",
+    langue: "fr",
+    faits: base({ stade: "premier_rappel", reponses: { deja_paye: "oui" } }),
+    identite,
+    ibanRemboursement: "BE68 5390 0754 7034",
+    date: AUJ,
+  });
+  assert.match(l.texte, /BE68 5390 0754 7034/);
+  assert.match(l.texte, /rembours/);
+});
+
 test("la demande de photos cite l'article 15 du RGPD et le délai d'un mois", () => {
   const l = composerLettre({ type: "demande_preuves", langue: "fr", faits: base(), identite, date: AUJ });
   assert.match(l.texte, /article 15 du règlement \(UE\) 2016\/679/);
@@ -317,4 +337,18 @@ test("le fichier d'agenda est un iCalendar valide avec ses rappels", () => {
   assert.equal((ics.match(/BEGIN:VALARM/g) ?? []).length, 2);
   assert.match(ics, /TRIGGER:-PT3780M/); // 3 jours avant, à 9 h
   assert.match(ics, /END:VCALENDAR\r\n$/);
+});
+
+test("agenda : points-virgules échappés, lignes repliées en octets, rappel le jour même", () => {
+  const titre = "Échéance ; redevance — régularisation " + "é".repeat(60);
+  const ics = genererIcs({ uid: "d2", titre, date: "2026-03-24", description: "a;b", rappels: [0] });
+  assert.match(ics, /DESCRIPTION:a\\;b/);
+  assert.match(ics, /TRIGGER:PT540M/);
+  const encodeur = new TextEncoder();
+  for (const ligne of ics.split("\r\n")) {
+    assert.ok(encodeur.encode(ligne).length <= 75, `ligne trop longue : ${ligne}`);
+  }
+  // Déplier redonne le titre intact.
+  const deplie = ics.replace(/\r\n /g, "");
+  assert.ok(deplie.includes("SUMMARY:Échéance \\; redevance"), "titre altéré");
 });

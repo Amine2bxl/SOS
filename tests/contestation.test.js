@@ -15,7 +15,14 @@ const {
   EXIGENCES,
   DELAI_CONTESTATION_JOURS,
 } = require("../.test-build/lib/contestation.js");
-const { SAISIE_VIDE, construireLettre } = require("../.test-build/lib/lettre.js");
+
+/** Saisie vierge : chaque champ présent, aucun rempli. */
+const SAISIE_VIDE = {
+  prenom: "", nom: "", adresse: "", codePostal: "", ville: "", email: "", telephone: "",
+  plaque: "", titulaireAutre: "", reference: "", communication: "", dateConstat: "", heureConstat: "",
+  lieuConstat: "", communeConstat: "", montant: "", motif: "", explication: "", dejaPaye: false,
+  ibanRemboursement: "",
+};
 
 /** Un dossier auquel il ne manque rien de bloquant. */
 const COMPLET = {
@@ -93,34 +100,6 @@ test("un délai dépassé est signalé comme tel", () => {
 test("sans date d'envoi, aucune échéance n'est inventée", () => {
   assert.equal(echeanceContestation(""), null);
   assert.equal(echeanceContestation("pas une date"), null);
-});
-
-test("la lettre reprend l'heure, le lieu et la communication structurée", () => {
-  const lettre = construireLettre(COMPLET);
-  assert.ok(lettre.includes("14h10"), "heure absente");
-  assert.ok(lettre.includes("Rue du Bailli 42"), "lieu absent");
-  assert.ok(lettre.includes("+++123/4567/89012+++"), "communication absente");
-  assert.ok(lettre.includes("1-ABC-123"), "plaque absente");
-  assert.ok(lettre.includes("ne constitue en aucune manière une reconnaissance de dette"));
-});
-
-test("un champ vide reste visible entre crochets, jamais inventé", () => {
-  const lettre = construireLettre({ ...SAISIE_VIDE });
-  assert.ok(lettre.includes("[Prénom]"));
-  assert.ok(lettre.includes("[Rue et numéro]"));
-});
-
-test("un remboursement demandé apparaît dans les demandes et les annexes", () => {
-  const lettre = construireLettre({ ...COMPLET, dejaPaye: true, ibanRemboursement: "BE68 5390 0754 7034" });
-  assert.ok(lettre.includes("remboursement"));
-  assert.ok(lettre.includes("BE68 5390 0754 7034"));
-  assert.ok(lettre.includes("Preuve du paiement déjà effectué"));
-});
-
-test("un véhicule au nom d'un tiers est explicité dans la lettre", () => {
-  const lettre = construireLettre({ ...COMPLET, titulaireAutre: "Société Dupont SRL" });
-  assert.ok(lettre.includes("Société Dupont SRL"));
-  assert.ok(lettre.includes("qualité de conducteur"));
 });
 
 /* -------------------------------------------------------------------------- */

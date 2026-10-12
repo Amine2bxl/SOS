@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { IconeCopier, IconeOk } from "@/components/icones";
 
 /**
  * Bouton de copie, avec confirmation visible.
@@ -32,23 +33,12 @@ export function CopierTexte({ valeur, libelle }: { valeur: string; libelle: stri
       type="button"
       onClick={copier}
       aria-label={libelle}
-      className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-line bg-white px-2.5 py-1.5 text-xs font-semibold text-navy-900 transition hover:bg-navy-50"
+      className={`inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-bold transition ${
+        copie ? "border-ok-600/30 bg-ok-50 text-ok-700" : "border-line bg-white text-navy-900 hover:bg-navy-50"
+      }`}
     >
-      {copie ? (
-        <>
-          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-ok-600" fill="currentColor" aria-hidden="true">
-            <path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z" />
-          </svg>
-          Copié
-        </>
-      ) : (
-        <>
-          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true">
-            <path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1Zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Zm0 16H8V7h11v14Z" />
-          </svg>
-          Copier
-        </>
-      )}
+      {copie ? <IconeOk className="h-3.5 w-3.5" /> : <IconeCopier className="h-3.5 w-3.5" />}
+      {copie ? "Copié" : "Copier"}
     </button>
   );
 }

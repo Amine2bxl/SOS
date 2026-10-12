@@ -39,12 +39,26 @@ const nextConfig: NextConfig = {
   },
 
   /**
-   * L'outil de lettre est devenu un module de l'espace membre. On garde
-   * l'ancienne adresse vivante pour ne casser aucun lien déjà partagé.
+   * Les anciennes adresses de l'espace membre restent vivantes : un lien
+   * partagé ou mis en favori ne doit jamais tomber sur une page introuvable.
+   * La lettre, les règles et les guides vivent maintenant dans le dossier et
+   * dans l'Aide. Redirections temporaires : l'espace membre peut encore
+   * évoluer, et un navigateur garde en mémoire une redirection permanente.
    */
   async redirects() {
     return [
-      { source: "/contester", destination: "/tableau-de-bord/lettre", permanent: true },
+      { source: "/contester", destination: "/tableau-de-bord/nouveau", permanent: false },
+      {
+        source: "/tableau-de-bord/lettre",
+        has: [{ type: "query", key: "dossier", value: "(?<id>[0-9a-fA-F-]{36})" }],
+        destination: "/tableau-de-bord/:id",
+        permanent: false,
+      },
+      { source: "/tableau-de-bord/lettre", destination: "/tableau-de-bord/dossiers", permanent: false },
+      { source: "/tableau-de-bord/contester", destination: "/tableau-de-bord/nouveau", permanent: false },
+      { source: "/tableau-de-bord/guides", destination: "/tableau-de-bord/aide", permanent: false },
+      { source: "/tableau-de-bord/regles", destination: "/tableau-de-bord/aide", permanent: false },
+      { source: "/tableau-de-bord/abonnement", destination: "/tableau-de-bord/compte", permanent: false },
     ];
   },
 };

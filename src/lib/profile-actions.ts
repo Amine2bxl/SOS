@@ -35,9 +35,9 @@ export async function enregistrerProfil(_precedent: EtatProfil, donnees: FormDat
   // Le prénom et le nom sont aussi dans la session, pour l'en-tête du site.
   await supabase.auth.updateUser({ data: { prenom, nom } });
 
-  revalidatePath("/tableau-de-bord");
-  revalidatePath("/tableau-de-bord/compte");
-  revalidatePath("/tableau-de-bord/lettre");
+  // Toutes les pages de l'espace membre : les lettres des dossiers reprennent
+  // ces coordonnées.
+  revalidatePath("/tableau-de-bord", "layout");
   return { message: "Vos informations sont enregistrées." };
 }
 
@@ -81,6 +81,7 @@ export async function supprimerMonCompte(
   }
 
   await supabase.from("evenements").delete().eq("user_id", user.id);
+  await supabase.from("lettres").delete().eq("user_id", user.id);
   await supabase.from("alertes_vues").delete().eq("user_id", user.id);
   await supabase.from("dossiers").delete().eq("user_id", user.id);
   await supabase.from("profiles").delete().eq("id", user.id);

@@ -21,19 +21,34 @@ export type EvenementAgenda = {
 
 /** Échappe le texte selon la RFC 5545 (virgules, points-virgules, retours à la ligne). */
 function echapper(texte: string): string {
-  return texte.replace(/\\/g, "\\\\").replace(/;/g, "\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+  return texte.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
 }
 
-/** Replie les lignes à 75 octets, comme l'exige la norme. */
+/**
+ * Replie les lignes à 75 octets, comme l'exige la norme — des octets, pas des
+ * caractères : un « é » en compte deux, et un agenda strict rejette une ligne
+ * trop longue. On ne coupe jamais au milieu d'un caractère.
+ */
 function plier(ligne: string): string {
+  const encodeur = new TextEncoder();
   const morceaux: string[] = [];
-  let reste = ligne;
-  while (reste.length > 74) {
-    morceaux.push(reste.slice(0, 74));
-    reste = " " + reste.slice(74);
+  let courant = "";
+  let octets = 0;
+  for (const car of ligne) {
+    const n = encodeur.encode(car).length;
+    // Les lignes de continuation commencent par une espace : 74 octets utiles.
+    const max = morceaux.length === 0 ? 75 : 74;
+    if (octets + n > max) {
+      morceaux.push(courant);
+      courant = car;
+      octets = n;
+    } else {
+      courant += car;
+      octets += n;
+    }
   }
-  morceaux.push(reste);
-  return morceaux.join("\r\n");
+  morceaux.push(courant);
+  return morceaux.join("\r\n ");
 }
 
 export function genererIcs(e: EvenementAgenda, maintenant = new Date()): string {
@@ -61,13 +76,14 @@ export function genererIcs(e: EvenementAgenda, maintenant = new Date()): string 
   ];
 
   // Chaque rappel déclenche une alarme à 9 h, J jours avant l'échéance.
+  // Le jour même (J = 0), l'alarme tombe APRÈS le début de la journée.
   for (const j of e.rappels ?? [3, 1]) {
     const minutes = j * 24 * 60 - 9 * 60;
     lignes.push(
       "BEGIN:VALARM",
       "ACTION:DISPLAY",
       `DESCRIPTION:${echapper(e.titre)}`,
-      `TRIGGER:-PT${minutes}M`,
+      minutes >= 0 ? `TRIGGER:-PT${minutes}M` : `TRIGGER:PT${-minutes}M`,
       "END:VALARM",
     );
   }

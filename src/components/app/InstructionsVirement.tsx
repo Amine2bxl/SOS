@@ -34,7 +34,7 @@ export function InstructionsVirement({
   const banque = coordonneesBancaires();
 
   return (
-    <Card className="mt-6 border-2 border-gold-400 bg-gold-100/40">
+    <Card className="mt-6 border-2 border-gold-400">
       <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-gold-700">
         Demande enregistrée
       </p>
@@ -46,7 +46,7 @@ export function InstructionsVirement({
         le compte de l&apos;association — en général un à deux jours ouvrables.
       </p>
 
-      <dl className="mt-5 divide-y divide-line rounded-lg border border-line bg-white">
+      <dl className="mt-5 divide-y divide-line rounded-2xl border border-line bg-white">
         <div className="flex flex-wrap items-baseline justify-between gap-2 p-4">
           <dt className="text-sm text-ink-soft">Montant</dt>
           <dd className="font-display text-lg font-bold text-navy-900">
@@ -89,7 +89,7 @@ export function InstructionsVirement({
 
       {/* La communication structurée est mise en avant : c'est le seul champ
           du virement que l'association ne peut pas deviner. */}
-      <div className="mt-5 rounded-lg border-l-4 border-navy-900 bg-navy-50 p-4">
+      <div className="mt-5 rounded-2xl border-l-4 border-navy-900 bg-navy-50 p-4">
         <p className="text-sm font-bold text-navy-900">
           Communication structurée — à recopier exactement
         </p>

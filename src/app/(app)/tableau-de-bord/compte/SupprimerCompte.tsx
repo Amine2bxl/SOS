@@ -24,8 +24,8 @@ export function SupprimerCompte({ dossiers }: { dossiers: number }) {
 
   return (
     <>
-      <Btn onClick={() => setOuverte(true)} variant="secondary">
-        Supprimer définitivement mon compte
+      <Btn onClick={() => setOuverte(true)} variant="ghost" taille="sm" className="text-danger-700">
+        Supprimer mon compte
       </Btn>
 
       <Modale
@@ -40,7 +40,7 @@ export function SupprimerCompte({ dossiers }: { dossiers: number }) {
           Cette action est définitive. Il n&apos;y a pas de corbeille.
         </p>
 
-        <div className="mt-4 rounded-lg border-l-4 border-danger-600 bg-danger-100/60 p-4 text-sm leading-relaxed text-ink">
+        <div className="mt-4 rounded-2xl border-l-4 border-danger-600 bg-danger-50 p-4 text-sm leading-relaxed text-ink">
           <p className="font-semibold text-danger-700">Ce qui sera effacé</p>
           <ul className="mt-2 space-y-1">
             <li>
@@ -71,7 +71,7 @@ export function SupprimerCompte({ dossiers }: { dossiers: number }) {
           </Field>
 
           {etat.erreur && (
-            <p role="alert" className="rounded-md bg-danger-100 p-3 text-sm font-medium text-danger-700">
+            <p role="alert" className="rounded-2xl bg-danger-100 p-3 text-sm font-medium text-danger-700">
               {etat.erreur}
             </p>
           )}
@@ -80,13 +80,9 @@ export function SupprimerCompte({ dossiers }: { dossiers: number }) {
             <Btn type="submit" variant="danger" className="flex-1" disabled={enCours}>
               {enCours ? "Suppression…" : "Supprimer définitivement"}
             </Btn>
-            <button
-              type="button"
-              onClick={() => setOuverte(false)}
-              className="inline-flex flex-1 items-center justify-center rounded-md border border-line bg-white px-4 py-2.5 text-sm font-semibold text-navy-900 transition hover:bg-navy-50"
-            >
+            <Btn type="button" variant="secondary" className="flex-1" onClick={() => setOuverte(false)}>
               Annuler
-            </button>
+            </Btn>
           </div>
         </form>
       </Modale>
