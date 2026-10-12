@@ -25,6 +25,9 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
+  // Les liens d'aperçu (réseaux sociaux, messageries) ont besoin d'adresses
+  // absolues : elles partent de l'URL publique du site.
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: {
     default: "SOS Citizens — Contestez votre redevance de stationnement",
     template: "%s — SOS Citizens",
