@@ -1,67 +1,47 @@
 /**
- * Tests de la navigation des modules de l'espace membre.
+ * Tests de la navigation de l'espace membre.
  *
- * `moduleActif` décide de l'entrée surlignée dans la barre latérale et du
- * titre affiché en haut de l'application. Un mauvais choix et l'utilisateur ne
- * sait plus où il se trouve — exactement le défaut que cette refonte corrige.
+ * `moduleActif` décide de l'entrée surlignée et du titre de page. Un mauvais
+ * choix et l'utilisateur ne sait plus où il se trouve.
  *
  * Lancer avec : npm test
  */
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const {
-  moduleActif,
-  TOUS_LES_MODULES,
-  MODULES_DOSSIERS,
-  MODULES_OUTILS,
-  MODULES_COMPTE,
-} = require("../.test-build/components/app/modules.js");
+const { moduleActif, MODULES } = require("../.test-build/components/app/modules.js");
+
+test("cinq entrées, pas une de plus", () => {
+  assert.equal(MODULES.length, 5);
+});
+
+test("l'accueil n'avale pas les autres pages", () => {
+  assert.equal(moduleActif("/tableau-de-bord").titre, "Accueil");
+  assert.equal(moduleActif("/tableau-de-bord/aide").titre, "Aide");
+  assert.equal(moduleActif("/tableau-de-bord/compte").titre, "Mon compte");
+  assert.equal(moduleActif("/tableau-de-bord/nouveau").titre, "Nouveau courrier");
+});
 
 test("une fiche de dossier reste rattachée à Mes dossiers", () => {
-  assert.equal(moduleActif("/tableau-de-bord").titre, "Mes dossiers");
-  // Sans cela, l'utilisateur ouvrant un dossier ne serait plus nulle part :
-  // aucune entrée surlignée et un titre générique en haut de l'application.
-  assert.equal(moduleActif("/tableau-de-bord/abc-123").titre, "Mes dossiers");
+  assert.equal(moduleActif("/tableau-de-bord/dossiers").titre, "Mes dossiers");
+  assert.equal(moduleActif("/tableau-de-bord/3f2504e0-4f89-41d3-9a0c-0305e82c3301").titre, "Mes dossiers");
 });
 
-test("le scan appartient au chemin guidé, pas à la liste des dossiers", () => {
-  assert.equal(moduleActif("/tableau-de-bord/nouveau").titre, "Contester ma redevance");
+test("l'adhésion appartient au compte", () => {
+  assert.equal(moduleActif("/adherer").titre, "Mon compte");
 });
 
-test("aucune entrée de la barre latérale ne sort de l'application", () => {
-  // Un module qui renverrait vers la vitrine ferait quitter l'espace membre
-  // sans prévenir : toutes les adresses doivent rester internes.
-  for (const m of TOUS_LES_MODULES) {
-    assert.ok(
-      m.href.startsWith("/tableau-de-bord"),
-      `${m.titre} pointe hors de l'application : ${m.href}`,
-    );
+test("aucune entrée ne sort de l'application", () => {
+  for (const m of MODULES) {
+    assert.ok(m.href.startsWith("/tableau-de-bord"), `${m.titre} pointe hors de l'application : ${m.href}`);
   }
 });
 
-test("le chemin le plus précis l'emporte sur le tableau de bord", () => {
-  assert.equal(moduleActif("/tableau-de-bord/lettre").titre, "Rédiger ma lettre");
-  assert.equal(moduleActif("/tableau-de-bord/regles").titre, "Règles de ma commune");
-  assert.equal(moduleActif("/tableau-de-bord/abonnement").titre, "Mon abonnement");
-  assert.equal(moduleActif("/tableau-de-bord/compte").titre, "Mes paramètres");
-});
-
-test("une sous-page reste rattachée à son module", () => {
-  assert.equal(moduleActif("/tableau-de-bord/compte/securite").titre, "Mes paramètres");
-});
-
-test("chaque module a une adresse unique et une phrase d'explication", () => {
-  const adresses = TOUS_LES_MODULES.map((m) => m.href);
+test("une seule action principale, et chaque entrée explique à quoi elle sert", () => {
+  assert.equal(MODULES.filter((m) => m.principal).length, 1);
+  const adresses = MODULES.map((m) => m.href);
   assert.equal(new Set(adresses).size, adresses.length, "adresse en double");
-  for (const m of TOUS_LES_MODULES) {
-    assert.ok(m.titre.length > 0, `${m.href} sans titre`);
+  for (const m of MODULES) {
     assert.ok(m.phrase.length > 20, `${m.href} sans phrase d'explication`);
+    assert.ok(m.court.length <= 9, `${m.href} : titre court trop long pour l'onglet`);
   }
-});
-
-test("les trois groupes couvrent tous les modules, sans recouvrement", () => {
-  assert.equal(
-    MODULES_DOSSIERS.length + MODULES_OUTILS.length + MODULES_COMPTE.length,
-    TOUS_LES_MODULES.length,
-  );
 });

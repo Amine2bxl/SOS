@@ -2,9 +2,12 @@
 
 import { useActionState } from "react";
 import { enregistrerProfil, type EtatProfil } from "@/lib/profile-actions";
-import { Card, Field, TextInput, SelectInput, Btn } from "@/components/ui";
-import { COMMUNES } from "@/lib/data";
+import { Field, TextInput, Btn } from "@/components/ui";
 
+/**
+ * Les coordonnées, saisies une fois pour toutes : chaque lettre les reprend.
+ * La commune est libre — Bruxelles, la Wallonie et la Flandre sont couvertes.
+ */
 export function FormulaireProfil(props: {
   prenom: string;
   nom: string;
@@ -26,44 +29,42 @@ export function FormulaireProfil(props: {
         </Field>
       </div>
 
-      <Field
-        label="Téléphone"
-        hint="Le service de contestation s'en sert pour vous joindre quand un point demande à être éclairci."
-      >
-        <TextInput name="telephone" type="tel" defaultValue={props.telephone} autoComplete="tel" placeholder="+32 470 00 00 00" />
+      <Field label="Rue et numéro">
+        <TextInput name="adresse" defaultValue={props.adresse} autoComplete="street-address" placeholder="Rue de la Loi 16" />
       </Field>
 
-      <Field label="Adresse" hint="Utilisée pour générer vos lettres de contestation.">
-        <TextInput name="adresse" defaultValue={props.adresse} autoComplete="street-address" />
-      </Field>
-
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-[10rem_1fr]">
         <Field label="Code postal">
-          <TextInput name="codePostal" defaultValue={props.codePostal} inputMode="numeric" autoComplete="postal-code" placeholder="1000" />
+          <TextInput
+            name="codePostal"
+            defaultValue={props.codePostal}
+            inputMode="numeric"
+            autoComplete="postal-code"
+            placeholder="1000"
+          />
         </Field>
         <Field label="Commune">
-          <SelectInput
-            name="commune"
-            options={COMMUNES.map((c) => ({ value: c.nom, label: c.nom }))}
-            placeholder="Choisissez votre commune…"
-            defaultValue={props.commune}
-          />
+          <TextInput name="commune" defaultValue={props.commune} autoComplete="address-level2" placeholder="Bruxelles" />
         </Field>
       </div>
 
+      <Field label="Téléphone" hint="Facultatif. Il apparaît sous votre nom dans les lettres, pour qu'on puisse vous joindre.">
+        <TextInput name="telephone" type="tel" defaultValue={props.telephone} autoComplete="tel" placeholder="+32 470 00 00 00" />
+      </Field>
+
       {etat.erreur && (
-        <p role="alert" className="rounded-md bg-danger-100 p-3 text-sm font-medium text-danger-700">
+        <p role="alert" className="rounded-2xl bg-danger-100 p-3 text-sm font-medium text-danger-700">
           {etat.erreur}
         </p>
       )}
       {etat.message && (
-        <p role="status" className="rounded-md bg-ok-100 p-3 text-sm font-medium text-ok-700">
+        <p role="status" className="rounded-2xl bg-ok-100 p-3 text-sm font-medium text-ok-700">
           {etat.message}
         </p>
       )}
 
       <Btn type="submit" variant="gold" disabled={enCours}>
-        {enCours ? "Enregistrement…" : "Enregistrer mes informations"}
+        {enCours ? "Enregistrement…" : "Enregistrer"}
       </Btn>
     </form>
   );

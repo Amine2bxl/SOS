@@ -1,39 +1,94 @@
+/**
+ * Le logo SOS Citizens.
+ *
+ * Le symbole dit le métier en un coup d'œil : un BOUCLIER (on vous protège),
+ * qui porte le P du panneau de stationnement, dont la panse est une BOUÉE de
+ * sauvetage (SOS). Trois idées, une seule forme — et lisible jusqu'à 16 px,
+ * parce qu'il sert aussi d'icône d'onglet et d'application.
+ */
+
+export function MarqueSos({
+  className = "h-9 w-9",
+  simplifie = false,
+  surFonce = false,
+}: {
+  className?: string;
+  /** Version pleine, sans les bandes de la bouée : pour les toutes petites tailles. */
+  simplifie?: boolean;
+  /**
+   * Sur un fond d'encre, le bouclier encre disparaîtrait : il s'éclaircit d'un
+   * ton et prend un liseré, pour garder sa silhouette.
+   */
+  surFonce?: boolean;
+}) {
+  // Circonférence de la bouée (rayon 7) découpée en huit segments égaux :
+  // quatre jaunes, quatre blancs, comme une vraie bouée.
+  const segment = (2 * Math.PI * 7) / 8;
+  return (
+    <svg viewBox="0 0 48 48" className={className} aria-hidden="true">
+      <path
+        d="M24 2.5 42 8.6v14c0 11.7-7.6 19.9-18 23.4C13.6 42.5 6 34.3 6 22.6v-14L24 2.5Z"
+        fill={surFonce ? "#22396b" : "#0f1e3d"}
+        stroke={surFonce ? "rgb(255 255 255 / 0.35)" : "none"}
+        strokeWidth={surFonce ? 1.4 : 0}
+      />
+      {/* Bouée : anneau blanc, bandes jaunes par-dessus. */}
+      <circle cx="26.6" cy="20" r="7" fill="none" stroke="#ffffff" strokeWidth="5.4" />
+      {simplifie ? (
+        <circle cx="26.6" cy="20" r="7" fill="none" stroke="#ffc629" strokeWidth="5.4" />
+      ) : (
+        <circle
+          cx="26.6"
+          cy="20"
+          r="7"
+          fill="none"
+          stroke="#ffc629"
+          strokeWidth="5.4"
+          strokeDasharray={`${segment} ${segment}`}
+          strokeDashoffset={segment / 2}
+        />
+      )}
+      {/* Le fût du P, dessiné après : il passe devant la bouée. */}
+      <rect x="14.8" y="12.2" width="6.2" height="24.6" rx="2.4" fill="#ffffff" />
+      {/* Le marquage au sol, en pied de bouclier. */}
+      <path d="M17 41.2h14" stroke="#ffc629" strokeWidth="2.4" strokeLinecap="round" strokeDasharray="3.4 3.2" />
+    </svg>
+  );
+}
+
 export function Logo({
   compact = false,
   surClair = false,
+  className = "",
 }: {
   compact?: boolean;
-  /** Variante pour les fonds clairs (barre d'application connectée). */
+  /** Variante pour les fonds clairs. Par défaut, le logo est posé sur l'encre. */
   surClair?: boolean;
+  className?: string;
 }) {
-  // Sur fond clair, les éléments « papier » du logo passent en bleu marine.
-  const secondaire = surClair ? "#0b2545" : "#f6f4ee";
   return (
-    <span className="flex items-center gap-2.5">
-      <svg viewBox="0 0 48 52" className="h-9 w-9 shrink-0" aria-hidden="true">
-        <path
-          d="M24 2 44 9v16c0 12.5-8.4 21.4-20 25C12.4 46.4 4 37.5 4 25V9L24 2Z"
-          fill="#0b2545"
-          stroke="#f2b705"
-          strokeWidth="2.5"
-        />
-        <circle cx="18" cy="20" r="4.2" fill="#f2b705" />
-        <circle cx="30" cy="20" r="4.2" fill={secondaire} />
-        <path d="M11 34c0-4.6 3.4-7.5 7-7.5s7 2.9 7 7.5" fill="none" stroke="#f2b705" strokeWidth="2.6" strokeLinecap="round" />
-        <path d="M24 34c0-4.6 3.4-7.5 7-7.5s7 2.9 7 7.5" fill="none" stroke={secondaire} strokeWidth="2.6" strokeLinecap="round" />
-      </svg>
+    <span className={`flex items-center gap-2.5 ${className}`}>
+      <MarqueSos className="h-9 w-9 shrink-0" surFonce={!surClair} />
       {!compact && (
         <span className="leading-none">
-          <span className="block font-display text-lg font-bold tracking-tight">
-            <span className="text-gold-500">SOS</span>{" "}
-            <span className={surClair ? "text-navy-900" : "text-white"}>CITIZENS</span>
+          <span className="block font-display text-[1.15rem] font-extrabold tracking-tight">
+            <span
+              className={
+                surClair
+                  ? "rounded-md bg-gold-400 px-1 py-px text-navy-950"
+                  : "text-gold-400"
+              }
+            >
+              SOS
+            </span>{" "}
+            <span className={surClair ? "text-navy-900" : "text-white"}>Citizens</span>
           </span>
           <span
-            className={`block text-[10px] font-semibold uppercase tracking-[0.28em] ${
-              surClair ? "text-navy-700/70" : "text-navy-100/80"
+            className={`mt-1 block text-[9.5px] font-bold uppercase tracking-[0.26em] ${
+              surClair ? "text-ink-soft" : "text-navy-200/80"
             }`}
           >
-            ASBL
+            ASBL · Belgique
           </span>
         </span>
       )}
@@ -41,19 +96,5 @@ export function Logo({
   );
 }
 
-export function PhoneIcon({ className = "h-4 w-4" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
-      <path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.46.57 3.6a1 1 0 0 1-.25 1l-2.22 2.2Z" />
-    </svg>
-  );
-}
-
-export function MailIcon({ className = "h-4 w-4" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <rect x="2.5" y="4.5" width="19" height="15" rx="2" />
-      <path d="m3 6 9 6.5L21 6" />
-    </svg>
-  );
-}
+// Compatibilité pendant la refonte : les anciennes pages importent ces noms.
+export { IconeMail as MailIcon, IconeTelephone as PhoneIcon } from "./icones";

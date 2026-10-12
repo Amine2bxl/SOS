@@ -1,401 +1,326 @@
 import Link from "next/link";
-import { Card, LinkBtn, Check, Cross } from "@/components/ui";
-import { MailIcon } from "@/components/Logo";
-import { BoutonContact } from "@/components/Contact";
-import { ZonesVisuel, ApercuEspaceMembre } from "@/components/visuels";
-import { EscalierProcedure, SourceProcedure } from "@/components/guide";
-import { IconeModule } from "@/components/app/IconeModule";
-import { MODULES_DOSSIERS, MODULES_OUTILS } from "@/components/app/modules";
-import { DELAI_CONTESTATION_JOURS } from "@/lib/contestation";
-import { CarteFormule } from "@/components/formules";
+import { Suspense } from "react";
+import { MOYENS, REGIONS } from "@/cerveau";
 import { PLANS } from "@/lib/plans";
-import { ASSO, CHIFFRES, NOUS_FAISONS, NOUS_NE_FAISONS_PAS, ALERTE } from "@/lib/data";
+import { ASSO } from "@/lib/data";
+import { LinkBtn } from "@/components/ui";
+import { CarteFormule } from "@/components/formules";
+import { BoutonContact } from "@/components/Contact";
+import { AssistantScan } from "@/components/scan/AssistantScan";
+import { EscalierProcedure } from "@/components/guide";
+import { ApercuAnalyse } from "@/components/site/ApercuAnalyse";
+import {
+  IconeAgenda,
+  IconeBalance,
+  IconeBelgique,
+  IconeCadenas,
+  IconeChevron,
+  IconeDelai,
+  IconeFleche,
+  IconeLettre,
+  IconeLibre,
+  IconeScanDoc,
+  IconeTampon,
+} from "@/components/icones";
 
-/** Les situations les plus fréquentes : le visiteur doit se reconnaître en 5 secondes. */
-const SITUATIONS = [
+/** Ce que fait le moteur, dans l'ordre où il le fait. */
+const MOTEUR = [
+  { Icone: IconeScanDoc, titre: "Il lit votre courrier", texte: "Référence, montant, dates, plaque, lieu : rien à retaper. Photo, capture ou PDF." },
+  { Icone: IconeDelai, titre: "Il calcule votre délai", texte: "Le délai de contestation de votre région, souvent plus court que la date imprimée." },
+  { Icone: IconeBalance, titre: "Il trouve vos arguments", texte: "Trois à cinq questions, une réponse d'un geste : il retient ce qui tient vraiment." },
+  { Icone: IconeLettre, titre: "Il rédige votre lettre", texte: "Pour votre cas, en français ou en néerlandais, avec les pièces à joindre." },
+  { Icone: IconeAgenda, titre: "Il suit votre dossier", texte: "Échéances, relance si l'administration se tait, réponse à l'huissier si besoin." },
+];
+
+const FAQ = [
   {
-    titre: "Une redevance de stationnement",
-    texte: "parking.brussels ou votre commune vous réclame 25 €, 50 €, parfois bien plus.",
+    q: "Est-ce vraiment gratuit ?",
+    r: "L'analyse est gratuite, sans compte. Vos deux premiers dossiers aussi, lettre comprise. L'adhésion à l'association — 70 € par an — n'est utile que si vous recevez plus de courriers.",
   },
   {
-    titre: "Une amende qui a grossi",
-    texte: "Vous n'avez pas réagi à temps, et les rappels ont fait grimper la note.",
+    q: "Mon document part-il quelque part ?",
+    r: "Non. Votre photo ou votre PDF est lu dans votre navigateur, sur votre appareil. Seules les informations que vous confirmez rejoignent votre dossier.",
   },
   {
-    titre: "Une sanction communale (SAC)",
-    texte: "Un fonctionnaire sanctionnateur vous réclame une somme. Vous ne savez pas quoi répondre.",
+    q: "Ça marche en Wallonie et en Flandre ?",
+    r: "Oui. Le moteur reconnaît la région du constat et adapte le délai, la procédure et la langue de la lettre — en néerlandais pour la Flandre. Bruxelles est couverte en détail ; ailleurs, chaque commune fixe son règlement et le moteur s'appuie sur ce qu'indique votre courrier.",
+  },
+  {
+    q: "Vous garantissez l'annulation ?",
+    r: "Non, et méfiez-vous de qui vous le promet. Le moteur vous dit honnêtement si votre dossier est solide — et quand il vaut mieux payer. La décision appartient à l'administration, puis au juge.",
+  },
+  {
+    q: "C'est une intelligence artificielle ?",
+    r: "C'est un moteur d'analyse écrit par l'association : des règles, des procédures et des arguments vérifiés, appliqués à votre cas. Il ne devine rien et n'invente rien — chaque conclusion se relit et s'explique. Il tourne sur nos serveurs, sans service extérieur.",
+  },
+  {
+    q: "Et si mon cas est compliqué ?",
+    r: "L'association répond par écrit, par WhatsApp ou par e-mail. Les membres bénéficient d'une relecture de leur dossier.",
   },
 ];
 
-/** Le parcours, du courrier reçu au dossier suivi. */
-const PARCOURS = [
-  {
-    titre: "Vous photographiez votre courrier",
-    texte:
-      "Photo, capture d'écran ou PDF. Nous en extrayons la référence, le montant, la date et l'heure du constat, le lieu, la plaque, la communication structurée.",
-  },
-  {
-    titre: "Vous vérifiez, vous ne tapez rien",
-    texte:
-      "Chaque champ arrive avec son niveau de confiance et l'extrait du document d'où il vient. Vous corrigez ce qui cloche, c'est tout.",
-  },
-  {
-    titre: "Votre lettre s'écrit, votre dossier vit",
-    texte:
-      "Les bons arguments et les bonnes annexes selon votre motif, un contrôle de complétude avant l'envoi, puis le suivi des délais jusqu'à la réponse.",
-  },
-];
-
-/** Les objections qui bloquent une inscription, traitées de face. */
-const OBJECTIONS = [
-  {
-    question: "Est-ce que ça coûte quelque chose ?",
-    reponse:
-      "Deux contestations gratuites, sans carte bancaire. Le téléphone et l'aide par écrit restent gratuits sans limite, quelle que soit votre formule.",
-  },
-  {
-    question: "Mes documents partent-ils quelque part ?",
-    reponse:
-      "Non. La lecture de votre courrier se fait dans votre navigateur : le fichier ne quitte pas votre appareil. Seules les informations que vous confirmez rejoignent votre dossier.",
-  },
-  {
-    question: "Vous garantissez l'annulation ?",
-    reponse:
-      "Non, et méfiez-vous de qui vous le promet. Nous vous donnons les moyens de vous défendre correctement et dans les délais. La décision appartient à l'administration, puis au juge.",
-  },
-  {
-    question: "Pourquoi créer un compte ?",
-    reponse:
-      "Parce que contester, c'est un dossier qui vit dans le temps : des pièces, des délais, une réponse à attendre. Sans compte, vous repartiriez de zéro à chaque courrier.",
-  },
-];
-
-/** Les quatre modules mis en vitrine, dans l'ordre où on les rencontre. */
-const MODULES_VITRINE = [
-  MODULES_DOSSIERS[0], // Contester : le chemin guidé
-  MODULES_OUTILS[0], // Rédiger ma lettre
-  MODULES_DOSSIERS[1], // Mes dossiers
-  MODULES_OUTILS[1], // Règles de ma commune
-];
-
-export default function HomePage() {
+export default async function Accueil({ searchParams }: { searchParams: Promise<{ compte?: string }> }) {
+  const { compte } = await searchParams;
   const gratuit = PLANS[0];
   const membre = PLANS.find((p) => p.miseEnAvant) ?? PLANS[1];
 
   return (
     <div>
-      {/* HERO — la promesse, l'urgence, une seule action. */}
-      <section className="relative overflow-hidden bg-navy-950 text-white">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(242,183,5,0.16),transparent_60%)]"
-        />
-        <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:py-20">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-gold-300">
-              Association citoyenne — Bruxelles
-            </p>
-            <h1 className="mt-4 font-display text-4xl font-black leading-[1.08] tracking-tight sm:text-5xl">
-              Une amende de stationnement&nbsp;?{" "}
-              <span className="text-gold-400">Ne la payez pas sans avoir lu ceci.</span>
-            </h1>
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-navy-100">
-              Photographiez votre courrier. Nous en extrayons tout, nous écrivons votre
-              contestation avec les bons arguments, et nous suivons vos délais à votre place.
-              Les deux premières sont gratuites.
-            </p>
-
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/inscription"
-                className="inline-flex items-center justify-center gap-2 rounded-md bg-gold-400 px-7 py-4 text-base font-black text-navy-950 shadow-xl shadow-gold-500/25 transition hover:-translate-y-0.5 hover:bg-gold-300 hover:shadow-2xl hover:shadow-gold-400/40"
-              >
-                Contester gratuitement
-                <span aria-hidden="true">→</span>
-              </Link>
-              <BoutonContact variante="outline" className="px-6 py-4 text-base" />
-            </div>
-
-            <p className="mt-5 text-sm text-navy-100/80">
-              Sans carte bancaire · Votre document reste sur votre appareil ·{" "}
-              <Link href="/connexion" className="underline hover:text-gold-300">
-                J&apos;ai déjà un compte
-              </Link>
-            </p>
-
-            {/* L'information la plus périssable, tout en haut. */}
-            <div className="mt-8 flex items-start gap-3 rounded-xl border border-gold-400/30 bg-gold-400/10 p-4">
-              <span className="font-display text-2xl font-black leading-none text-gold-400">
-                {DELAI_CONTESTATION_JOURS}
-              </span>
-              <p className="text-sm leading-relaxed text-navy-100">
-                <strong className="text-white">jours seulement</strong> pour contester chez
-                parking.brussels, à compter de la réception. Les communes fixent leur propre délai —
-                c&apos;est la mention de votre courrier qui fait foi.
-              </p>
-            </div>
-          </div>
-
-          {/* On montre l'outil plutôt que de le décrire. */}
-          <div className="lg:pl-4">
-            <ApercuEspaceMembre />
-            <p className="mt-3 text-center text-xs text-navy-100/60">
-              Votre espace membre, une fois connecté.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ALERTE D'ACTUALITÉ */}
-      <section className="border-b border-danger-600/30 bg-danger-100">
-        <div className="mx-auto flex max-w-4xl gap-3 px-4 py-4 sm:px-6">
-          <svg viewBox="0 0 24 24" className="mt-0.5 h-5 w-5 shrink-0 text-danger-600" fill="currentColor" aria-hidden="true">
-            <path d="M12 2 1 21h22L12 2Zm1 14h-2v2h2v-2Zm0-7h-2v5h2V9Z" />
-          </svg>
-          <p className="text-sm leading-relaxed text-ink">
-            <strong className="text-danger-700">{ALERTE.titre} :</strong> {ALERTE.texte}
-          </p>
-        </div>
-      </section>
-
-      {/* CE QUI ARRIVE SI VOUS NE FAITES RIEN — le vrai moteur de décision. */}
-      <section className="mx-auto max-w-5xl px-4 py-14 sm:px-6">
-        <h2 className="text-center font-display text-2xl font-bold text-navy-900 sm:text-3xl">
-          Ce qui arrive si vous laissez traîner
-        </h2>
-        <p className="mx-auto mt-3 max-w-2xl text-center leading-relaxed text-ink-soft">
-          Une redevance de 25 € ne reste pas à 25 €. Chaque étape ajoute des frais, et la dernière
-          se termine chez un huissier.
+      {compte === "supprime" && (
+        <p role="status" className="bg-ok-100 px-4 py-3 text-center text-sm font-semibold text-ok-700">
+          Votre compte et vos données ont été supprimés.
         </p>
+      )}
 
-        <div className="mt-9">
-          <EscalierProcedure />
+      {/* ================================================================ HÉROS */}
+      <section className="relative overflow-hidden bg-navy-900 text-white">
+        <div className="motif-points absolute inset-0" aria-hidden="true" />
+        <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 pb-14 pt-10 sm:px-6 lg:grid-cols-[1.08fr_0.92fr] lg:pb-20 lg:pt-16">
+          <div className="animate-rise">
+            <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-navy-100">
+              <IconeBelgique className="h-4 w-4 text-white [--icone-accent:var(--color-gold-400)]" />
+              Bruxelles · Wallonie · Flandre
+            </p>
+            <h1 className="mt-5 font-display text-[2.6rem] font-extrabold leading-[1.02] sm:text-6xl">
+              Une redevance de stationnement&nbsp;?{" "}
+              <span className="text-gold-400">Contestez-la en trois minutes.</span>
+            </h1>
+            <p className="mt-5 max-w-xl text-lg leading-relaxed text-navy-100">
+              Photographiez le courrier. Le moteur SOS le lit, calcule votre délai, trouve vos arguments et rédige votre
+              lettre — en français ou en néerlandais.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <LinkBtn href="#analyser" variant="gold" taille="lg">
+                <IconeScanDoc className="h-6 w-6 [--icone-accent:transparent]" />
+                Analyser mon courrier
+              </LinkBtn>
+              <LinkBtn href="#comment" variant="outline" taille="lg">
+                Comment ça marche
+              </LinkBtn>
+            </div>
+            <p className="mt-5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-navy-100">
+              <span>Gratuit, sans compte</span>
+              <span aria-hidden="true" className="hidden sm:inline">
+                ·
+              </span>
+              <span>Votre document reste sur votre téléphone</span>
+            </p>
+          </div>
+          <div className="lg:pl-6">
+            <ApercuAnalyse />
+          </div>
         </div>
+        <div className="motif-marquage h-2" aria-hidden="true" />
+      </section>
 
-        <div className="mt-6 text-center">
-          <SourceProcedure />
-          <p className="mt-2 text-xs leading-relaxed text-ink-soft">
-            Contester ne suspend pas l&apos;obligation de payer dans le délai indiqué : si la
-            contestation aboutit, les sommes versées sont remboursées.
+      {/* ===================================================== BANDE DE CONFIANCE */}
+      <section className="border-b border-line bg-card">
+        <ul className="mx-auto grid max-w-6xl grid-cols-2 gap-x-6 gap-y-4 px-4 py-6 sm:px-6 lg:grid-cols-4">
+          {[
+            { Icone: IconeTampon, texte: "Association sans but lucratif", detail: `BCE ${ASSO.bce}` },
+            { Icone: IconeCadenas, texte: "Lu sur votre appareil", detail: "Le document n'est envoyé nulle part" },
+            { Icone: IconeLettre, texte: "Lettre en FR ou NL", detail: "Dans la langue de l'administration" },
+            { Icone: IconeBelgique, texte: "Toute la Belgique", detail: "Les trois régions" },
+          ].map(({ Icone, texte, detail }) => (
+            <li key={texte} className="flex items-center gap-3">
+              <Icone className="h-9 w-9 shrink-0 text-navy-900" />
+              <span className="min-w-0">
+                <span className="block text-sm font-bold text-navy-900">{texte}</span>
+                <span className="block text-xs text-ink-soft">{detail}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* ============================================================ ANALYSER */}
+      <section id="analyser" className="scroll-mt-20 px-4 py-14 sm:px-6 lg:py-20">
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-gold-700">Essayez maintenant</p>
+          <h2 className="mt-2 font-display text-3xl font-extrabold text-navy-900 sm:text-4xl">
+            Votre analyse, gratuite et sans compte
+          </h2>
+          <p className="mt-3 text-[1.05rem] text-ink-soft">
+            Déposez votre courrier : en une minute, vous savez quoi faire, avant quand, et avec quels arguments.
           </p>
         </div>
+        <div className="mx-auto mt-8 max-w-2xl rounded-[1.75rem] border border-line/80 bg-card p-5 shadow-flotte sm:p-8">
+          <Suspense>
+            <AssistantScan mode="visiteur" />
+          </Suspense>
+        </div>
+      </section>
 
-        <div className="mt-8 flex justify-center">
-          <LinkBtn href="/inscription" variant="gold" className="px-6 py-3.5 text-base">
-            Arrêter la mécanique maintenant →
+      {/* ======================================================= LE MOTEUR */}
+      <section id="comment" className="scroll-mt-20 bg-navy-900 py-16 text-white lg:py-20">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="max-w-2xl">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-gold-400">Le moteur SOS</p>
+            <h2 className="mt-2 font-display text-3xl font-extrabold sm:text-4xl">
+              Le savoir de l&apos;association, appliqué à votre courrier.
+            </h2>
+            <p className="mt-3 text-[1.05rem] leading-relaxed text-navy-100">
+              Les règles, les procédures, les arguments qui marchent et les erreurs qui coûtent cher — réunis dans un
+              moteur qui ne devine rien et n&apos;invente rien.
+            </p>
+          </div>
+          <ol className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            {MOTEUR.map(({ Icone, titre, texte }, i) => (
+              <li key={titre} className="rounded-[var(--radius-carte)] border border-white/10 bg-white/[0.04] p-5">
+                <div className="flex items-center justify-between">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-navy-900">
+                    <Icone className="h-8 w-8" />
+                  </span>
+                  <span className="font-display text-sm font-bold text-gold-400">0{i + 1}</span>
+                </div>
+                <h3 className="mt-4 font-display text-lg font-bold">{titre}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-navy-100">{texte}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* ======================================================= LES ARGUMENTS */}
+      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-20">
+        <div className="max-w-2xl">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-gold-700">Les arguments</p>
+          <h2 className="mt-2 font-display text-3xl font-extrabold text-navy-900 sm:text-4xl">
+            {MOYENS.length} façons de faire tomber une redevance
+          </h2>
+          <p className="mt-3 text-[1.05rem] text-ink-soft">
+            Le moteur les passe toutes en revue pour vous. Vous vous reconnaissez peut-être déjà.
+          </p>
+        </div>
+        <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {MOYENS.map((m) => (
+            <li key={m.id} className="flex items-center gap-3 rounded-2xl border border-line/80 bg-card p-3.5 shadow-carte">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-navy-50 text-navy-900">
+                <IconeLibre nom={m.icone} className="h-7 w-7" />
+              </span>
+              <span className="text-sm font-semibold leading-snug text-navy-900">« {m.titre} »</span>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-8">
+          <LinkBtn href="#analyser" variant="primary">
+            Vérifier mon cas
+            <IconeFleche className="h-5 w-5" />
           </LinkBtn>
         </div>
       </section>
 
-      {/* EST-CE POUR MOI ? */}
-      <section className="border-y border-line bg-card py-14">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <h2 className="text-center font-display text-2xl font-bold text-navy-900 sm:text-3xl">
-            Nous pouvons vous aider si…
-          </h2>
-          <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            {SITUATIONS.map((s) => (
-              <div key={s.titre} className="rounded-xl border border-line bg-paper p-5">
-                <Check className="h-6 w-6 text-ok-600" />
-                <h3 className="mt-3 font-display text-base font-bold text-navy-900">{s.titre}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">{s.texte}</p>
-              </div>
-            ))}
+      {/* ======================================================= L'ESCALIER */}
+      <section className="border-y border-line bg-card py-16 lg:py-20">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="max-w-2xl">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-danger-700">Le piège</p>
+            <h2 className="mt-2 font-display text-3xl font-extrabold text-navy-900 sm:text-4xl">
+              Une redevance ne reste jamais à son prix.
+            </h2>
+            <p className="mt-3 text-[1.05rem] text-ink-soft">
+              Chaque courrier ignoré ajoute des frais. Le meilleur moment pour réagir, c&apos;est le premier.
+            </p>
           </div>
-          <p className="mt-6 text-center text-sm text-ink-soft">
-            Vous n&apos;êtes pas sûr de votre situation ?{" "}
-            <BoutonContact variante="lien">Écrivez-nous, nous regardons avec vous.</BoutonContact>
+          <div className="mt-10">
+            <EscalierProcedure />
+          </div>
+          <p className="mt-5 text-xs text-ink-faint">
+            Procédure publiée par parking.brussels. Ailleurs, chaque commune fixe la sienne : c&apos;est votre courrier qui
+            fait foi.
           </p>
         </div>
       </section>
 
-      {/* COMMENT ÇA MARCHE */}
-      <section className="mx-auto max-w-5xl px-4 py-14 sm:px-6">
-        <h2 className="text-center font-display text-2xl font-bold text-navy-900 sm:text-3xl">
-          Trois minutes, trois étapes
-        </h2>
-        <p className="mx-auto mt-3 max-w-xl text-center text-ink-soft">
-          Vous ne tapez rien : vous vérifiez ce que nous avons lu.
-        </p>
-        <ol className="mt-9 grid gap-5 lg:grid-cols-3">
-          {PARCOURS.map((p, i) => (
-            <li key={p.titre} className="rounded-xl border border-line bg-card p-6 shadow-sm">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-navy-900 font-display text-lg font-bold text-gold-300">
-                {i + 1}
-              </span>
-              <h3 className="mt-4 font-display text-lg font-bold text-navy-900">{p.titre}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-ink-soft">{p.texte}</p>
-            </li>
-          ))}
-        </ol>
+      {/* ========================================================= LA BELGIQUE */}
+      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-20">
+        <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+          <div>
+            <IconeBelgique className="h-24 w-24 text-navy-900" />
+            <h2 className="mt-4 font-display text-3xl font-extrabold text-navy-900 sm:text-4xl">
+              Une seule plateforme, trois régions.
+            </h2>
+            <p className="mt-3 text-[1.05rem] text-ink-soft">
+              Le moteur reconnaît où a eu lieu le constat, et adapte tout : le délai, la procédure, la langue.
+            </p>
+          </div>
+          <ul className="grid gap-3 sm:grid-cols-3">
+            {(["bruxelles", "wallonie", "flandre"] as const).map((id) => {
+              const r = REGIONS[id];
+              return (
+                <li key={id} className="rounded-[var(--radius-carte)] border border-line/80 bg-card p-5 shadow-carte">
+                  <p className="font-display text-xl font-extrabold text-navy-900">{r.court}</p>
+                  <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-ink-faint">
+                    {r.langues.map((l) => (l === "fr" ? "Français" : "Néerlandais")).join(" · ")}
+                  </p>
+                  <p className="mt-3 text-sm leading-relaxed text-ink-soft">
+                    {r.delaiContestationJours
+                      ? `Délai de contestation : ${r.delaiContestationJours} jours. Procédure détaillée, étape par étape.`
+                      : "Délai fixé par chaque commune : le moteur le lit sur votre courrier."}
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       </section>
 
-      {/* CE QUE LE COMPTE DÉBLOQUE */}
-      <section className="bg-navy-950 py-16 text-white">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <p className="text-center text-xs font-bold uppercase tracking-[0.22em] text-gold-300">
-            L&apos;espace membre
-          </p>
-          <h2 className="mt-3 text-center font-display text-2xl font-bold sm:text-3xl">
-            Quatre modules, quatre rôles distincts
-          </h2>
-          <p className="mx-auto mt-3 max-w-2xl text-center leading-relaxed text-navy-100/80">
-            Vos informations circulent de l&apos;un à l&apos;autre sans jamais être retapées.
-          </p>
-
-          <div className="mt-9 grid gap-4 sm:grid-cols-2">
-            {MODULES_VITRINE.map((m) => (
-              <div key={m.href} className="flex gap-4 rounded-xl border border-navy-800 bg-navy-900/60 p-5">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-gold-400 text-navy-950">
-                  <IconeModule nom={m.icone} className="h-5 w-5" />
-                </span>
-                <div>
-                  <h3 className="font-display text-base font-bold">{m.titre}</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-navy-100/75">{m.phrase}</p>
-                </div>
-              </div>
-            ))}
+      {/* ============================================================= TARIFS */}
+      <section className="bg-paper pb-16 lg:pb-20">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6">
+          <div className="text-center">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-gold-700">Tarifs</p>
+            <h2 className="mt-2 font-display text-3xl font-extrabold text-navy-900 sm:text-4xl">Commencez gratuitement</h2>
+            <p className="mx-auto mt-3 max-w-xl text-[1.05rem] text-ink-soft">
+              Deux dossiers offerts, sans carte bancaire. Ensuite, l&apos;adhésion : 70 € par an, dossiers illimités.
+            </p>
           </div>
-
-          <div className="mt-9 flex justify-center">
-            <LinkBtn href="/inscription" variant="gold" className="px-6 py-3.5 text-base">
-              Créer mon compte gratuit →
-            </LinkBtn>
+          <div className="mt-8 grid items-start gap-5 md:grid-cols-2">
+            <CarteFormule plan={gratuit} href="#analyser" libelleAction="Analyser mon courrier" />
+            <CarteFormule plan={membre} href="/tarifs" libelleAction="Voir le détail" />
           </div>
         </div>
       </section>
 
-      {/* CHIFFRES */}
-      <section className="border-b border-line bg-card py-12">
-        <div className="mx-auto grid max-w-4xl gap-8 px-4 text-center sm:grid-cols-3 sm:px-6">
-          {CHIFFRES.map((c) => (
-            <div key={c.label}>
-              <p className="font-display text-4xl font-black text-gold-600">{c.valeur}</p>
-              <p className="mt-1 font-semibold text-navy-900">{c.label}</p>
-              <p className="mt-1 text-sm text-ink-soft">{c.detail}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* OBJECTIONS */}
-      <section className="mx-auto max-w-5xl px-4 py-14 sm:px-6">
-        <h2 className="text-center font-display text-2xl font-bold text-navy-900 sm:text-3xl">
-          Ce que vous vous demandez sans doute
-        </h2>
-        <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          {OBJECTIONS.map((o) => (
-            <div key={o.question} className="rounded-xl border border-line bg-card p-5">
-              <h3 className="font-display text-base font-bold text-navy-900">{o.question}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-ink-soft">{o.reponse}</p>
-            </div>
+      {/* ================================================================ FAQ */}
+      <section className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:py-20">
+        <h2 className="text-center font-display text-3xl font-extrabold text-navy-900 sm:text-4xl">Vos questions</h2>
+        <div className="mt-8 space-y-3">
+          {FAQ.map((f) => (
+            <details key={f.q} className="group rounded-[var(--radius-carte)] border border-line/80 bg-card shadow-carte">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 font-display text-base font-bold text-navy-900">
+                {f.q}
+                <IconeChevron className="h-4 w-4 shrink-0 text-navy-700 transition group-open:rotate-180" />
+              </summary>
+              <p className="px-5 pb-5 text-[0.95rem] leading-relaxed text-ink-soft">{f.r}</p>
+            </details>
           ))}
         </div>
         <p className="mt-6 text-center text-sm text-ink-soft">
-          <Link href="/comprendre#faq" className="font-semibold text-navy-700 underline">
-            Voir les douze questions fréquentes et les sources officielles
+          Une autre question ? <BoutonContact variante="lien">Écrivez-nous</BoutonContact> ·{" "}
+          <Link href="/comprendre" className="font-semibold text-navy-700 underline decoration-navy-200 underline-offset-4">
+            Comprendre la procédure
           </Link>
         </p>
       </section>
 
-      {/* LES ZONES */}
-      <section className="bg-navy-950 py-14 text-white">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <h2 className="text-center font-display text-2xl font-bold sm:text-3xl">
-            Les zones de stationnement, en un coup d&apos;œil
-          </h2>
-          <p className="mx-auto mt-3 max-w-xl text-center text-navy-100/80">
-            Tout commence par la zone où vous étiez garé : c&apos;est elle qui fixe le tarif, les
-            horaires et la règle qu&apos;on vous oppose.
-          </p>
-          <div className="mt-8">
-            <ZonesVisuel sombre />
-          </div>
-          <div className="mt-8 flex justify-center">
-            <LinkBtn href="/communes" variant="outline">
-              Voir le détail pour ma commune →
-            </LinkBtn>
-          </div>
-        </div>
-      </section>
-
-      {/* FORMULES */}
-      <section className="mx-auto max-w-5xl px-4 py-14 sm:px-6">
-        <h2 className="text-center font-display text-2xl font-bold text-navy-900 sm:text-3xl">
-          Commencez gratuitement
-        </h2>
-        <p className="mx-auto mt-3 max-w-xl text-center text-ink-soft">
-          Deux contestations offertes, sans carte bancaire. L&apos;adhésion vient après, si vous en
-          avez besoin.
-        </p>
-        <div className="mt-8 grid items-start gap-5 sm:grid-cols-2">
-          {[gratuit, membre].map((plan) => (
-            <CarteFormule
-              key={plan.id}
-              plan={plan}
-              courte
-              href={plan.id === "gratuit" ? "/inscription" : "/tarifs"}
-              libelleAction={
-                plan.id === "gratuit" ? "Commencer gratuitement" : "Voir toutes les formules"
-              }
-            />
-          ))}
-        </div>
-      </section>
-
-      {/* CE QUE NOUS FAISONS / NE FAISONS PAS */}
-      <section className="mx-auto max-w-5xl px-4 pb-14 sm:px-6">
-        <div className="grid gap-5 lg:grid-cols-2">
-          <Card title="Ce que nous faisons">
-            <ul className="space-y-2.5">
-              {NOUS_FAISONS.map((x) => (
-                <li key={x} className="flex gap-2.5 text-sm text-ink">
-                  <Check className="mt-0.5 h-4.5 w-4.5 shrink-0 text-ok-600" />
-                  {x}
-                </li>
-              ))}
-            </ul>
-          </Card>
-          <Card title="Ce que nous ne faisons pas" className="border-line bg-paper">
-            <ul className="space-y-2.5">
-              {NOUS_NE_FAISONS_PAS.map((x) => (
-                <li key={x} className="flex gap-2.5 text-sm text-ink">
-                  <Cross className="mt-0.5 h-4.5 w-4.5 shrink-0 text-ink-soft" />
-                  {x}
-                </li>
-              ))}
-            </ul>
-          </Card>
-        </div>
-      </section>
-
-      {/* CTA FINAL */}
-      <section className="bg-navy-900 py-16 text-white">
-        <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
-          <h2 className="font-display text-2xl font-black sm:text-3xl">
-            Votre délai court déjà.
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl leading-relaxed text-navy-100">
-            Créez votre compte, scannez votre courrier, et sachez en trois minutes ce qui reste
-            possible — sans jargon ni fausse promesse.
+      {/* ========================================================== APPEL FINAL */}
+      <section className="relative overflow-hidden bg-navy-900 py-16 text-white">
+        <div className="motif-points absolute inset-0" aria-hidden="true" />
+        <div className="relative mx-auto max-w-3xl px-4 text-center sm:px-6">
+          <h2 className="font-display text-3xl font-extrabold sm:text-4xl">Le délai court déjà.</h2>
+          <p className="mx-auto mt-3 max-w-xl text-[1.05rem] text-navy-100">
+            Trois minutes maintenant valent mieux que des frais de rappel plus tard.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <LinkBtn href="/inscription" variant="gold" className="w-full px-7 py-4 text-base sm:w-auto">
-              Contester gratuitement →
+            <LinkBtn href="#analyser" variant="gold" taille="lg">
+              <IconeScanDoc className="h-6 w-6 [--icone-accent:transparent]" />
+              Analyser mon courrier
             </LinkBtn>
-            <BoutonContact variante="outline" className="w-full px-6 py-4 text-base sm:w-auto" />
+            <LinkBtn href="/connexion" variant="outline" taille="lg">
+              J&apos;ai déjà un compte
+            </LinkBtn>
           </div>
-          <p className="mt-8 text-sm text-navy-100/70">
-            Ou écrivez-nous à{" "}
-            <a href={`mailto:${ASSO.email}`} className="inline-flex items-center gap-1.5 underline hover:text-gold-300">
-              <MailIcon className="h-4 w-4" />
-              {ASSO.email}
-            </a>{" "}
-            ·{" "}
-            <Link href="/contact" className="underline hover:text-gold-300">
-              toutes nos coordonnées
-            </Link>
-          </p>
         </div>
       </section>
     </div>

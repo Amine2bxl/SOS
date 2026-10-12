@@ -1,348 +1,299 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { listerDossiers, lireProfil, lireAlertesNonVues } from "@/lib/dossiers";
-import {
-  TYPES_DOCUMENT,
-  joursAvantEcheance,
-  formatMontant,
-  formatDate,
-  prochaineAction,
-  type Dossier,
-  type ProchaineAction,
-} from "@/lib/dossiers-format";
+import { listerDossiers, lireProfil, lireAlertesNonVues, analyserDossier } from "@/lib/dossiers";
+import { formatMontant, prochaineAction, type Dossier, type ProchaineAction } from "@/lib/dossiers-format";
 import { planById, contestationsRestantes } from "@/lib/plans";
 import { completudeProfil } from "@/lib/contestation";
-import { LinkBtn, Card, Stat, SectionApp, EtatVide, CarteModule, BarreProgression } from "@/components/ui";
-import { BadgeStatut, PastilleEcheance } from "@/components/dossier-ui";
+import { LinkBtn, SectionApp } from "@/components/ui";
+import { CarteDossier, CompteARebours, FriseProcedure, nomDossier } from "@/components/dossier-ui";
 import { AlerteReglementaire } from "@/components/AlerteReglementaire";
 import { RafraichirEnTempsReel } from "@/components/RafraichirEnTempsReel";
-import { IconeModule } from "@/components/app/IconeModule";
-import { MODULES_DOSSIERS, MODULES_OUTILS } from "@/components/app/modules";
+import { RechercheRapide } from "@/components/app/RechercheRapide";
+import {
+  IconeBalance,
+  IconeBulle,
+  IconeCadenas,
+  IconeFleche,
+  IconeLettre,
+  IconePersonne,
+  IconeScanDoc,
+  IconeSceau,
+} from "@/components/icones";
 
-export const metadata: Metadata = { title: "Mon tableau de bord" };
+export const metadata: Metadata = { title: "Accueil" };
 export const dynamic = "force-dynamic";
 
-const TONS_ACTION: Record<ProchaineAction["ton"], string> = {
-  urgent: "border-danger-600/40 bg-danger-100 text-danger-700",
-  attention: "border-warn-600/40 bg-warn-100 text-warn-700",
-  neutre: "border-navy-600/25 bg-navy-50 text-navy-700",
-  termine: "border-ok-600/40 bg-ok-100 text-ok-700",
-};
+const RANG_TON: Record<ProchaineAction["ton"], number> = { urgent: 0, attention: 1, neutre: 2, termine: 3 };
 
-/** Une ligne de dossier : l'identité à gauche, la prochaine action à droite. */
-function LigneDossier({ dossier }: { dossier: Dossier }) {
-  const suite = prochaineAction(dossier);
-  const jours = joursAvantEcheance(dossier.date_echeance);
-
-  return (
-    <li className="overflow-hidden rounded-xl border border-line bg-card shadow-sm transition hover:border-navy-600/40 hover:shadow-md">
-      <Link href={`/tableau-de-bord/${dossier.id}`} className="block p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="font-display font-bold text-navy-900">
-              {dossier.reference ?? "Dossier sans référence"}
-            </p>
-            <p className="mt-0.5 text-sm text-ink-soft">
-              {TYPES_DOCUMENT[dossier.type_document] ?? dossier.type_document}
-              {dossier.commune && ` — ${dossier.commune}`}
-            </p>
-          </div>
-          <BadgeStatut statut={dossier.statut} />
-        </div>
-
-        <div className="mt-3.5 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-ink-soft">
-          <span className="font-bold text-navy-900">{formatMontant(dossier.montant)}</span>
-          {dossier.plaque && <span>{dossier.plaque}</span>}
-          <span>Constat&nbsp;: {formatDate(dossier.date_constat)}</span>
-          {dossier.date_echeance && <PastilleEcheance jours={jours} />}
-        </div>
-      </Link>
-
-      <div
-        className={`flex flex-wrap items-center justify-between gap-2 border-t px-5 py-3 ${TONS_ACTION[suite.ton]}`}
-      >
-        <p className="text-sm">
-          <span className="font-bold">{suite.action}</span>
-          <span className="ml-1.5 opacity-80">{suite.raison}</span>
-        </p>
-        <Link
-          href={suite.lien}
-          className="shrink-0 whitespace-nowrap rounded-md bg-white/70 px-3 py-1.5 text-xs font-bold underline-offset-2 transition hover:bg-white hover:underline"
-        >
-          {suite.libelleLien} →
-        </Link>
-      </div>
-    </li>
-  );
+/** Les dossiers dans l'ordre où il faut s'en occuper. */
+function parUrgence(a: { action: ProchaineAction }, b: { action: ProchaineAction }) {
+  const ton = RANG_TON[a.action.ton] - RANG_TON[b.action.ton];
+  if (ton !== 0) return ton;
+  return (a.action.jours ?? 9999) - (b.action.jours ?? 9999);
 }
 
-export default async function TableauDeBordPage() {
-  const [dossiers, profil, alertes] = await Promise.all([
-    listerDossiers(),
-    lireProfil(),
-    lireAlertesNonVues(),
-  ]);
+export default async function Accueil() {
+  const [dossiers, profil, alertes] = await Promise.all([listerDossiers(), lireProfil(), lireAlertesNonVues()]);
+
+  const suivis = dossiers
+    .map((d) => {
+      const analyse = analyserDossier(d);
+      return { dossier: d, analyse, action: prochaineAction(d, analyse.delai) };
+    })
+    .sort(parUrgence);
+
+  const enCours = suivis.filter((s) => s.action.ton !== "termine");
+  const gagnes = dossiers.filter((d) => d.statut === "accepte");
+  const montantEnJeu = enCours.reduce((t, s) => t + (s.dossier.montant ?? 0), 0);
+  const montantGagne = gagnes.reduce((t, d) => t + (d.montant ?? 0), 0);
 
   const plan = planById(profil?.plan);
   const restantes = contestationsRestantes(profil?.plan, dossiers.length);
-  const profilComplet = completudeProfil(profil);
+  const profilIncomplet = !completudeProfil(profil).complet;
+  const prenom = profil?.prenom?.trim();
 
-  // Un bonjour qui colle au moment de la journée : l'espace membre doit se
-  // sentir habité, pas administratif.
-  const heure = new Date().getUTCHours() + 1; // Bruxelles, approximation suffisante
-  const salutation = heure < 12 ? "Bonjour" : heure < 18 ? "Bon après-midi" : "Bonsoir";
+  const urgentes = enCours.filter((s) => s.action.ton === "urgent").length;
+  const resume =
+    dossiers.length === 0
+      ? "Un courrier à contester ? Commencez par le photographier."
+      : urgentes > 0
+        ? `${urgentes} dossier${urgentes > 1 ? "s demandent" : " demande"} votre attention aujourd'hui.`
+        : enCours.length > 0
+          ? "Rien d'urgent. Voici où en sont vos dossiers."
+          : "Tous vos dossiers sont terminés. Rien à faire.";
 
-  const enCours = dossiers.filter((d) => !["accepte", "rejete", "clos"].includes(d.statut));
-  const totalEnJeu = enCours.reduce((s, d) => s + (d.montant ?? 0), 0);
-  const gagnes = dossiers.filter((d) => d.statut === "accepte");
-
-  // Ce qui presse : délai dépassé ou dans la semaine, contestation non partie.
-  const urgents = enCours
-    .filter((d) => {
-      const j = joursAvantEcheance(d.date_echeance);
-      return j !== null && j <= 7 && !["contestation_envoyee", "en_attente_reponse"].includes(d.statut);
-    })
-    .sort((a, b) => (a.date_echeance! < b.date_echeance! ? -1 : 1));
-
-  const echeances = enCours
-    .filter((d) => d.date_echeance)
-    .sort((a, b) => (a.date_echeance! < b.date_echeance! ? -1 : 1))
-    .slice(0, 4);
+  const [premier, ...autres] = enCours;
+  const aujourdhui = new Date().toLocaleDateString("fr-BE", { weekday: "long", day: "numeric", month: "long" });
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
       <RafraichirEnTempsReel />
+      {alertes.map((a) => (
+        <AlerteReglementaire key={a.id} alerte={a} />
+      ))}
 
-      {alertes.length > 0 && <AlerteReglementaire alerte={alertes[0]} />}
+      <header className="animate-rise">
+        <p className="text-sm font-medium text-ink-soft first-letter:uppercase">{aujourdhui}</p>
+        <h1 className="mt-1 font-display text-[2rem] font-extrabold leading-tight text-navy-900 sm:text-4xl">
+          {prenom ? `Bonjour ${prenom}` : "Bonjour"}
+        </h1>
+        <p className="mt-1.5 text-[1.05rem] text-ink-soft">{resume}</p>
+      </header>
 
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h2 className="font-display text-3xl font-bold text-navy-900">
-            {salutation}
-            {profil?.prenom ? ` ${profil.prenom}` : ""}
-          </h2>
-          <p className="mt-1 text-ink-soft">
-            {enCours.length === 0
-              ? "Aucun dossier en cours. Vous êtes à jour."
-              : urgents.length > 0
-                ? `${urgents.length} dossier${urgents.length > 1 ? "s demandent" : " demande"} votre attention aujourd'hui.`
-                : `${enCours.length} dossier${enCours.length > 1 ? "s" : ""} en cours, aucune échéance serrée.`}
-          </p>
-        </div>
-        <LinkBtn href="/tableau-de-bord/contester" variant="gold">
-          Contester une redevance →
-        </LinkBtn>
-      </div>
-
-      {/* CE QUI PRESSE — toujours en premier, jamais noyé dans le reste. */}
-      {urgents.length > 0 && (
-        <div className="mt-6 rounded-xl border-2 border-danger-600/40 bg-danger-100 p-5">
-          <p className="font-display font-bold text-danger-700">
-            {urgents.length === 1
-              ? "1 dossier arrive à échéance"
-              : `${urgents.length} dossiers arrivent à échéance`}
-          </p>
-          <ul className="mt-2.5 space-y-1.5 text-sm text-ink">
-            {urgents.map((d) => {
-              const j = joursAvantEcheance(d.date_echeance)!;
-              return (
-                <li key={d.id} className="flex flex-wrap items-center gap-x-2">
-                  <Link href={`/tableau-de-bord/${d.id}`} className="font-semibold underline">
-                    {d.reference ?? "Dossier sans référence"}
-                  </Link>
-                  <span>
-                    —{" "}
-                    {j < 0
-                      ? `échéance dépassée depuis ${-j} jour${-j > 1 ? "s" : ""}`
-                      : j === 0
-                        ? "échéance aujourd'hui"
-                        : `dans ${j} jour${j > 1 ? "s" : ""}`}
-                  </span>
-                  <Link
-                    href={prochaineAction(d).lien}
-                    className="rounded-md bg-white px-2.5 py-1 text-xs font-bold text-danger-700"
-                  >
-                    {prochaineAction(d).libelleLien} →
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      )}
-
-      {/* PROFIL INCOMPLET — chaque champ manquant sera à retaper dans chaque lettre. */}
-      {!profilComplet.complet && (
-        <Card className="mt-6 border-navy-600/30 bg-navy-50/60">
-          <div className="sm:flex sm:items-center sm:justify-between sm:gap-5">
-            <div className="min-w-0">
-              <p className="font-display text-lg font-bold text-navy-900">
-                Complétez votre profil une bonne fois
-              </p>
-              <p className="mt-1 text-sm leading-relaxed text-ink-soft">
-                Il manque{" "}
-                <strong className="text-navy-900">
-                  {profilComplet.manquants.map((m) => m.libelle.toLowerCase()).join(", ")}
-                </strong>
-                . Ces coordonnées sont exigées sur toute contestation : renseignées ici, elles
-                remplissent automatiquement chacune de vos lettres.
-              </p>
+      {dossiers.length === 0 ? (
+        <PremierPas />
+      ) : (
+        <>
+          {premier ? (
+            <CartePriorite dossier={premier.dossier} action={premier.action} />
+          ) : (
+            <div className="mt-6 rounded-[var(--radius-carte)] border border-ok-600/30 bg-ok-50 p-6">
+              <p className="font-display text-lg font-bold text-ok-700">Aucun dossier en cours</p>
+              <p className="mt-1 text-sm text-ink-soft">Un nouveau courrier ? Scannez-le : l&apos;analyse prend une minute.</p>
             </div>
-            <LinkBtn href="/tableau-de-bord/compte" variant="gold" className="mt-4 shrink-0 sm:mt-0">
-              Compléter mon profil
-            </LinkBtn>
-          </div>
-          <div className="mt-4">
-            <BarreProgression utilise={profilComplet.score} total={100} label="Profil renseigné" />
-          </div>
-        </Card>
+          )}
+
+          <dl className="mt-5 grid grid-cols-3 gap-3">
+            <Chiffre valeur={String(enCours.length)} libelle="en cours" />
+            <Chiffre valeur={formatMontant(montantEnJeu)} libelle="en jeu" />
+            <Chiffre valeur={gagnes.length > 0 ? formatMontant(montantGagne) : "0"} libelle={gagnes.length > 0 ? "économisés" : "gagné"} accent={gagnes.length > 0} />
+          </dl>
+
+          {autres.length > 0 && (
+            <SectionApp
+              titre="Vos autres dossiers"
+              action={
+                <Link href="/tableau-de-bord/dossiers" className="text-sm font-bold text-navy-700 hover:text-navy-900">
+                  Tout voir →
+                </Link>
+              }
+            >
+              <ul className="grid grid-cols-1 gap-3">
+                {autres.slice(0, 3).map((s) => (
+                  <li key={s.dossier.id}>
+                    <CarteDossier dossier={s.dossier} action={s.action} />
+                  </li>
+                ))}
+              </ul>
+            </SectionApp>
+          )}
+        </>
       )}
 
-      {/* CHIFFRES CLÉS */}
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat valeur={String(enCours.length)} label="dossiers en cours" detail="Contestations non clôturées" />
-        <Stat valeur={formatMontant(totalEnJeu)} label="montant en jeu" detail="Total réclamé sur ces dossiers" />
-        <Stat
-          valeur={String(gagnes.length)}
-          label={`contestation${gagnes.length > 1 ? "s" : ""} acceptée${gagnes.length > 1 ? "s" : ""}`}
-          detail="Dossiers clos en votre faveur"
-        />
-        <Stat
-          valeur={restantes === null ? "∞" : String(restantes)}
-          label="contestations restantes"
-          detail={`Formule ${plan.nom}`}
-        />
+      <div className="mt-9 grid gap-4 lg:grid-cols-2">
+        <section className="rounded-[var(--radius-carte)] border border-line/80 bg-card p-5 shadow-carte sm:p-6">
+          <div className="flex items-center gap-3">
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-navy-50 text-navy-900">
+              <IconeBulle className="h-7 w-7" />
+            </span>
+            <div>
+              <h2 className="font-display text-lg font-bold text-navy-900">Une question ?</h2>
+              <p className="text-sm text-ink-soft">La réponse vient de notre base de savoir.</p>
+            </div>
+          </div>
+          <RechercheRapide />
+        </section>
+
+        {plan.id === "gratuit" ? (
+          <section className="relative overflow-hidden rounded-[var(--radius-carte)] bg-navy-900 p-5 text-white shadow-carte sm:p-6">
+            <div className="motif-points absolute inset-0" aria-hidden="true" />
+            <div className="relative">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-gold-400">Adhésion</p>
+              <h2 className="mt-2 font-display text-xl font-bold">
+                {restantes && restantes > 0
+                  ? `Encore ${restantes} dossier${restantes > 1 ? "s" : ""} offert${restantes > 1 ? "s" : ""}`
+                  : "Vos dossiers offerts sont utilisés"}
+              </h2>
+              <p className="mt-2 text-sm leading-relaxed text-navy-100">
+                Membre de l&apos;association : dossiers illimités, relecture par nos bénévoles, alertes quand la
+                règle change. Une redevance évitée rembourse souvent l&apos;année.
+              </p>
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <LinkBtn href="/adherer" variant="gold">
+                  Adhérer — 70 € / an
+                </LinkBtn>
+              </div>
+            </div>
+          </section>
+        ) : (
+          <section className="rounded-[var(--radius-carte)] border border-line/80 bg-card p-5 shadow-carte sm:p-6">
+            <div className="flex items-center gap-3">
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gold-100 text-navy-900">
+                <IconeSceau className="h-7 w-7" />
+              </span>
+              <div>
+                <h2 className="font-display text-lg font-bold text-navy-900">
+                  {plan.id === "membre" ? "Vous êtes membre" : `Membre — formule ${plan.nom}`}
+                </h2>
+                <p className="text-sm text-ink-soft">Dossiers illimités. Merci de soutenir l&apos;association.</p>
+              </div>
+            </div>
+          </section>
+        )}
       </div>
 
-      {/* PROCHAINES ÉCHÉANCES + FORMULE */}
-      {(echeances.length > 0 || restantes !== null) && (
-        <div className="mt-4 grid gap-4 lg:grid-cols-2">
-          <Card title="Vos prochaines échéances" subtitle="Les dates qui ne se rattrapent pas.">
-            {echeances.length === 0 ? (
-              <p className="text-sm text-ink-soft">
-                Aucune date limite enregistrée sur vos dossiers en cours.
-              </p>
-            ) : (
-              <ol className="space-y-3">
-                {echeances.map((d) => {
-                  const j = joursAvantEcheance(d.date_echeance);
-                  return (
-                    <li key={d.id} className="flex items-center gap-3">
-                      <span
-                        className={`h-2.5 w-2.5 shrink-0 rounded-full ${
-                          j !== null && j <= 7 ? "bg-danger-600" : j !== null && j <= 21 ? "bg-warn-600" : "bg-ok-600"
-                        }`}
-                        aria-hidden="true"
-                      />
-                      <Link
-                        href={`/tableau-de-bord/${d.id}`}
-                        className="min-w-0 flex-1 truncate text-sm font-semibold text-navy-900 hover:underline"
-                      >
-                        {d.reference ?? "Dossier sans référence"}
-                      </Link>
-                      <span className="shrink-0 text-xs text-ink-soft">{formatDate(d.date_echeance)}</span>
-                      <PastilleEcheance jours={j} />
-                    </li>
-                  );
-                })}
-              </ol>
-            )}
-          </Card>
-
-          <Card title={`Formule ${plan.nom}`} subtitle={plan.pour}>
-            {restantes === null ? (
-              <p className="text-sm leading-relaxed text-ink-soft">
-                Contestations illimitées : ouvrez autant de dossiers que nécessaire.
-              </p>
-            ) : (
-              <>
-                <BarreProgression
-                  utilise={Math.min(dossiers.length, plan.quotaContestations ?? 0)}
-                  total={plan.quotaContestations ?? 0}
-                  label="Contestations utilisées"
-                />
-                <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-                  {restantes === 0 ? (
-                    <>
-                      Quota épuisé. Vos dossiers restent suivis ; l&apos;adhésion ouvre les
-                      contestations illimitées et la relecture de vos lettres.
-                    </>
-                  ) : (
-                    <>
-                      Il vous reste {restantes} contestation{restantes > 1 ? "s" : ""} gratuite
-                      {restantes > 1 ? "s" : ""}. Le téléphone et l&apos;aide écrite restent gratuits
-                      sans limite.
-                    </>
-                  )}
-                </p>
-              </>
-            )}
-            <LinkBtn
-              href="/tableau-de-bord/abonnement"
-              variant={plan.id === "gratuit" ? "gold" : "secondary"}
-              className="mt-4"
-            >
-              {plan.id === "gratuit" ? "Voir les formules d'adhésion" : "Gérer mon abonnement"}
-            </LinkBtn>
-          </Card>
-        </div>
+      {profilIncomplet && (
+        <Link
+          href="/tableau-de-bord/compte"
+          className="group mt-4 flex items-center gap-4 rounded-[var(--radius-carte)] border border-gold-300 bg-gold-50 p-5 transition hover:border-gold-500"
+        >
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white text-navy-900">
+            <IconePersonne className="h-7 w-7" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-bold text-navy-900">Complétez vos coordonnées, une seule fois</span>
+            <span className="block text-sm text-ink-soft">
+              Votre nom et votre adresse s&apos;inscrivent alors tout seuls dans chaque lettre.
+            </span>
+          </span>
+          <IconeFleche className="h-5 w-5 shrink-0 text-navy-700 transition group-hover:translate-x-0.5" />
+        </Link>
       )}
-
-      {/* MES DOSSIERS */}
-      <SectionApp
-        titre="Mes dossiers"
-        intro="Chaque dossier vous dit ce qu'il attend de vous."
-        action={
-          dossiers.length > 0 ? (
-            <LinkBtn href="/tableau-de-bord/nouveau" variant="secondary">
-              Ajouter un courrier
-            </LinkBtn>
-          ) : undefined
-        }
-      >
-        {dossiers.length === 0 ? (
-          <EtatVide
-            titre="Votre premier dossier commence ici"
-            texte="Prenez votre courrier en photo ou collez une capture d'écran. Nous en extrayons la référence, le montant et la date limite ; vous n'avez plus qu'à vérifier."
-          >
-            <LinkBtn href="/tableau-de-bord/contester" variant="gold">
-              Contester ma redevance
-            </LinkBtn>
-            <LinkBtn href="/tableau-de-bord/guides" variant="secondary">
-              D&apos;abord comprendre mon courrier
-            </LinkBtn>
-          </EtatVide>
-        ) : (
-          <ul className="space-y-3">
-            {dossiers.map((d) => (
-              <LigneDossier key={d.id} dossier={d} />
-            ))}
-          </ul>
-        )}
-      </SectionApp>
-
-      {/* LES MODULES — à quoi sert quoi, sans avoir à cliquer. */}
-      <SectionApp
-        titre="Vos modules"
-        intro="Chaque module fait une chose précise. Voici laquelle."
-      >
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[MODULES_DOSSIERS[0], ...MODULES_OUTILS].map((m) => (
-            <CarteModule
-              key={m.href}
-              href={m.href}
-              titre={m.titre}
-              phrase={m.phrase}
-              cta="Ouvrir"
-              icone={<IconeModule nom={m.icone} className="h-5 w-5" />}
-            />
-          ))}
-        </div>
-      </SectionApp>
-
-      <p className="mt-8 text-center text-xs text-ink-soft">
-        Vos dossiers se mettent à jour tout seuls, sans rechargement de page.
-      </p>
     </div>
+  );
+}
+
+function Chiffre({ valeur, libelle, accent = false }: { valeur: string; libelle: string; accent?: boolean }) {
+  return (
+    <div className={`rounded-2xl border p-3.5 sm:p-4 ${accent ? "border-ok-600/30 bg-ok-50" : "border-line/80 bg-card"}`}>
+      <dd className={`truncate font-display text-xl font-extrabold sm:text-2xl ${accent ? "text-ok-700" : "text-navy-900"}`}>
+        {valeur}
+      </dd>
+      <dt className="text-xs font-medium text-ink-soft">{libelle}</dt>
+    </div>
+  );
+}
+
+/** Le dossier qui passe avant tous les autres, en grand. */
+function CartePriorite({ dossier, action }: { dossier: Dossier; action: ProchaineAction }) {
+  const urgent = action.ton === "urgent";
+  return (
+    <section
+      aria-label="À faire en priorité"
+      className="animate-rise relative mt-6 overflow-hidden rounded-[1.75rem] bg-navy-900 text-white shadow-flotte"
+    >
+      <div className="motif-points absolute inset-0" aria-hidden="true" />
+      <div className={`h-1.5 ${urgent ? "bg-danger-600" : "motif-marquage"}`} aria-hidden="true" />
+      <div className="relative grid gap-6 p-5 sm:grid-cols-[1fr_auto] sm:items-center sm:p-7">
+        <div className="min-w-0">
+          <p className={`text-xs font-bold uppercase tracking-[0.16em] ${urgent ? "text-danger-100" : "text-gold-400"}`}>
+            {urgent ? "Urgent" : "À faire maintenant"} · {nomDossier(dossier)}
+          </p>
+          <h2 className="mt-2 font-display text-2xl font-extrabold leading-tight sm:text-3xl">{action.action}</h2>
+          <p className="mt-2 max-w-xl text-[0.95rem] leading-relaxed text-navy-100">{action.raison}</p>
+          <div className="mt-5 max-w-md">
+            <FriseProcedure stade={dossier.type_document} surFonce />
+          </div>
+          <div className="mt-6">
+            <LinkBtn href={action.lien} variant="gold" taille="lg">
+              {action.libelleLien}
+              <IconeFleche className="h-5 w-5" />
+            </LinkBtn>
+          </div>
+        </div>
+        {action.jours !== null && (
+          <div className="hidden sm:block">
+            <CompteARebours jours={action.jours} taille="lg" surFonce />
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/** Le tout premier écran : trois gestes, une seule action. */
+function PremierPas() {
+  const gestes = [
+    {
+      Icone: IconeScanDoc,
+      titre: "Photographiez votre courrier",
+      texte: "Ou déposez le PDF. Le moteur lit les dates, le montant, la plaque.",
+    },
+    {
+      Icone: IconeBalance,
+      titre: "Répondez à trois questions",
+      texte: "Ce que le courrier ne dit pas : aviez-vous payé ? la voiture était-elle à vous ?",
+    },
+    {
+      Icone: IconeLettre,
+      titre: "Envoyez votre lettre",
+      texte: "Rédigée pour votre cas, avec le délai à tenir et la marche à suivre.",
+    },
+  ];
+  return (
+    <section className="animate-rise relative mt-6 overflow-hidden rounded-[1.75rem] bg-navy-900 text-white shadow-flotte">
+      <div className="motif-points absolute inset-0" aria-hidden="true" />
+      <div className="motif-marquage h-1.5" aria-hidden="true" />
+      <div className="relative p-6 sm:p-9">
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-gold-400">Votre premier dossier</p>
+        <h2 className="mt-2 max-w-xl font-display text-[1.7rem] font-extrabold leading-tight sm:text-4xl">
+          Trois gestes, et votre contestation est prête.
+        </h2>
+        <ol className="mt-7 grid gap-4 sm:grid-cols-3">
+          {gestes.map(({ Icone, titre, texte }, i) => (
+            <li key={titre} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+              <div className="flex items-center gap-3">
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-navy-900">
+                  <Icone className="h-7 w-7" />
+                </span>
+                <span className="font-display text-sm font-bold text-gold-400">{i + 1}</span>
+              </div>
+              <p className="mt-3 font-bold">{titre}</p>
+              <p className="mt-1 text-sm leading-relaxed text-navy-100">{texte}</p>
+            </li>
+          ))}
+        </ol>
+        <div className="mt-7 flex flex-col gap-4 sm:flex-row sm:items-center">
+          <LinkBtn href="/tableau-de-bord/nouveau" variant="gold" taille="lg">
+            <IconeScanDoc className="h-6 w-6 [--icone-accent:transparent]" />
+            Scanner mon courrier
+          </LinkBtn>
+          <p className="flex items-center gap-2 text-sm text-navy-100">
+            <IconeCadenas className="h-5 w-5 shrink-0 text-white [--icone-accent:transparent]" />
+            Votre document est lu sur votre appareil.
+          </p>
+        </div>
+      </div>
+    </section>
   );
 }

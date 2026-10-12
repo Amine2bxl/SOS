@@ -1,34 +1,29 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Suspense } from "react";
-import { FormulaireConnexion } from "./FormulaireConnexion";
+import { FormulaireAcces } from "./FormulaireAcces";
 import { supabaseConfigure } from "@/lib/supabase/config";
+import { modeConfirmation } from "@/lib/auth-actions";
 import { ServiceIndisponible } from "@/components/ServiceIndisponible";
 
-export const metadata: Metadata = { title: "Connexion" };
+export const metadata: Metadata = {
+  title: "Entrer dans mon espace",
+  description: "Votre adresse e-mail, un code, et vous y êtes. Pas de mot de passe.",
+};
 
-export default function ConnexionPage() {
+export default async function ConnexionPage() {
   if (!supabaseConfigure()) return <ServiceIndisponible />;
 
+  // Le formulaire doit savoir comment le code arrive (notre e-mail, ou celui
+  // de Supabase), si Google est branché, et si l'anti-robot l'est.
+  const mode = await modeConfirmation();
+
   return (
-    <div className="mx-auto max-w-md px-4 py-16 sm:px-6">
-      <h1 className="text-center font-display text-3xl font-bold text-navy-900">
-        Connexion
-      </h1>
-      <p className="mt-3 text-center text-ink-soft">
-        Retrouvez vos dossiers et leur avancement.
-      </p>
-
-      <Suspense fallback={null}>
-        <FormulaireConnexion />
-      </Suspense>
-
-      <p className="mt-6 text-center text-sm text-ink-soft">
-        Pas encore de compte ?{" "}
-        <Link href="/inscription" className="font-semibold text-navy-700 underline">
-          Créer un compte gratuit
-        </Link>
-      </p>
-    </div>
+    <Suspense fallback={null}>
+      <FormulaireAcces
+        mode={mode}
+        googleActif={process.env.NEXT_PUBLIC_AUTH_GOOGLE === "1"}
+        cleTurnstile={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? null}
+      />
+    </Suspense>
   );
 }

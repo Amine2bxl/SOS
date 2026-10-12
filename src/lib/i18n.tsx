@@ -2,16 +2,23 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
+/**
+ * Les langues de l'interface. Pas de drapeaux : en Belgique, le néerlandais
+ * n'est pas « la langue des Pays-Bas », ni le français celle de la France.
+ * Le code suffit, et ne froisse personne.
+ */
 export const LANGUES = [
-  { code: "fr", drapeau: "🇫🇷", label: "Français" },
-  { code: "en", drapeau: "🇬🇧", label: "English" },
-  { code: "nl", drapeau: "🇳🇱", label: "Nederlands" },
-  { code: "de", drapeau: "🇩🇪", label: "Deutsch" },
+  { code: "fr", label: "Français" },
+  { code: "nl", label: "Nederlands" },
+  { code: "en", label: "English" },
+  { code: "de", label: "Deutsch" },
 ] as const;
 
 export type Langue = (typeof LANGUES)[number]["code"];
 
 const FR = {
+  "nav.commentCaMarche": "Comment ça marche",
+  "commun.analyser": "Analyser mon courrier",
   "nav.comprendre": "Comprendre",
   "nav.communes": "Communes",
   "nav.tarifs": "Tarifs",
@@ -38,11 +45,13 @@ const FR = {
   "footer.confidentialite": "Confidentialité",
   "footer.conditions": "Conditions d'utilisation",
   "footer.tagline":
-    "Association citoyenne bruxelloise qui aide à comprendre et contester les redevances de stationnement.",
+    "Association citoyenne qui aide à comprendre et contester les redevances de stationnement, partout en Belgique.",
   "footer.identite": "Association d'information et d'accompagnement citoyen, non un cabinet d'avocats : aucune annulation n'est garantie.",
 };
 
 const EN: Record<string, string> = {
+  "nav.commentCaMarche": "How it works",
+  "commun.analyser": "Analyse my letter",
   "nav.comprendre": "Understand",
   "nav.communes": "Municipalities",
   "nav.tarifs": "Pricing",
@@ -69,12 +78,14 @@ const EN: Record<string, string> = {
   "footer.confidentialite": "Privacy",
   "footer.conditions": "Terms of use",
   "footer.tagline":
-    "A Brussels citizens' association helping people understand and contest parking charges.",
+    "A citizens' association helping people understand and contest parking charges, everywhere in Belgium.",
   "footer.identite":
     "An information and support association, not a law firm: no annulment is guaranteed.",
 };
 
 const NL: Record<string, string> = {
+  "nav.commentCaMarche": "Hoe het werkt",
+  "commun.analyser": "Mijn brief analyseren",
   "nav.comprendre": "Begrijpen",
   "nav.communes": "Gemeenten",
   "nav.tarifs": "Tarieven",
@@ -101,12 +112,14 @@ const NL: Record<string, string> = {
   "footer.confidentialite": "Privacy",
   "footer.conditions": "Gebruiksvoorwaarden",
   "footer.tagline":
-    "Een Brusselse burgervereniging die helpt parkeerretributies te begrijpen en te betwisten.",
+    "Een burgervereniging die helpt parkeerretributies te begrijpen en te betwisten, overal in België.",
   "footer.identite":
     "Een vereniging voor informatie en begeleiding, geen advocatenkantoor: geen annulering wordt gegarandeerd.",
 };
 
 const DE: Record<string, string> = {
+  "nav.commentCaMarche": "So funktioniert's",
+  "commun.analyser": "Meinen Brief analysieren",
   "nav.comprendre": "Verstehen",
   "nav.communes": "Gemeinden",
   "nav.tarifs": "Preise",
@@ -133,7 +146,7 @@ const DE: Record<string, string> = {
   "footer.confidentialite": "Datenschutz",
   "footer.conditions": "Nutzungsbedingungen",
   "footer.tagline":
-    "Ein Brüsseler Bürgerverein, der hilft, Parkgebühren zu verstehen und anzufechten.",
+    "Ein Bürgerverein, der hilft, Parkgebühren zu verstehen und anzufechten, überall in Belgien.",
   "footer.identite":
     "Ein Informations- und Begleitverein, keine Anwaltskanzlei: keine Annullierung wird garantiert.",
 };
@@ -186,11 +199,10 @@ export function useLangue(): EtatLangue {
   return useContext(ContexteLangue);
 }
 
-/** Sélecteur de langue en drapeaux, dépliant sous une pastille. */
+/** Sélecteur de langue : le code de la langue, dépliant sous une pastille. */
 export function ChoixLangue() {
   const { langue, changer } = useLangue();
   const [ouvert, setOuvert] = useState(false);
-  const actuelle = LANGUES.find((l) => l.code === langue) ?? LANGUES[0];
 
   return (
     <div className="relative">
@@ -200,14 +212,11 @@ export function ChoixLangue() {
         aria-haspopup="listbox"
         aria-expanded={ouvert}
         aria-label="Langue"
-        className={`flex items-center gap-1.5 rounded-md border px-2.5 py-2 text-sm font-semibold transition ${
-          ouvert
-            ? "border-white/40 bg-navy-800 text-white"
-            : "border-navy-700 text-navy-100 hover:bg-navy-800/70"
+        className={`flex h-10 items-center rounded-full border px-3 text-[13px] font-bold uppercase tracking-wide transition ${
+          ouvert ? "border-white/40 bg-white/10 text-white" : "border-white/15 text-navy-100 hover:bg-white/10"
         }`}
       >
-        <span aria-hidden="true">{actuelle.drapeau}</span>
-        <span className="hidden text-[13.5px] uppercase sm:inline">{actuelle.code}</span>
+        {langue}
       </button>
 
       {ouvert && (
@@ -216,7 +225,7 @@ export function ChoixLangue() {
           <div
             role="listbox"
             aria-label="Choisir la langue"
-            className="absolute right-0 z-50 mt-2 w-44 overflow-hidden rounded-xl border border-navy-700 bg-navy-950 shadow-2xl"
+            className="absolute right-0 z-50 mt-2 w-44 overflow-hidden rounded-2xl border border-white/10 bg-navy-950 p-1 shadow-flotte"
           >
             {LANGUES.map((l) => (
               <button
@@ -228,11 +237,11 @@ export function ChoixLangue() {
                   changer(l.code);
                   setOuvert(false);
                 }}
-                className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm transition ${
-                  l.code === langue ? "bg-navy-800 font-bold text-gold-300" : "text-navy-100 hover:bg-navy-800"
+                className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition ${
+                  l.code === langue ? "bg-white/10 font-bold text-gold-300" : "text-navy-100 hover:bg-white/5"
                 }`}
               >
-                <span aria-hidden="true">{l.drapeau}</span>
+                <span className="w-6 text-xs font-bold uppercase text-navy-200">{l.code}</span>
                 {l.label}
               </button>
             ))}

@@ -19,8 +19,11 @@ export default function ConditionsUtilisationPage() {
 
       <Card title="Un service d'information et d'accompagnement" className="mt-8">
         <p className="text-sm leading-relaxed text-ink-soft">
-          {ASSO.nom} met à disposition des contenus d&apos;information, un outil de rédaction de
-          lettre de contestation, un scanner de documents et un espace de suivi des dossiers. Ce
+          {ASSO.nom} met à disposition des contenus d&apos;information, un moteur d&apos;analyse des
+          courriers de redevance, un outil de rédaction de lettres, un scanner de documents et un
+          espace de suivi des dossiers. Les conclusions du moteur sont une aide à la décision, fondée
+          sur les informations que vous confirmez : elles ne remplacent pas votre propre lecture du
+          courrier, dont les mentions font foi. Ce
           service est un accompagnement citoyen : il ne constitue pas un contrat de conseil
           juridique ni d&apos;avocat, et ne garantit aucune issue sur un dossier.
         </p>
@@ -30,8 +33,9 @@ export default function ConditionsUtilisationPage() {
         <p className="text-sm leading-relaxed text-ink-soft">
           La création d&apos;un compte est gratuite et supposée réservée aux personnes majeures ou
           aux personnes habilitées à agir pour un véhicule. Vous vous engagez à fournir des
-          informations exactes, notamment votre adresse e-mail, et à garder votre mot de passe
-          confidentiel. Vous êtes responsable de ce qui est fait depuis votre compte.
+          informations exactes et à garder l&apos;accès à votre boîte e-mail pour vous : c&apos;est elle qui
+          ouvre votre compte, par un code à usage unique. Un compte par personne. Vous êtes
+          responsable de ce qui est fait depuis votre compte.
         </p>
       </Card>
 

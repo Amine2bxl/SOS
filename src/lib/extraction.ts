@@ -17,6 +17,7 @@
  */
 
 import { COMMUNES } from "./data";
+import { ibanValide, formaterIban } from "./iban";
 
 export type Confiance = "haute" | "moyenne" | "faible";
 
@@ -220,12 +221,18 @@ function extraireMontant(texte: string): Champ<number> {
 function extrairePlaque(texte: string): Champ<string> {
   // Format belge actuel : 1-ABC-123. L'OCR confond O/0 et I/1 : on ne corrige
   // que la partie lettres, jamais les chiffres.
+  //
+  // Le premier chiffre n'est pas libre : la série européenne belge a commencé
+  // à 1 en 2010 et en est aujourd'hui à 2. Un « 7-ABC-123 » n'existe pas — ce
+  // qui ressemble à une plaque est alors autre chose (un numéro de dossier, une
+  // référence), et le signaler évite de préremplir le formulaire avec une
+  // plaque fausse que l'utilisateur validerait sans regarder.
   const moderne = /\b([1-9])[\s\-.]?([A-Z]{3})[\s\-.]?(\d{3})\b/g;
-  const m = [...texte.matchAll(moderne)][0];
-  if (m) {
+  for (const m of texte.matchAll(moderne)) {
+    const premier = Number(m[1]);
     return {
       valeur: `${m[1]}-${m[2].toUpperCase()}-${m[3]}`,
-      confiance: "haute",
+      confiance: premier <= 2 ? "haute" : "faible",
       contexte: contexteAutour(texte, m.index ?? 0),
     };
   }
@@ -291,16 +298,43 @@ function extraireCommunication(texte: string): Champ<string> {
   };
 }
 
-/** IBAN du bénéficiaire : utile pour la preuve de paiement et le remboursement. */
+/**
+ * IBAN du bénéficiaire : utile pour la preuve de paiement et le remboursement.
+ *
+ * L'OCR confond le 0 et le O, le 1 et le I, le 5 et le S. Un IBAN mal lu garde
+ * la bonne forme : il passerait pour sûr, et c'est la banque qui le refuserait
+ * au moment du virement. La clé de contrôle tranche — et quand elle ne tombe
+ * pas juste, on sort quand même la valeur, mais marquée « à vérifier ».
+ */
 function extraireIban(texte: string): Champ<string> {
-  const m = texte.match(/\b(BE\d{2}(?:\s?\d{4}){3})\b/i);
-  if (!m) return champVide<string>();
-  const compact = m[1].replace(/\s+/g, "").toUpperCase();
-  return {
-    valeur: compact.replace(/(.{4})/g, "$1 ").trim(),
-    confiance: "haute",
-    contexte: contexteAutour(texte, m.index ?? 0),
-  };
+  // La forme belge d'abord (BE + 14 chiffres), puis un IBAN étranger : un
+  // courrier d'huissier ou de société de recouvrement peut en porter un.
+  const candidats = [
+    ...texte.matchAll(/\b(BE\s?\d{2}(?:[\s.]?\d{4}){3})\b/gi),
+    ...texte.matchAll(/\b([A-Z]{2}\s?\d{2}(?:[\s.]?[A-Z0-9]{4}){2,7})\b/g),
+  ];
+
+  let repli: Champ<string> | null = null;
+
+  for (const m of candidats) {
+    const compact = m[1].replace(/[\s.]/g, "").toUpperCase();
+
+    if (ibanValide(compact)) {
+      return {
+        valeur: formaterIban(compact),
+        confiance: "haute",
+        contexte: contexteAutour(texte, m.index ?? 0),
+      };
+    }
+
+    repli ??= {
+      valeur: formaterIban(compact),
+      confiance: "faible",
+      contexte: contexteAutour(texte, m.index ?? 0),
+    };
+  }
+
+  return repli ?? champVide<string>();
 }
 
 function extraireCommune(texte: string): Champ<string> {
@@ -452,6 +486,134 @@ export function extraireDonnees(texteBrut: string): DonneesExtraites {
     iban: extraireIban(texte),
     zone: extraireZone(texte),
   };
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Cohérence entre champs                                                    */
+/* -------------------------------------------------------------------------- */
+
+/** Rang numérique d'un indice de confiance, pour comparer deux lectures. */
+const RANG: Record<Confiance, number> = { haute: 3, moyenne: 2, faible: 1 };
+
+/**
+ * Relit l'ensemble et dégrade ce qui ne tient pas debout.
+ *
+ * Chaque champ est extrait indépendamment des autres, ce qui laisse passer des
+ * combinaisons impossibles : une échéance antérieure au constat, un constat
+ * daté de l'an prochain. Prises une par une, ces valeurs ont l'air correctes et
+ * sortent même en confiance « haute » — l'utilisateur les valide alors sans les
+ * regarder, et c'est précisément le champ faux qui fera rater le délai.
+ *
+ * On ne corrige rien ici : on rétrograde, pour que l'interface mette le champ en
+ * évidence. Deviner à la place de quelqu'un sur une date de recours serait pire
+ * que de lui demander de vérifier.
+ */
+export function verifierCoherence(d: DonneesExtraites): DonneesExtraites {
+  const sortie: DonneesExtraites = { ...d };
+  const degrader = (cle: keyof DonneesExtraites) => {
+    const champ = sortie[cle];
+    if (champ.valeur !== null && champ.confiance !== "faible") {
+      sortie[cle] = { ...champ, confiance: "faible" } as never;
+    }
+  };
+
+  const jour = (iso: string | null) => (iso ? Date.parse(`${iso}T00:00:00Z`) : null);
+  const constat = jour(sortie.dateConstat.valeur);
+  const echeance = jour(sortie.dateEcheance.valeur);
+  const envoi = jour(sortie.dateEnvoi.valeur);
+  const maintenant = Date.now();
+  const AN = 365 * 24 * 3600 * 1000;
+
+  // Une échéance de paiement est postérieure au constat, toujours.
+  if (constat !== null && echeance !== null && echeance < constat) {
+    degrader("dateEcheance");
+    degrader("dateConstat");
+  }
+
+  // Le courrier part après le constat, pas avant.
+  if (constat !== null && envoi !== null && envoi < constat) {
+    degrader("dateEnvoi");
+  }
+
+  // Un constat à venir n'existe pas ; un constat de plus de cinq ans n'est plus
+  // recouvrable et signale presque toujours une date mal lue.
+  if (constat !== null && (constat > maintenant + 2 * 24 * 3600 * 1000 || constat < maintenant - 5 * AN)) {
+    degrader("dateConstat");
+  }
+
+  // Une redevance de stationnement bruxelloise tient dans une plage connue :
+  // de quelques euros à quelques centaines, frais de recouvrement compris. Un
+  // montant hors de cette plage vient presque toujours d'un chiffre collé à un
+  // autre — la référence lue comme un montant, typiquement.
+  const montant = sortie.montant.valeur;
+  if (montant !== null && (montant < 1 || montant > 2000)) {
+    degrader("montant");
+  }
+
+  // Un courrier d'huissier ou une contrainte ne porte jamais le montant de base
+  // seul : des frais s'y ajoutent. Un montant de 25 € sur un tel courrier est
+  // le tarif de la redevance repris en rappel, pas la somme réclamée.
+  const stade = sortie.typeDocument.valeur;
+  if (montant !== null && montant <= 30 && (stade === "contrainte" || stade === "courrier_huissier")) {
+    degrader("montant");
+  }
+
+  return sortie;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Fusion de plusieurs lectures                                              */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Combine plusieurs lectures du même document en une seule.
+ *
+ * L'OCR est tenté plusieurs fois sur une photo — préparations et orientations
+ * différentes — et jusqu'ici on ne gardait que la meilleure, en jetant les
+ * autres. C'était du gâchis : une tentative moins riche dans l'ensemble peut
+ * très bien être la seule à avoir lu correctement la plaque, parce qu'un reflet
+ * tombait ailleurs. Et un PDF multipage a ses champs répartis entre les pages,
+ * le délai de recours se trouvant presque toujours au verso.
+ *
+ * Pour chaque champ, on retient la valeur la plus sûre, la première lecture
+ * servant d'arbitre à égalité de confiance : c'est celle que la note globale a
+ * désignée comme la meilleure.
+ */
+export function fusionnerExtractions(lectures: DonneesExtraites[]): DonneesExtraites {
+  if (lectures.length === 0) return extraireDonnees("");
+  if (lectures.length === 1) return lectures[0];
+
+  const fusion = { ...lectures[0] } as Record<string, Champ<unknown>>;
+
+  for (const lecture of lectures.slice(1)) {
+    for (const [cle, champ] of Object.entries(lecture) as [string, Champ<unknown>][]) {
+      const retenu = fusion[cle];
+      if (champ.valeur === null) continue;
+      if (retenu.valeur === null || RANG[champ.confiance] > RANG[retenu.confiance]) {
+        fusion[cle] = champ;
+      }
+    }
+  }
+
+  return fusion as unknown as DonneesExtraites;
+}
+
+/**
+ * Le chemin normal : plusieurs textes en entrée, un dossier vérifié en sortie.
+ *
+ * Les textes arrivent dans l'ordre où l'OCR les a classés, le meilleur en
+ * premier.
+ */
+export function extraireDeTextes(textes: string[]): DonneesExtraites {
+  const utiles = textes.filter((t) => t.trim().length > 0);
+  if (utiles.length === 0) return extraireDonnees("");
+
+  // Le texte complet est aussi passé à l'extraction : un libellé et sa valeur
+  // peuvent se trouver sur deux pages différentes d'un même PDF, et seule la
+  // concaténation permet de les rapprocher.
+  const ensemble = utiles.length > 1 ? [utiles.join("\n"), ...utiles] : utiles;
+
+  return verifierCoherence(fusionnerExtractions(ensemble.map(extraireDonnees)));
 }
 
 /** Champs qui décident de la qualité d'une lecture, pour informer l'utilisateur. */

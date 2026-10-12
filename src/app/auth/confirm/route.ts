@@ -1,38 +1,60 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { creerClientServeur } from "@/lib/supabase/server";
+import { cheminSur } from "@/lib/chemin-sur";
 
 /**
- * Destinataire des liens de confirmation envoyés par Supabase
- * (…/auth/confirm?token_hash=…&type=signup) : le lien de l'e-mail arrive ici,
- * vérifie le code et ouvre la session, puis renvoie vers le tableau de bord.
+ * L'arrivée des liens de connexion : e-mail de code, lien magique, Google.
  *
- * La voie normale reste le code à 6 chiffres saisi dans la fenêtre : cette
- * route ne sert que si quelqu'un clique directement sur le lien reçu.
+ * Trois formes de retour, toutes traitées ici :
+ *
+ *  - `token_hash` + `type` : le lien de NOTRE e-mail. Il fonctionne sur
+ *    n'importe quel appareil — on peut lire l'e-mail sur son téléphone et
+ *    ouvrir la session sur son ordinateur… ou l'inverse.
+ *  - `code` : le retour de Google, ou du lien envoyé par Supabase. La
+ *    vérification exige le même navigateur que celui de la demande.
+ *  - `error` : lien expiré, connexion Google annulée. On ramène la personne à
+ *    l'écran de connexion avec un message clair, jamais sur une page blanche.
  */
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
-  const tokenHash = url.searchParams.get("token_hash");
-  const type = (url.searchParams.get("type") ?? "signup") as
-    | "signup"
-    | "invite"
-    | "recovery"
-    | "email_change"
-    | "magiclink"
-    | "email";
-  const suite = url.searchParams.get("next") ?? "/tableau-de-bord";
-
-  const supabase = await creerClientServeur();
   const racine = url.origin;
+  const brute = url.searchParams.get("suite") ?? url.searchParams.get("next") ?? "/tableau-de-bord";
+  const suite = cheminSur(brute);
 
-  if (supabase && tokenHash) {
-    const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
-    if (!error) {
-      return NextResponse.redirect(
-        new URL(suite.startsWith("/") ? suite : "/tableau-de-bord", racine),
-      );
-    }
+  const echec = (raison: string) => {
+    const retour = new URL("/connexion", racine);
+    retour.searchParams.set("erreur", raison);
+    retour.searchParams.set("suite", suite);
+    return NextResponse.redirect(retour);
+  };
+
+  const erreur = url.searchParams.get("error_description") ?? url.searchParams.get("error");
+  if (erreur) {
+    return echec(/expired|invalid/i.test(erreur) ? "lien-expire" : "connexion-annulee");
   }
 
-  // Échec ou lien incomplet : on renvoie proprement vers l'accueil.
-  return NextResponse.redirect(new URL("/", racine));
+  const supabase = await creerClientServeur();
+  if (!supabase) return echec("service-indisponible");
+
+  const tokenHash = url.searchParams.get("token_hash");
+  const type = url.searchParams.get("type");
+  if (tokenHash) {
+    const typeOtp = (["signup", "email", "magiclink", "recovery", "invite", "email_change"].includes(type ?? "")
+      ? type
+      : "email") as "signup" | "email" | "magiclink" | "recovery" | "invite" | "email_change";
+    const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: typeOtp });
+    if (error) return echec("lien-expire");
+    return NextResponse.redirect(new URL(suite, racine));
+  }
+
+  const code = url.searchParams.get("code");
+  if (code) {
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    // Un lien ouvert dans un autre navigateur que celui de la demande ne peut
+    // pas aboutir : on le dit, et le code reste la solution.
+    if (error) return echec("autre-navigateur");
+    return NextResponse.redirect(new URL(suite, racine));
+  }
+
+  return echec("lien-incomplet");
 }

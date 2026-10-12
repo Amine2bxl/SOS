@@ -29,3 +29,8 @@ next-env.d.ts
 # sortie de compilation des tests
 /.test-build/
 .env*
+
+# Documents sources du savoir de l'association : seul l'extrait généré
+# (src/cerveau/corpus/corpus.genere.ts) est versionné.
+/savoir/sources/*
+!/savoir/sources/.gitkeep

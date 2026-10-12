@@ -1,55 +1,70 @@
-import type { Metadata } from "next";
-import { Fraunces, Public_Sans } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Bricolage_Grotesque, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "@/components/useSession";
 import { LanguageProvider } from "@/lib/i18n";
 import { ASSO } from "@/lib/data";
+import { urlDuSite } from "@/lib/url-site";
 
-const fraunces = Fraunces({
+/*
+ * Deux familles, deux rôles.
+ *
+ * Bricolage Grotesque pour les titres : une grotesque à caractère, franche,
+ * qui ne ressemble ni à un cabinet d'avocats ni à une administration. DM Sans
+ * pour le texte : lisible à petite taille, sur un téléphone, au soleil.
+ */
+const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
-  weight: ["600", "700", "900"],
   variable: "--font-display",
   display: "swap",
 });
 
-const publicSans = Public_Sans({
+const dmSans = DM_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
   variable: "--font-sans",
   display: "swap",
 });
 
 export const metadata: Metadata = {
+  // Les liens d'aperçu (réseaux sociaux, messageries) ont besoin d'adresses
+  // absolues : elles partent de l'URL publique du site.
+  metadataBase: new URL(urlDuSite()),
   title: {
-    default: "SOS Citizens ASBL — Contester une redevance de stationnement à Bruxelles",
-    template: "%s — SOS Citizens ASBL",
+    default: "SOS Citizens — Contestez votre redevance de stationnement",
+    template: "%s — SOS Citizens",
   },
   description:
-    "Association bruxelloise. Nous aidons les habitants à comprendre et contester les redevances de stationnement, les amendes et les sanctions communales. Deux contestations gratuites, et l'appel ne coûte rien.",
+    "Une photo de votre courrier suffit. Le moteur SOS lit la redevance, calcule votre délai, trouve vos arguments et rédige votre lettre de contestation. Association sans but lucratif, partout en Belgique.",
   keywords: [
-    "SOS Citizens",
     "contester redevance stationnement",
-    "parking.brussels",
-    "amende Bruxelles",
-    "sanction administrative communale",
-    "ASBL Bruxelles",
+    "redevance de stationnement Belgique",
+    "parking.brussels contestation",
+    "parkeerretributie betwisten",
+    "lettre de contestation stationnement",
+    "SOS Citizens",
   ],
   openGraph: {
-    title: "SOS Citizens ASBL — Vous n'êtes pas seul face à votre amende",
+    title: "SOS Citizens — Contestez votre redevance de stationnement",
     description:
-      "Comprendre son courrier, réunir les bonnes preuves et contester dans les délais. Par une association bruxelloise.",
+      "Une photo, une analyse, une lettre prête à envoyer. Par une association citoyenne, partout en Belgique.",
     locale: "fr_BE",
     type: "website",
   },
 };
 
-/** Données structurées : aide les moteurs de recherche à identifier l'association. */
+export const viewport: Viewport = {
+  themeColor: "#0f1e3d",
+  width: "device-width",
+  initialScale: 1,
+};
+
+/** Données structurées : aident les moteurs de recherche à identifier l'association. */
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "NGO",
   name: ASSO.nom,
   description:
-    "Association sans but lucratif bruxelloise qui accompagne les citoyens dans la contestation des redevances de stationnement et des sanctions administratives communales.",
+    "Association sans but lucratif qui aide les citoyens à comprendre et contester les redevances de stationnement en Belgique.",
   foundingDate: "2024-08-16",
   telephone: ASSO.telephone,
   email: ASSO.email,
@@ -60,17 +75,24 @@ const jsonLd = {
     addressLocality: ASSO.ville,
     addressCountry: "BE",
   },
-  areaServed: "Région de Bruxelles-Capitale",
+  areaServed: "BE",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className={`${fraunces.variable} ${publicSans.variable}`}>
+    // `data-scroll-behavior` : depuis Next 16, sans cet attribut, le défilement
+    // doux s'appliquerait aussi aux changements de page — une navigation
+    // paraîtrait lente.
+    <html
+      lang="fr"
+      data-scroll-behavior="smooth"
+      className={`${bricolage.variable} ${dmSans.variable}`}
+    >
       <body className="flex min-h-screen flex-col font-sans antialiased">
         <SessionProvider>
           <a
             href="#contenu"
-            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-navy-900 focus:px-4 focus:py-2 focus:text-white"
+            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-navy-900 focus:px-4 focus:py-2 focus:text-white"
           >
             Aller au contenu
           </a>

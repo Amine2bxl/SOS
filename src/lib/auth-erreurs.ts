@@ -1,20 +1,29 @@
 /**
- * Traduction des erreurs Supabase en français. Partageable entre le serveur
- * (actions) et le navigateur (connexion rapide) : aucune dépendance serveur.
+ * Traduction des erreurs Supabase en français compréhensible.
+ *
+ * Partageable entre le serveur (actions) et le navigateur : aucune dépendance
+ * serveur. Chaque message dit ce qui s'est passé et quoi faire — « erreur »
+ * tout court n'aide personne.
  */
 
-/** Traduit les messages d'erreur Supabase en français compréhensible. */
 export function traduireErreur(message: string): string {
   const m = message.toLowerCase();
-  if (m.includes("invalid login credentials")) return "E-mail ou mot de passe incorrect.";
-  if (m.includes("email not confirmed")) return "Confirmez d'abord votre adresse e-mail : vérifiez votre boîte de réception.";
-  if (m.includes("user already registered")) return "Un compte existe déjà avec cette adresse. Connectez-vous.";
-  if (m.includes("password should be at least")) return "Le mot de passe doit contenir au moins 8 caractères.";
-  if (m.includes("unable to validate email")) return "Cette adresse e-mail ne semble pas valide.";
-  if (m.includes("otp expired") || m.includes("token has expired") || m.includes("too many requests"))
+
+  // L'ordre compte : « rate limit » doit passer avant les messages qui
+  // contiennent aussi « otp » ou « email ».
+  if (m.includes("rate limit") || m.includes("too many requests") || m.includes("over_email_send_rate_limit"))
+    return "Trop d'e-mails envoyés en peu de temps. Patientez quelques minutes avant de redemander un code.";
+  if (m.includes("otp expired") || m.includes("token has expired") || m.includes("expired"))
     return "Ce code a expiré. Demandez-en un nouveau.";
-  if (m.includes("invalid token") || m.includes("invalid otp") || m.includes("email otp") || m.includes("otp"))
-    return "Code incorrect. Regardez le code du dernier e-mail reçu.";
-  if (m.includes("rate limit") || m.includes("too many")) return "Trop de tentatives. Réessayez dans quelques minutes.";
-  return "Une erreur est survenue. Réessayez, ou appelez-nous si cela persiste.";
+  if (m.includes("invalid token") || m.includes("invalid otp") || m.includes("token") || m.includes("otp"))
+    return "Code incorrect. Vérifiez le code du dernier e-mail reçu.";
+  if (m.includes("signups not allowed") || m.includes("signup is disabled"))
+    return "La création de compte est momentanément fermée. Réessayez plus tard.";
+  if (m.includes("unable to validate email") || m.includes("invalid email") || m.includes("email address") && m.includes("invalid"))
+    return "Cette adresse e-mail ne semble pas valide.";
+  if (m.includes("database error saving new user"))
+    return "Un compte existe déjà pour une variante de cette adresse. Utilisez l'adresse de votre inscription.";
+  if (m.includes("email not confirmed")) return "Confirmez d'abord votre adresse : un code vous a été envoyé.";
+  if (m.includes("user already registered")) return "Un compte existe déjà avec cette adresse.";
+  return "Une erreur est survenue. Réessayez dans un instant.";
 }

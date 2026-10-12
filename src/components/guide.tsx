@@ -9,89 +9,63 @@
  * côté application.
  */
 
-import { Card, Check, KeyBox } from "@/components/ui";
+import { Card, KeyBox } from "@/components/ui";
+import { IconeHuissier, IconeLettre, IconeMiseEnDemeure, IconeSceau, IconeTicket } from "@/components/icones";
 import { DOCUMENTS, NOTIONS, PREUVES } from "@/lib/data";
 import { PROCEDURE_RECOUVREMENT } from "@/lib/contestation";
 
 const COULEURS = {
-  info: "border-navy-600/30 bg-navy-50",
-  attention: "border-warn-600/40 bg-warn-100/60",
-  urgent: "border-danger-600/40 bg-danger-100/60",
+  info: "border-l-azur-600 bg-card",
+  attention: "border-l-gold-500 bg-card",
+  urgent: "border-l-danger-600 bg-danger-50",
 } as const;
 
 const ETIQUETTES = {
-  info: { texte: "Vous avez le temps d'agir", classe: "bg-navy-700 text-white" },
-  attention: { texte: "Réagissez maintenant", classe: "bg-warn-600 text-white" },
-  urgent: { texte: "Urgent — appelez-nous", classe: "bg-danger-600 text-white" },
+  info: { texte: "Vous avez le temps d'agir", classe: "bg-azur-100 text-azur-700" },
+  attention: { texte: "Réagissez maintenant", classe: "bg-gold-100 text-gold-700" },
+  urgent: { texte: "Urgent — réagissez aujourd'hui", classe: "bg-danger-600 text-white" },
 } as const;
+
+const ICONES_ETAPES = [IconeTicket, IconeLettre, IconeMiseEnDemeure, IconeSceau, IconeHuissier];
 
 /**
  * L'escalier des frais : ce que coûte chaque étape si rien n'est fait.
  *
- * Un seul rendu, deux habillages. `sombre` sert sur les fonds navy de la
- * vitrine ; `compact` réduit à l'essentiel pour une fiche de dossier.
+ * Les marches montent pour de bon : chaque carte est un peu plus haute que la
+ * précédente, et passe au rouge à partir de la contrainte. On comprend sans
+ * lire qu'il vaut mieux agir sur la première.
  */
-export function EscalierProcedure({
-  sombre = false,
-  etapeCourante,
-}: {
-  sombre?: boolean;
-  /** Index de l'étape où en est l'utilisateur : elle est mise en évidence. */
-  etapeCourante?: number;
-}) {
+export function EscalierProcedure({ etapeCourante }: { etapeCourante?: number } = {}) {
   return (
-    <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+    <ol className="grid gap-3 lg:grid-cols-5 lg:items-end">
       {PROCEDURE_RECOUVREMENT.map((etape, i) => {
-        const active = etapeCourante === i;
-        const premiere = i === 0;
+        const Icone = ICONES_ETAPES[i] ?? IconeTicket;
+        const ici = etapeCourante === i;
         return (
           <li
             key={etape.titre}
-            className={`rounded-xl border p-4 ${
-              active
-                ? "border-gold-400 bg-gold-100/60 ring-2 ring-gold-400/40"
-                : sombre
-                  ? "border-white/10 bg-white/5"
-                  : premiere
-                    ? "border-ok-600/40 bg-ok-100/50"
-                    : "border-line bg-card"
+            className={`rounded-[var(--radius-carte)] border p-5 ${
+              ici
+                ? "border-gold-400 bg-gold-50 ring-2 ring-gold-400/40"
+                : i === 0
+                  ? "border-gold-300 bg-gold-50"
+                  : i >= 3
+                    ? "border-danger-600/20 bg-danger-50"
+                    : "border-line bg-paper"
             }`}
+            style={{ minHeight: `${9 + i * 1.6}rem` }}
           >
-            <div className="flex items-center gap-2">
-              <span
-                className={`flex h-7 w-7 items-center justify-center rounded-full font-display text-xs font-black ${
-                  premiere && !sombre ? "bg-ok-600 text-white" : "bg-navy-900 text-gold-300"
-                }`}
-              >
-                {i + 1}
-              </span>
-              {active && (
-                <span className="rounded-full bg-gold-400 px-2 py-0.5 text-[10px] font-black text-navy-950">
-                  VOUS ÊTES ICI
+            <div className="flex items-center justify-between gap-2">
+              <Icone className="h-9 w-9 text-navy-900" />
+              {(ici || (etapeCourante === undefined && i === 0)) && (
+                <span className="rounded-full bg-gold-400 px-2 py-0.5 text-[10px] font-bold text-navy-950">
+                  {ici ? "VOUS ÊTES ICI" : "AGIR ICI"}
                 </span>
               )}
             </div>
-            <p
-              className={`mt-3 font-display text-sm font-bold ${
-                sombre && !active ? "text-white" : "text-navy-900"
-              }`}
-            >
-              {etape.titre}
-            </p>
-            <p
-              className={`mt-1 text-[11.5px] leading-snug ${
-                sombre && !active ? "text-navy-100/70" : "text-ink-soft"
-              }`}
-            >
-              {etape.quand}
-            </p>
-            <p
-              className={`mt-2 text-xs font-bold ${
-                premiere && !sombre ? "text-ok-700" : sombre && !active ? "text-gold-300" : "text-danger-700"
-              }`}
-            >
-              {etape.cout}
-            </p>
+            <h3 className="mt-3 font-display text-base font-bold text-navy-900">{etape.titre}</h3>
+            <p className="mt-0.5 text-xs text-ink-soft">{etape.quand}</p>
+            <p className={`mt-2 text-sm font-bold ${i === 0 ? "text-navy-900" : "text-danger-700"}`}>{etape.cout}</p>
           </li>
         );
       })}
@@ -102,7 +76,7 @@ export function EscalierProcedure({
 /** Mention de source, à afficher sous l'escalier. */
 export function SourceProcedure({ sombre = false }: { sombre?: boolean }) {
   return (
-    <p className={`text-xs leading-relaxed ${sombre ? "text-navy-100/60" : "text-ink-soft"}`}>
+    <p className={`text-xs leading-relaxed ${sombre ? "text-navy-100/60" : "text-ink-faint"}`}>
       Procédure publiée par parking.brussels ; les montants et délais communaux peuvent différer.
       C&apos;est toujours la mention portée sur votre courrier qui fait foi.
     </p>
@@ -120,7 +94,7 @@ export function QuelCourrier({ typeCourant }: { typeCourant?: string | null }) {
         return (
           <li
             key={d.titre}
-            className={`rounded-xl border-2 p-5 ${COULEURS[d.gravite]} ${
+            className={`rounded-[var(--radius-carte)] border border-l-4 border-line/80 p-5 shadow-carte ${COULEURS[d.gravite]} ${
               cestLeVotre ? "ring-2 ring-gold-400" : ""
             }`}
           >
@@ -128,7 +102,7 @@ export function QuelCourrier({ typeCourant }: { typeCourant?: string | null }) {
               <h3 className="font-display text-lg font-bold text-navy-900">{d.titre}</h3>
               <div className="flex items-center gap-2">
                 {cestLeVotre && (
-                  <span className="rounded-full bg-gold-400 px-3 py-1 text-xs font-black text-navy-950">
+                  <span className="rounded-full bg-gold-400 px-3 py-1 text-xs font-bold text-navy-950">
                     Votre courrier
                   </span>
                 )}
@@ -155,7 +129,7 @@ export function NotionsCles() {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       {NOTIONS.map((n) => (
-        <div key={n.titre} className="rounded-xl border border-line bg-card p-5 shadow-sm">
+        <div key={n.titre} className="rounded-[var(--radius-carte)] border border-line/80 bg-card p-5 shadow-carte">
           <h3 className="font-display text-base font-bold text-navy-900">{n.titre}</h3>
           <p className="mt-2 text-sm leading-relaxed text-ink-soft">{n.texte}</p>
         </div>
@@ -173,8 +147,8 @@ export function PreuvesUtiles() {
     >
       <ul className="grid gap-2 sm:grid-cols-2">
         {PREUVES.map((p) => (
-          <li key={p} className="flex gap-2.5 rounded-md bg-paper p-3 text-sm text-ink">
-            <Check className="mt-0.5 h-4 w-4 shrink-0 text-ok-600" />
+          <li key={p} className="flex gap-3 rounded-2xl bg-paper p-3 text-sm text-ink">
+            <span className="mt-2 h-1 w-3.5 shrink-0 rounded-full bg-gold-400" aria-hidden="true" />
             {p}
           </li>
         ))}
@@ -198,14 +172,14 @@ export function CadreReglementaire() {
   );
 }
 
-/** Le point qui surprend tout le monde : payer referme le dossier. */
+/** Le point qui surprend tout le monde : payer sans rien dire referme le dossier. */
 export function PayerOuContester() {
   return (
     <KeyBox title="Payer ou contester : décidez avant de payer">
-      Payer vaut reconnaissance des faits et referme le dossier. Si vous comptez contester,
-      faites-le <strong>par écrit, dans le délai indiqué, avec une preuve d&apos;envoi</strong>.
-      Attention&nbsp;: introduire une contestation ne suspend pas pour autant l&apos;obligation de
-      payer dans ce délai — si elle aboutit, les sommes versées vous sont remboursées.
+      Payer sans rien dire vaut acceptation : le dossier se referme. Si vous contestez, faites-le{" "}
+      <strong>par écrit, dans le délai indiqué, avec une preuve d&apos;envoi</strong>. La contestation ne
+      suspend pas le délai de paiement : vous pouvez payer pour éviter les frais de rappel — si elle
+      aboutit, la somme vous est remboursée.
     </KeyBox>
   );
 }

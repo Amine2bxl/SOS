@@ -21,7 +21,18 @@
 export type ProgressionOCR = { etape: string; pourcentage: number };
 
 export type ResultatLecture = {
+  /** La meilleure lecture, celle qu'on montre à l'utilisateur. */
   texte: string;
+  /**
+   * Toutes les lectures retenues, la meilleure en tête.
+   *
+   * Sur une photo, ce sont les différentes tentatives (préparations et
+   * orientations) ; sur un PDF, les pages. L'extraction les combine champ par
+   * champ : une tentative médiocre dans l'ensemble est parfois la seule à avoir
+   * lu la plaque correctement, parce que le reflet tombait ailleurs. Ne garder
+   * que la meilleure, c'était jeter cette information.
+   */
+  textes: string[];
   /** Confiance globale de la reconnaissance, de 0 à 100. */
   confiance: number;
   /** D'où vient le texte : la couche de texte du PDF, ou une reconnaissance d'image. */
@@ -232,7 +243,7 @@ async function chargerPdfjs() {
   return pdfjs;
 }
 
-type ContenuPdf = { texte: string; pages: number; rendus: Blob[] };
+type ContenuPdf = { texte: string; parPage: string[]; pages: number; rendus: Blob[] };
 
 /**
  * Lit un PDF : d'abord sa couche de texte, et seulement à défaut ses images.
@@ -268,7 +279,7 @@ async function lirePdf(
 
   const texteNatif = morceaux.join("\n").replace(/[ \t]{2,}/g, " ").trim();
   if (texteNatif.length >= SEUIL_TEXTE_MAIGRE) {
-    return { texte: texteNatif, pages: nbPages, rendus: [] };
+    return { texte: texteNatif, parPage: morceaux, pages: nbPages, rendus: [] };
   }
 
   // 2) PDF scanné (aucune couche de texte utile) : on rend les pages en image.
@@ -289,7 +300,7 @@ async function lirePdf(
     rendus.push(await canvasVersBlob(preparer(canvas, "binaire")));
   }
 
-  return { texte: texteNatif, pages: nbPages, rendus };
+  return { texte: texteNatif, parPage: morceaux, pages: nbPages, rendus };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -374,7 +385,7 @@ async function lirePhoto(
   fichier: File,
   reconnaisseur: Reconnaisseur,
   surProgression?: (p: ProgressionOCR) => void,
-): Promise<Tentative> {
+): Promise<{ meilleure: Tentative; toutes: Tentative[] }> {
   const image = await decoderImage(fichier);
   const [largeur, hauteur] = tailleDeTravail(image.width, image.height);
 
@@ -388,6 +399,7 @@ async function lirePhoto(
   ];
 
   let meilleure: Tentative = { texte: "", confiance: 0, note: -1 };
+  const toutes: Tentative[] = [];
 
   for (const [i, essai] of essais.entries()) {
     surProgression?.({
@@ -397,6 +409,9 @@ async function lirePhoto(
 
     const canvas = preparer(dessiner(image, largeur, hauteur, essai.angle), essai.preparation);
     const tentative = await reconnaisseur.lire(await canvasVersBlob(canvas), essai.psm);
+    // Une tentative quasi vide n'apporte rien à la fusion et ne ferait que
+    // diluer le résultat : on ne garde que celles qui ont lu quelque chose.
+    if (richesse(tentative.texte) >= 40) toutes.push(tentative);
     if (tentative.note > meilleure.note) meilleure = tentative;
 
     // Lecture franchement bonne : on ne cherche pas plus loin.
@@ -406,7 +421,12 @@ async function lirePhoto(
     if (i >= 1 && richesse(meilleure.texte) >= 250) break;
   }
 
-  return meilleure;
+  // La meilleure d'abord : c'est l'arbitre à égalité de confiance côté
+  // extraction, et c'est elle qu'on affiche.
+  return {
+    meilleure,
+    toutes: [meilleure, ...toutes.filter((t) => t !== meilleure)],
+  };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -432,7 +452,13 @@ export async function lireDocument(
     // La couche de texte suffit : lecture parfaite, aucune reconnaissance.
     if (pdf.rendus.length === 0) {
       surProgression?.({ etape: "Document lu", pourcentage: 100 });
-      return { texte: pdf.texte, confiance: 100, source: "texte-pdf", pages: pdf.pages };
+      return {
+        texte: pdf.texte,
+        textes: [pdf.texte, ...pdf.parPage],
+        confiance: 100,
+        source: "texte-pdf",
+        pages: pdf.pages,
+      };
     }
 
     // PDF scanné : reconnaissance page par page.
@@ -450,8 +476,10 @@ export async function lireDocument(
         sommeConfiance += t.confiance;
       }
       surProgression?.({ etape: "Document lu", pourcentage: 100 });
+      const complet = textes.join("\n");
       return {
-        texte: textes.join("\n"),
+        texte: complet,
+        textes: [complet, ...textes],
         confiance: Math.round(sommeConfiance / pdf.rendus.length),
         source: "ocr",
         pages: pdf.rendus.length,
@@ -463,10 +491,11 @@ export async function lireDocument(
 
   const reconnaisseur = await ouvrirReconnaisseur(surProgression, 20, 70);
   try {
-    const meilleure = await lirePhoto(fichier, reconnaisseur, surProgression);
+    const { meilleure, toutes } = await lirePhoto(fichier, reconnaisseur, surProgression);
     surProgression?.({ etape: "Document lu", pourcentage: 100 });
     return {
       texte: meilleure.texte,
+      textes: toutes.map((t) => t.texte),
       confiance: Math.round(meilleure.confiance),
       source: "ocr",
       pages: 1,
