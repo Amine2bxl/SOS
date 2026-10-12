@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { cheminSur } from "@/lib/chemin-sur";
 
 /** Pages qui exigent d'être connecté : tout l'espace membre. */
 const PAGES_PROTEGEES = ["/tableau-de-bord", "/adherer"];
@@ -62,11 +63,14 @@ export async function proxy(request: NextRequest) {
   // Frontière étanche dans l'autre sens : un membre connecté n'a rien à faire
   // sur la page d'accueil vitrine ni sur les écrans d'accès. Il atterrit
   // directement dans son application.
-  if (user && ["/", "/connexion", "/inscription"].includes(chemin)) {
-    const espace = request.nextUrl.clone();
-    espace.pathname = "/tableau-de-bord";
-    espace.search = "";
-    return NextResponse.redirect(espace);
+  // Le formulaire doit pouvoir rendre sa confirmation après l'action OTP,
+  // ou vérifier une session créée dans un autre onglet, sans être redirigé.
+  const confirmationEnCours = chemin === "/connexion";
+  if (user && !confirmationEnCours && ["/", "/connexion", "/inscription"].includes(chemin)) {
+    const suite = chemin === "/" ? "/tableau-de-bord" : cheminSur(request.nextUrl.searchParams.get("suite"));
+    const redirection = NextResponse.redirect(new URL(suite, request.url));
+    response.cookies.getAll().forEach((cookie) => redirection.cookies.set(cookie));
+    return redirection;
   }
 
   return response;

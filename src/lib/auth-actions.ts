@@ -12,7 +12,7 @@
  *
  *  - `code` (la voie voulue) : nous fabriquons le code avec la clé de service
  *    Supabase et envoyons NOTRE e-mail par Resend, depuis le domaine de
- *    l'association. Le code et un lien de secours y figurent.
+ *    l'association. Le code se saisit dans le formulaire resté ouvert.
  *  - `lien` (le repli) : Supabase envoie son propre e-mail. Son gabarit par
  *    défaut ne contient qu'un lien ; si le gabarit a été modifié pour inclure
  *    le code (`{{ .Token }}`), l'écran accepte aussi le code. L'expéditeur par
@@ -68,7 +68,15 @@ function motDePasseTechnique(): string {
 /**
  * Envoie un code de connexion — et crée le compte s'il n'existe pas.
  */
-export async function envoyerCode(_precedent: EtatAuth, donnees: FormData): Promise<EtatAuth> {
+export async function envoyerCode(precedent: EtatAuth, donnees: FormData): Promise<EtatAuth> {
+  try {
+    return await envoyerCodeInterne(precedent, donnees);
+  } catch {
+    return { erreur: "Le service d'envoi est momentanément indisponible. Réessayez dans un instant." };
+  }
+}
+
+async function envoyerCodeInterne(_precedent: EtatAuth, donnees: FormData): Promise<EtatAuth> {
   const supabase = await creerClientServeur();
   if (!supabase) return { erreur: "La connexion n'est pas disponible pour le moment." };
 
@@ -135,15 +143,11 @@ export async function envoyerCode(_precedent: EtatAuth, donnees: FormData): Prom
     if (error) return { erreur: traduireErreur(error.message) };
 
     const code = data?.properties?.email_otp;
-    const jeton = data?.properties?.hashed_token;
     if (!code) return { erreur: "Nous n'avons pas pu produire votre code. Réessayez dans un instant." };
 
     const gabarit = emailConfirmation({
       prenom: String(data.user?.user_metadata?.prenom ?? ""),
       code,
-      lienConfirmation: jeton
-        ? `${site}/auth/confirm?token_hash=${jeton}&type=${nouveau ? "signup" : "email"}&suite=${encodeURIComponent(suite)}`
-        : null,
       urlSite: site,
       nouveau,
     });
@@ -173,13 +177,21 @@ export async function envoyerCode(_precedent: EtatAuth, donnees: FormData): Prom
 }
 
 /** Vérifie le code à 6 chiffres et ouvre la session. */
-export async function verifierCode(_precedent: EtatAuth, donnees: FormData): Promise<EtatAuth> {
+export async function verifierCode(precedent: EtatAuth, donnees: FormData): Promise<EtatAuth> {
+  try {
+    return await verifierCodeInterne(precedent, donnees);
+  } catch {
+    return { erreur: "La vérification est momentanément indisponible. Votre saisie est conservée : réessayez." };
+  }
+}
+
+async function verifierCodeInterne(_precedent: EtatAuth, donnees: FormData): Promise<EtatAuth> {
   const supabase = await creerClientServeur();
   if (!supabase) return { erreur: "La vérification n'est pas disponible pour le moment." };
 
   const email = String(donnees.get("email") ?? "").trim().toLowerCase();
   const code = String(donnees.get("code") ?? "").replace(/\D/g, "");
-  if (!email) return { erreur: "Nous n'avons pas votre adresse e-mail." };
+  if (!emailValide(email)) return { erreur: "Cette adresse e-mail ne semble pas valide." };
   if (!/^\d{6}$/.test(code)) return { erreur: "Saisissez les 6 chiffres du code reçu par e-mail.", email };
 
   // Un code à 6 chiffres, c'est un million de combinaisons : sans plafond,
@@ -192,14 +204,26 @@ export async function verifierCode(_precedent: EtatAuth, donnees: FormData): Pro
   // connexion en « email ». On essaie les deux sans que la personne ait à le
   // savoir.
   const premier = await supabase.auth.verifyOtp({ email, token: code, type: "email" });
-  const resultat = premier.error
+  const resultat = premier.error && !/rate limit|too many|request this after/i.test(premier.error.message)
     ? await supabase.auth.verifyOtp({ email, token: code, type: "signup" })
     : premier;
 
   if (resultat.error) return { erreur: traduireErreur(resultat.error.message), email };
+  if (!resultat.data.session || !resultat.data.user) {
+    return { erreur: "La session n'a pas pu être ouverte. Demandez un nouveau code.", email };
+  }
 
   revalidatePath("/", "layout");
   return { verifie: true, email };
+}
+
+/** Un ancien lien ouvert dans un autre onglet peut avoir validé cette adresse. */
+export async function verifierSession(email: string): Promise<EtatAuth> {
+  const supabase = await creerClientServeur();
+  if (!supabase || !emailValide(email)) return {};
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user?.email_confirmed_at || user.email?.toLowerCase() !== email.trim().toLowerCase()) return {};
+  return { verifie: true, email: user.email };
 }
 
 export async function seDeconnecter() {
