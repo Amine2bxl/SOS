@@ -38,6 +38,7 @@ export async function envoyerEmail({
   try {
     const reponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
+      signal: AbortSignal.timeout(10_000),
       headers: {
         Authorization: `Bearer ${cle}`,
         "Content-Type": "application/json",

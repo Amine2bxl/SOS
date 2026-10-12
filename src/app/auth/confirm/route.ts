@@ -21,6 +21,13 @@ export async function GET(request: NextRequest) {
   const brute = url.searchParams.get("suite") ?? url.searchParams.get("next") ?? "/tableau-de-bord";
   const suite = cheminSur(brute);
 
+  const succes = () => {
+    const retour = new URL("/connexion", racine);
+    retour.searchParams.set("confirme", "1");
+    retour.searchParams.set("suite", suite);
+    return NextResponse.redirect(retour);
+  };
+
   const echec = (raison: string) => {
     const retour = new URL("/connexion", racine);
     retour.searchParams.set("erreur", raison);
@@ -44,7 +51,7 @@ export async function GET(request: NextRequest) {
       : "email") as "signup" | "email" | "magiclink" | "recovery" | "invite" | "email_change";
     const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: typeOtp });
     if (error) return echec("lien-expire");
-    return NextResponse.redirect(new URL(suite, racine));
+    return succes();
   }
 
   const code = url.searchParams.get("code");
@@ -53,7 +60,7 @@ export async function GET(request: NextRequest) {
     // Un lien ouvert dans un autre navigateur que celui de la demande ne peut
     // pas aboutir : on le dit, et le code reste la solution.
     if (error) return echec("autre-navigateur");
-    return NextResponse.redirect(new URL(suite, racine));
+    return succes();
   }
 
   return echec("lien-incomplet");

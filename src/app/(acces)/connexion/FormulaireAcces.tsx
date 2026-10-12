@@ -1,13 +1,33 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { envoyerCode, verifierCode, type EtatAuth, type ModeConfirmation } from "@/lib/auth-actions";
+import { useActionState, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { envoyerCode, verifierCode, verifierSession, type EtatAuth, type ModeConfirmation } from "@/lib/auth-actions";
 import { creerClientNavigateur } from "@/lib/supabase/client";
 import { Btn } from "@/components/ui";
 import { IconeFlecheGauche, IconeMail } from "@/components/icones";
 import { MarqueSos } from "@/components/Logo";
 import { cheminSur } from "@/lib/chemin-sur";
+import { CLE_ATTENTE_AUTH, lireAttenteAuth, secondesAvantRenvoi, type AttenteAuth } from "@/lib/auth-attente";
+
+function lireStockage(): string | null {
+  try { return sessionStorage.getItem(CLE_ATTENTE_AUTH); } catch { return null; }
+}
+
+function abonnerStockage(changement: () => void) {
+  window.addEventListener(CLE_ATTENTE_AUTH, changement);
+  return () => window.removeEventListener(CLE_ATTENTE_AUTH, changement);
+}
+
+function stockerAttente(attente: AttenteAuth | null) {
+  try {
+    if (attente) sessionStorage.setItem(CLE_ATTENTE_AUTH, JSON.stringify(attente));
+    else sessionStorage.removeItem(CLE_ATTENTE_AUTH);
+    window.dispatchEvent(new Event(CLE_ATTENTE_AUTH));
+  } catch { /* Le formulaire fonctionne aussi sans stockage navigateur. */ }
+}
+
+const stockageServeur = () => null;
 
 /**
  * Entrer dans son espace : une adresse, un code. Rien d'autre.
@@ -33,6 +53,7 @@ declare global {
     turnstile?: {
       render: (el: HTMLElement, options: Record<string, unknown>) => string;
       reset: (id?: string) => void;
+      remove: (id: string) => void;
     };
   }
 }
@@ -40,24 +61,21 @@ declare global {
 /** Le widget anti-robot de Cloudflare, chargé seulement s'il est configuré. */
 function AntiRobot({ cle, surJeton }: { cle: string; surJeton: (jeton: string) => void }) {
   const zone = useRef<HTMLDivElement>(null);
-  const rendu = useRef(false);
 
   useEffect(() => {
+    let id: string | null = null;
     const afficher = () => {
-      if (rendu.current || !zone.current || !window.turnstile) return;
-      rendu.current = true;
-      window.turnstile.render(zone.current, {
+      if (id || !zone.current || !window.turnstile) return;
+      id = window.turnstile.render(zone.current, {
         sitekey: cle,
         callback: surJeton,
+        "expired-callback": () => surJeton(""),
+        "error-callback": () => surJeton(""),
         "refresh-expired": "auto",
         language: "fr",
         appearance: "interaction-only",
       });
     };
-    if (window.turnstile) {
-      afficher();
-      return;
-    }
     const existant = document.querySelector<HTMLScriptElement>("script[data-turnstile]");
     const script = existant ?? document.createElement("script");
     if (!existant) {
@@ -67,7 +85,11 @@ function AntiRobot({ cle, surJeton }: { cle: string; surJeton: (jeton: string) =
       document.head.appendChild(script);
     }
     script.addEventListener("load", afficher);
-    return () => script.removeEventListener("load", afficher);
+    afficher();
+    return () => {
+      script.removeEventListener("load", afficher);
+      if (id) window.turnstile?.remove(id);
+    };
   }, [cle, surJeton]);
 
   return <div ref={zone} className="flex justify-center empty:hidden" />;
@@ -88,62 +110,121 @@ export function FormulaireAcces({
   mode,
   googleActif,
   cleTurnstile,
+  emailVerifie = null,
 }: {
   mode: ModeConfirmation;
   googleActif: boolean;
   cleTurnstile: string | null;
+  emailVerifie?: string | null;
 }) {
+  const routeur = useRouter();
   const parametres = useSearchParams();
   const brute = parametres.get("suite") ?? "/tableau-de-bord";
   const suite = cheminSur(brute);
   const erreurUrl = ERREURS_URL[parametres.get("erreur") ?? ""] ?? null;
 
-  const [envoi, envoyer, envoiEnCours] = useActionState<EtatAuth, FormData>(envoyerCode, {});
-  const [verif, verifier, verifEnCours] = useActionState<EtatAuth, FormData>(verifierCode, {});
-
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [jetonHumain, setJetonHumain] = useState("");
-  const [modifierAdresse, setModifierAdresse] = useState(false);
-  const [attente, setAttente] = useState(0);
+  const [demande, setDemande] = useState<AttenteAuth | null>(null);
+  const [horloge, setHorloge] = useState(() => Date.now());
+  const [cycleHumain, setCycleHumain] = useState(0);
+  const [sessionVerifiee, setSessionVerifiee] = useState<string | null>(null);
+  const [erreurVerification, setErreurVerification] = useState<string | null>(null);
   const [googleEnCours, setGoogleEnCours] = useState(false);
+  const [erreurGoogle, setErreurGoogle] = useState<string | null>(null);
   const formulaireCode = useRef<HTMLFormElement>(null);
+  const derniereSoumission = useRef("");
+  const stockage = useSyncExternalStore(abonnerStockage, lireStockage, stockageServeur);
+  const enAttente = demande ?? lireAttenteAuth(stockage, suite, horloge);
+  const etapeCode = !!enAttente;
+  const adresse = enAttente?.email ?? email;
+  const modeEnvoi = enAttente?.mode ?? mode;
+  const attente = enAttente ? secondesAvantRenvoi(enAttente.envoyeLe, horloge) : 0;
 
-  // L'étape « code » est dérivée de la réponse du serveur, pas d'un état qu'on
-  // synchroniserait à la main : impossible d'afficher une saisie de code pour
-  // un e-mail qui n'est pas parti.
-  const etapeCode = !!envoi.envoye && !modifierAdresse;
-  const adresse = envoi.email ?? email;
-  const modeEnvoi = envoi.mode ?? mode;
+  const [envoi, envoyer, envoiEnCours] = useActionState<EtatAuth, FormData>(async (precedent, donnees) => {
+    const resultat = await envoyerCode(precedent, donnees);
+    setJetonHumain("");
+    setCycleHumain((n) => n + 1);
+    if (resultat.envoye && resultat.email) {
+      const a: AttenteAuth = { email: resultat.email, suite, mode: resultat.mode ?? mode, envoyeLe: Date.now() };
+      setDemande(a);
+      stockerAttente(a);
+      setHorloge(a.envoyeLe);
+      setCode("");
+      setErreurVerification(null);
+      derniereSoumission.current = "";
+    }
+    return resultat;
+  }, {});
 
-  // Compte à rebours avant de pouvoir redemander un code.
+  const [verif, verifier, verifEnCours] = useActionState<EtatAuth, FormData>(async (precedent, donnees) => {
+    const resultat = await verifierCode(precedent, donnees);
+    setErreurVerification(resultat.erreur ?? null);
+    if (resultat.verifie) stockerAttente(null);
+    return resultat;
+  }, {});
+
+  // Le délai commence uniquement après un envoi réussi, même après rechargement.
   useEffect(() => {
-    if (attente <= 0) return;
-    const t = setTimeout(() => setAttente((n) => n - 1), 1000);
+    if (!etapeCode || attente <= 0) return;
+    const t = setTimeout(() => setHorloge(Date.now()), 1000);
     return () => clearTimeout(t);
-  }, [attente]);
+  }, [etapeCode, attente]);
 
-  // Code vérifié : on charge l'espace par une navigation complète, pour que le
-  // serveur lise le cookie de session tout juste écrit.
+  // En revenant de la messagerie, l'onglet initial suit un ancien lien validé.
+  // Le serveur vérifie la session ET son adresse, jamais un simple paramètre URL.
   useEffect(() => {
-    if (verif.verifie) window.location.assign(suite);
-  }, [verif.verifie, suite]);
+    if (!etapeCode) return;
+    let actif = true;
+    const actualiser = async () => {
+      if (document.visibilityState !== "visible") return;
+      try {
+        const resultat = await verifierSession(adresse);
+        if (actif && resultat.verifie) {
+          stockerAttente(null);
+          setSessionVerifiee(resultat.email ?? adresse);
+        }
+      } catch { /* Une panne de réseau n'efface pas la saisie du code. */ }
+    };
+    window.addEventListener("focus", actualiser);
+    document.addEventListener("visibilitychange", actualiser);
+    void actualiser();
+    return () => {
+      actif = false;
+      window.removeEventListener("focus", actualiser);
+      document.removeEventListener("visibilitychange", actualiser);
+    };
+  }, [etapeCode, adresse]);
 
   const continuerAvecGoogle = async () => {
     const supabase = creerClientNavigateur();
     if (!supabase) return;
     setGoogleEnCours(true);
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/confirm?suite=${encodeURIComponent(suite)}` },
-    });
+    setErreurGoogle(null);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/auth/confirm?suite=${encodeURIComponent(suite)}` },
+      });
+      if (error) setErreurGoogle("Google n'est pas disponible. Utilisez votre adresse e-mail.");
+    } catch {
+      setErreurGoogle("Google n'est pas disponible. Utilisez votre adresse e-mail.");
+    } finally {
+      setGoogleEnCours(false);
+    }
   };
 
-  if (verif.verifie) {
+  if (verif.verifie || sessionVerifiee || emailVerifie) {
     return (
       <div role="status" className="flex flex-col items-center gap-4 text-center animate-rise">
         <MarqueSos className="h-16 w-16 animate-pop" />
-        <p className="font-display text-xl font-bold text-navy-900">Ouverture de votre espace…</p>
+        <h1 className="font-display text-2xl font-bold text-navy-900">Votre adresse est vérifiée</h1>
+        <p className="text-ink-soft">Vous pouvez maintenant accéder à vos dossiers.</p>
+        <Btn variant="gold" taille="lg" onClick={() => {
+          stockerAttente(null);
+          routeur.replace(suite);
+        }}>Continuer vers mon espace</Btn>
       </div>
     );
   }
@@ -156,8 +237,11 @@ export function FormulaireAcces({
           type="button"
           onClick={() => {
             setEmail(adresse);
-            setModifierAdresse(true);
+            setDemande(null);
+            stockerAttente(null);
             setCode("");
+            setErreurVerification(null);
+            derniereSoumission.current = "";
           }}
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy-700 hover:text-navy-900"
         >
@@ -168,19 +252,21 @@ export function FormulaireAcces({
           <IconeMail className="h-8 w-8" />
         </span>
         <h1 className="mt-5 font-display text-[1.9rem] font-extrabold leading-tight text-navy-900">
-          {modeEnvoi === "code" ? "Entrez votre code" : "Ouvrez votre e-mail"}
+          Entrez votre code
         </h1>
         <p className="mt-2 leading-relaxed text-ink-soft">
-          {modeEnvoi === "code" ? "Un code à 6 chiffres vient de partir vers " : "Un e-mail vient de partir vers "}
+          Un e-mail de vérification vient de partir vers{" "}
           <strong className="text-ink">{adresse}</strong>.
-          {modeEnvoi === "lien" && " Cliquez sur le lien qu'il contient, sur cet appareil."}
+          {" "}Saisissez son code ici pour continuer sur cette page.
         </p>
 
-        <form ref={formulaireCode} action={verifier} className="mt-7">
+        <form ref={formulaireCode} action={verifier} onSubmit={() => {
+          derniereSoumission.current = code;
+        }} className="mt-7">
           <input type="hidden" name="email" value={adresse} />
           <label className="block">
             <span className="mb-2 block text-sm font-semibold text-navy-900">
-              {modeEnvoi === "code" ? "Code reçu par e-mail" : "Votre e-mail contient un code ? Saisissez-le ici"}
+              Code reçu par e-mail
             </span>
             <input
               name="code"
@@ -188,12 +274,22 @@ export function FormulaireAcces({
               onChange={(e) => {
                 const chiffres = e.target.value.replace(/\D/g, "").slice(0, 6);
                 setCode(chiffres);
+                setErreurVerification(null);
                 // Six chiffres : on valide sans attendre le clic.
-                if (chiffres.length === 6) setTimeout(() => formulaireCode.current?.requestSubmit(), 0);
+                if (chiffres.length === 6 && !verifEnCours && derniereSoumission.current !== chiffres) {
+                  derniereSoumission.current = chiffres;
+                  setTimeout(() => formulaireCode.current?.requestSubmit(), 0);
+                }
               }}
               inputMode="numeric"
               autoComplete="one-time-code"
-              autoFocus={modeEnvoi === "code"}
+              autoFocus
+              required
+              minLength={6}
+              maxLength={6}
+              pattern="[0-9]{6}"
+              disabled={verifEnCours}
+              aria-invalid={!!erreurVerification}
               placeholder="••••••"
               aria-describedby="aide-code"
               className="h-16 w-full rounded-2xl border-2 border-line bg-white text-center font-display text-3xl font-extrabold tracking-[0.5em] text-navy-900 outline-none transition placeholder:text-line focus:border-navy-600 focus:ring-4 focus:ring-gold-300/40"
@@ -203,9 +299,9 @@ export function FormulaireAcces({
             Pas reçu ? Regardez dans les indésirables — l&apos;expéditeur est SOS Citizens.
           </p>
 
-          {verif.erreur && (
+          {erreurVerification && (
             <p role="alert" className="mt-4 rounded-xl bg-danger-50 p-3 text-sm font-medium text-danger-700">
-              {verif.erreur}
+              {erreurVerification}
             </p>
           )}
 
@@ -216,21 +312,26 @@ export function FormulaireAcces({
 
         <form
           action={envoyer}
-          onSubmit={() => setAttente(45)}
           className="mt-4 text-center"
         >
           <input type="hidden" name="email" value={adresse} />
           <input type="hidden" name="suite" value={suite} />
           {jetonHumain && <input type="hidden" name="cf-turnstile-response" value={jetonHumain} />}
+          {cleTurnstile && <AntiRobot key={cycleHumain} cle={cleTurnstile} surJeton={setJetonHumain} />}
           <button
             type="submit"
-            disabled={envoiEnCours || attente > 0}
+            disabled={envoiEnCours || verifEnCours || attente > 0 || (!!cleTurnstile && !jetonHumain)}
             className="text-sm font-semibold text-navy-700 underline decoration-navy-200 underline-offset-4 hover:text-navy-900 disabled:cursor-default disabled:text-ink-faint disabled:no-underline"
           >
             {envoiEnCours ? "Envoi…" : attente > 0 ? `Renvoyer un code dans ${attente} s` : "Renvoyer un code"}
           </button>
-          {envoi.erreur && <p className="mt-2 text-sm text-danger-700">{envoi.erreur}</p>}
+          {envoi.erreur && <p role="alert" className="mt-2 text-sm text-danger-700">{envoi.erreur}</p>}
         </form>
+        {modeEnvoi === "lien" && (
+          <p className="mt-4 text-xs leading-relaxed text-ink-soft">
+            Si votre e-mail contient uniquement un lien, ouvrez-le puis revenez à cet onglet : la vérification sera reconnue automatiquement.
+          </p>
+        )}
       </div>
     );
   }
@@ -270,11 +371,7 @@ export function FormulaireAcces({
       )}
 
       <form
-        action={(donnees) => {
-          setModifierAdresse(false);
-          envoyer(donnees);
-          setAttente(45);
-        }}
+        action={envoyer}
         className={googleActif ? "" : "mt-7"}
       >
         <input type="hidden" name="suite" value={suite} />
@@ -297,7 +394,7 @@ export function FormulaireAcces({
 
         {cleTurnstile && (
           <div className="mt-4">
-            <AntiRobot cle={cleTurnstile} surJeton={setJetonHumain} />
+            <AntiRobot key={cycleHumain} cle={cleTurnstile} surJeton={setJetonHumain} />
           </div>
         )}
 
@@ -317,6 +414,7 @@ export function FormulaireAcces({
           {envoiEnCours ? "Envoi du code…" : "Recevoir mon code"}
         </Btn>
       </form>
+      {erreurGoogle && <p role="alert" className="mt-3 text-sm text-danger-700">{erreurGoogle}</p>}
 
       <p className="mt-6 text-xs leading-relaxed text-ink-soft">
         En continuant, vous acceptez les{" "}
