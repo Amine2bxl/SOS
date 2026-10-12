@@ -79,8 +79,11 @@ export function AtelierLettre({
   const [moyensChoisis, setMoyensChoisis] = useState<string[]>(moyens.map((m) => m.id));
   const [explication, setExplication] = useState("");
   const [iban, setIban] = useState("");
-  const [texte, setTexte] = useState("");
-  const [enregistree, setEnregistree] = useState(false);
+  // La dernière version enregistrée de la lettre conseillée, s'il y en a une :
+  // elle s'affiche d'emblée, sans attendre une nouvelle rédaction.
+  const [initiale] = useState(() => lettres.find((l) => l.type === typeConseille && l.langue === langueConseillee));
+  const [texte, setTexte] = useState(initiale?.contenu ?? "");
+  const [enregistree, setEnregistree] = useState(!!initiale);
   const [edition, setEdition] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -93,14 +96,14 @@ export function AtelierLettre({
   };
 
   const generer = useCallback(
-    (options?: { moyens?: string[]; explication?: string; iban?: string }) => {
-      setErreur(null);
+    (options?: { type?: TypeLettre; langue?: "fr" | "nl"; moyens?: string[]; explication?: string; iban?: string }) => {
+      const t = options?.type ?? type;
       demarrerGeneration(async () => {
         const r = await redigerLettreDossier({
           dossierId,
-          type,
-          langue,
-          moyens: AVEC_ARGUMENTS.includes(type) ? (options?.moyens ?? moyensChoisis) : undefined,
+          type: t,
+          langue: options?.langue ?? langue,
+          moyens: AVEC_ARGUMENTS.includes(t) ? (options?.moyens ?? moyensChoisis) : undefined,
           explication: options?.explication ?? explication,
           ibanRemboursement: options?.iban ?? iban,
         });
@@ -108,6 +111,7 @@ export function AtelierLettre({
           setErreur(r.erreur ?? "La lettre n'a pas pu être rédigée.");
           return;
         }
+        setErreur(null);
         setTexte(r.lettre.texte);
         setEnregistree(false);
         setEdition(false);
@@ -116,22 +120,34 @@ export function AtelierLettre({
     [dossierId, type, langue, moyensChoisis, explication, iban],
   );
 
-  // Au changement de lettre ou de langue : la dernière version enregistrée si
-  // elle existe, sinon une rédaction neuve.
-  const derniereCle = useRef("");
-  useEffect(() => {
-    const cle = `${type}:${langue}`;
-    if (derniereCle.current === cle) return;
-    derniereCle.current = cle;
-    const sauvee = lettres.find((l) => l.type === type && l.langue === langue);
+  /** Une autre lettre ou une autre langue : la version gardée si elle existe, sinon une rédaction neuve. */
+  const charger = (t: TypeLettre, l: "fr" | "nl") => {
+    const sauvee = lettres.find((x) => x.type === t && x.langue === l);
     if (sauvee) {
       setTexte(sauvee.contenu);
       setEnregistree(true);
       setEdition(false);
     } else {
-      generer();
+      generer({ type: t, langue: l });
     }
-  }, [type, langue, lettres, generer]);
+  };
+  const changerType = (t: TypeLettre) => {
+    setType(t);
+    setChoixType(false);
+    charger(t, langue);
+  };
+  const changerLangue = (l: "fr" | "nl") => {
+    setLangue(l);
+    charger(type, l);
+  };
+
+  // À l'arrivée, sans lettre gardée : le moteur la rédige aussitôt.
+  const premiereRedaction = useRef(false);
+  useEffect(() => {
+    if (premiereRedaction.current || initiale) return;
+    premiereRedaction.current = true;
+    generer();
+  }, [initiale, generer]);
 
   const trous = useMemo(() => Array.from(new Set(texte.match(/\[[^\]\n]{2,80}\]/g) ?? [])), [texte]);
 
@@ -189,7 +205,7 @@ export function AtelierLettre({
                 {type === typeConseille && <Pastille ton="signal">Conseillée</Pastille>}
               </span>
               <span className="flex items-center gap-1 text-sm font-semibold text-navy-700">
-                Changer de lettre <IconeChevron className={`h-3.5 w-3.5 transition ${choixType ? "rotate-90" : ""}`} />
+                Changer de lettre <IconeChevron className={`h-3.5 w-3.5 transition ${choixType ? "rotate-180" : ""}`} />
               </span>
             </span>
           </button>
@@ -200,7 +216,7 @@ export function AtelierLettre({
                 key={l}
                 type="button"
                 aria-pressed={langue === l}
-                onClick={() => setLangue(l)}
+                onClick={() => changerLangue(l)}
                 className={`rounded-full px-3.5 py-1.5 text-sm font-bold transition ${
                   langue === l ? "bg-navy-900 text-white" : "text-navy-800 hover:bg-white"
                 }`}
@@ -217,10 +233,7 @@ export function AtelierLettre({
               <li key={l.id}>
                 <button
                   type="button"
-                  onClick={() => {
-                    setType(l.id);
-                    setChoixType(false);
-                  }}
+                  onClick={() => changerType(l.id)}
                   aria-pressed={type === l.id}
                   className={`flex w-full items-start gap-3 rounded-2xl border p-3 text-left transition ${
                     type === l.id ? "border-navy-900 bg-navy-50" : "border-line hover:border-navy-200 hover:bg-paper"
@@ -266,7 +279,7 @@ export function AtelierLettre({
                   : `${moyensChoisis.length} argument${moyensChoisis.length > 1 ? "s" : ""} retenu${moyensChoisis.length > 1 ? "s" : ""} · ajoutez votre récit si vous le souhaitez`}
               </span>
             </span>
-            <IconeChevron className="h-4 w-4 shrink-0 text-navy-700 transition group-open:rotate-90" />
+            <IconeChevron className="h-4 w-4 shrink-0 text-navy-700 transition group-open:rotate-180" />
           </summary>
           <div className="space-y-4 border-t border-line px-4 pb-5 pt-4 sm:px-5">
             {avecArguments && (
@@ -375,7 +388,7 @@ export function AtelierLettre({
             <IconeCopier className="h-5 w-5" /> Copier
           </Btn>
           <Btn variant="secondary" onClick={imprimer} disabled={!texte || generation} className="px-3">
-            <IconeImprimer className="h-5 w-5" /> <span className="hidden sm:inline">Imprimer ou</span> PDF
+            <IconeImprimer className="h-5 w-5" /> <span className="hidden sm:inline">Imprimer ou</span>PDF
           </Btn>
           <Btn variant="primary" onClick={() => sauver(() => montrerToast("Lettre rangée dans le dossier"))} disabled={!texte || enregistree || sauvegarde} className="px-3">
             <IconeOk className="hidden h-5 w-5 sm:block" /> {sauvegarde ? "…" : "Enregistrer"}

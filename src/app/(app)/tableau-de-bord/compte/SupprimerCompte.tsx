@@ -24,7 +24,7 @@ export function SupprimerCompte({ dossiers }: { dossiers: number }) {
 
   return (
     <>
-      <Btn onClick={() => setOuverte(true)} variant="ghost" taille="sm" className="text-danger-700">
+      <Btn onClick={() => setOuverte(true)} variant="dangerDiscret" taille="sm">
         Supprimer mon compte
       </Btn>
 

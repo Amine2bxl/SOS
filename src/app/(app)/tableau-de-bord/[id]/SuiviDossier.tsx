@@ -21,6 +21,7 @@ const ICONE_EVENEMENT: Record<string, (p: { className?: string }) => React.React
   creation: IconeTampon,
   lettre: IconeLettre,
   statut: IconeSceau,
+  rappel: IconeAgenda,
 };
 
 /**
@@ -171,7 +172,7 @@ export function SuiviDossier({
             Clôturer le dossier
           </Btn>
         )}
-        <Btn variant="ghost" taille="sm" onClick={() => setSuppression(true)} className="text-danger-700">
+        <Btn variant="dangerDiscret" taille="sm" onClick={() => setSuppression(true)}>
           <IconeCorbeille className="h-4 w-4" />
           Supprimer
         </Btn>

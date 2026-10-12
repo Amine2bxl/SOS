@@ -10,10 +10,16 @@
 export function MarqueSos({
   className = "h-9 w-9",
   simplifie = false,
+  surFonce = false,
 }: {
   className?: string;
   /** Version pleine, sans les bandes de la bouée : pour les toutes petites tailles. */
   simplifie?: boolean;
+  /**
+   * Sur un fond d'encre, le bouclier encre disparaîtrait : il s'éclaircit d'un
+   * ton et prend un liseré, pour garder sa silhouette.
+   */
+  surFonce?: boolean;
 }) {
   // Circonférence de la bouée (rayon 7) découpée en huit segments égaux :
   // quatre jaunes, quatre blancs, comme une vraie bouée.
@@ -22,7 +28,9 @@ export function MarqueSos({
     <svg viewBox="0 0 48 48" className={className} aria-hidden="true">
       <path
         d="M24 2.5 42 8.6v14c0 11.7-7.6 19.9-18 23.4C13.6 42.5 6 34.3 6 22.6v-14L24 2.5Z"
-        fill="#0f1e3d"
+        fill={surFonce ? "#22396b" : "#0f1e3d"}
+        stroke={surFonce ? "rgb(255 255 255 / 0.35)" : "none"}
+        strokeWidth={surFonce ? 1.4 : 0}
       />
       {/* Bouée : anneau blanc, bandes jaunes par-dessus. */}
       <circle cx="26.6" cy="20" r="7" fill="none" stroke="#ffffff" strokeWidth="5.4" />
@@ -60,7 +68,7 @@ export function Logo({
 }) {
   return (
     <span className={`flex items-center gap-2.5 ${className}`}>
-      <MarqueSos className="h-9 w-9 shrink-0" />
+      <MarqueSos className="h-9 w-9 shrink-0" surFonce={!surClair} />
       {!compact && (
         <span className="leading-none">
           <span className="block font-display text-[1.15rem] font-extrabold tracking-tight">

@@ -258,3 +258,61 @@ ${lienHtml}
     texte,
   };
 }
+
+/**
+ * Un rappel sur un dossier : une échéance qui approche, une relance à faire.
+ *
+ * Court, et un seul bouton : il mène droit à la bonne page du bon dossier. Un
+ * rappel qui oblige à chercher son dossier n'est pas suivi d'effet.
+ */
+export function emailRappel({
+  prenom,
+  sujet,
+  message,
+  dossier,
+  lien,
+  libelleLien,
+  urlSite,
+}: {
+  prenom: string | null;
+  sujet: string;
+  message: string;
+  /** Comment on désigne le dossier : la commune et la référence. */
+  dossier: string;
+  lien: string;
+  libelleLien: string;
+  urlSite: string;
+}): Gabarit {
+  const bonjour = prenom?.trim() ? `Bonjour ${prenom.trim()}` : "Bonjour";
+  const corps = `              <p style="margin:0 0 6px;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#a86f00;font-weight:bold;">${echapper(dossier)}</p>
+              <h1 style="margin:0 0 12px;font-size:23px;line-height:1.3;color:${COULEURS.navy};">${echapper(sujet)}</h1>
+              <p style="margin:0 0 6px;font-size:15px;line-height:1.6;color:${COULEURS.encre};">${echapper(bonjour)},</p>
+              <p style="margin:0 0 22px;font-size:15px;line-height:1.6;color:${COULEURS.encreDouce};">${echapper(message)}</p>
+              <table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="background-color:${COULEURS.or};border-radius:999px;">
+                <a href="${lien}" style="display:inline-block;padding:13px 26px;font-size:15px;font-weight:bold;color:${COULEURS.navy};text-decoration:none;">${echapper(libelleLien)}</a>
+              </td></tr></table>
+              <p style="margin:24px 0 0;font-size:12px;line-height:1.6;color:${COULEURS.encreDouce};">
+                Vous recevez ce rappel parce que ce dossier est ouvert dans votre espace SOS Citizens. Un dossier
+                réglé ? Clôturez-le dans son onglet « Suivi » : les rappels s&rsquo;arrêtent.
+              </p>`;
+
+  const texte = [
+    `${bonjour},`,
+    "",
+    `${sujet} — ${dossier}`,
+    "",
+    message,
+    "",
+    `${libelleLien} : ${lien}`,
+    "",
+    "Un dossier réglé ? Clôturez-le dans son onglet « Suivi » : les rappels s'arrêtent.",
+    "",
+    `L'équipe de ${ASSO.nom}`,
+  ].join("\n");
+
+  return {
+    sujet: `${sujet} — ${dossier}`,
+    html: coquille({ titre: sujet, preheader: message.slice(0, 110), corps, urlSite }),
+    texte,
+  };
+}

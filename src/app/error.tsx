@@ -27,7 +27,7 @@ export default function Erreur({
 
   return (
     <div className="mx-auto max-w-lg px-4 py-24 text-center sm:px-6">
-      <p className="font-display text-5xl font-black text-gold-400">Oups</p>
+      <p className="font-display text-6xl font-extrabold text-gold-500">Oups</p>
       <h1 className="mt-4 font-display text-2xl font-bold text-navy-900">
         Cette page n&apos;a pas pu s&apos;afficher
       </h1>
@@ -40,13 +40,13 @@ export default function Erreur({
         <button
           type="button"
           onClick={reset}
-          className="inline-flex items-center justify-center rounded-md bg-gold-400 px-5 py-3 text-sm font-bold text-navy-950 transition hover:bg-gold-300"
+          className="inline-flex h-11 items-center justify-center rounded-full bg-gold-400 px-6 text-sm font-bold text-navy-950 shadow-bouton transition hover:bg-gold-300"
         >
           Réessayer
         </button>
         <Link
           href="/tableau-de-bord"
-          className="inline-flex items-center justify-center rounded-md border border-line bg-white px-5 py-3 text-sm font-semibold text-navy-900 transition hover:bg-navy-50"
+          className="inline-flex h-11 items-center justify-center rounded-full border border-line bg-white px-6 text-sm font-semibold text-navy-900 transition hover:bg-navy-50"
         >
           Retour à mon espace
         </Link>

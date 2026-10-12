@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PageHead, Card, Check } from "@/components/ui";
+import { PageHead, Card } from "@/components/ui";
 import { ASSO } from "@/lib/data";
 
 export const metadata: Metadata = {
@@ -32,29 +32,31 @@ export default function ConfidentialitePage() {
       <Card title="Quelles données collectons-nous ?" className="mt-6">
         <ul className="space-y-2.5 text-sm text-ink">
           <li className="flex gap-2.5">
-            <Check className="mt-0.5 h-4 w-4 shrink-0 text-ok-600" />
+            <span className="mt-2 h-1 w-3.5 shrink-0 rounded-full bg-gold-400" aria-hidden="true" />
             <span>
-              <strong className="text-navy-900">Création de compte :</strong> adresse e-mail, prénom,
-              nom, et, si vous les renseignez, adresse, code postal et commune.
+              <strong className="text-navy-900">Création de compte :</strong> votre adresse e-mail, puis,
+              si vous les renseignez pour vos lettres, vos prénom, nom, adresse, code postal, commune et
+              téléphone.
             </span>
           </li>
           <li className="flex gap-2.5">
-            <Check className="mt-0.5 h-4 w-4 shrink-0 text-ok-600" />
+            <span className="mt-2 h-1 w-3.5 shrink-0 rounded-full bg-gold-400" aria-hidden="true" />
             <span>
               <strong className="text-navy-900">Dossiers de contestation :</strong> les informations du
-              courrier que vous confirmez (référence, montant, dates, plaque, commune, autorité) et le
-              texte extrait de votre document.
+              courrier que vous confirmez (référence, montant, dates, plaque, commune, organisme), vos
+              réponses aux questions du moteur, l&apos;analyse qui en résulte, vos lettres, et le texte
+              extrait de votre document.
             </span>
           </li>
           <li className="flex gap-2.5">
-            <Check className="mt-0.5 h-4 w-4 shrink-0 text-ok-600" />
+            <span className="mt-2 h-1 w-3.5 shrink-0 rounded-full bg-gold-400" aria-hidden="true" />
             <span>
               <strong className="text-navy-900">Messages :</strong> les e-mails et messages que vous nous
               envoyez.
             </span>
           </li>
           <li className="flex gap-2.5">
-            <Check className="mt-0.5 h-4 w-4 shrink-0 text-ok-600" />
+            <span className="mt-2 h-1 w-3.5 shrink-0 rounded-full bg-gold-400" aria-hidden="true" />
             <span>
               <strong className="text-navy-900">Aucune donnée de paiement :</strong> le paiement en ligne
               n&apos;est pas actif, aucune donnée bancaire ne nous est transmise.
@@ -62,11 +64,12 @@ export default function ConfidentialitePage() {
           </li>
         </ul>
         <p className="mt-4 text-xs leading-relaxed text-ink-soft">
-          L&apos;outil de lettre en libre accès (page « Contester ») fonctionne entièrement dans votre
-          navigateur : rien n&apos;y est enregistré, rien n&apos;y est envoyé. La lecture des documents
-          par le scanner se fait également dans votre navigateur : votre photo ou votre PDF ne
-          quittent jamais votre appareil, et nous ne les stockons nulle part. Seul le texte lu en est
-          enregistré, dans votre dossier, et il est effacé au bout de six mois.
+          La lecture des documents se fait dans votre navigateur : votre photo ou votre PDF ne
+          quittent jamais votre appareil, et nous ne les stockons nulle part. Pour l&apos;analyse, les
+          informations confirmées (dates, montant, commune, réponses) sont transmises à notre
+          moteur ; sans compte, elles ne sont pas enregistrées. Si vous demandez votre lettre avant
+          d&apos;avoir un compte, elles restent quelques heures dans votre navigateur, le temps de le
+          créer. Dans un dossier, le texte lu sur le courrier est effacé au bout de six mois.
         </p>
       </Card>
 
@@ -115,8 +118,11 @@ export default function ConfidentialitePage() {
 
       <Card title="À qui vos données sont-elles confiées ?" className="mt-6">
         <p className="text-sm leading-relaxed text-ink-soft">
-          Les données de compte et de dossiers sont stockées dans la base de données de notre
-          prestataire technique (Supabase), qui agit en sous-traitant et auquel l&apos;accès est
+          Le site est hébergé par Vercel ; les e-mails de connexion sont envoyés par Resend ; si elle
+          est active, la vérification anti-robot est assurée par Cloudflare Turnstile ; si vous la
+          choisissez, la connexion avec Google passe par Google. Les données de compte et de dossiers
+          sont stockées dans la base de données de notre prestataire technique (Supabase), qui agit
+          en sous-traitant et auquel l&apos;accès est
           limité par des règles de sécurité (« politiques de sécurité au niveau des lignes ») : chaque
           utilisateur ne voit que ses propres données. Le site est hébergé par Vercel. Nous ne vendons,
           ne louons et ne transmettons aucune donnée à des tiers à des fins commerciales ou publicitaires.

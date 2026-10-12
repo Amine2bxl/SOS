@@ -178,7 +178,7 @@ function EtatAdhesion({ membre }: { membre: InfosMembre }) {
     return (
       <div className="rounded-2xl bg-navy-900 p-4 text-white">
         <p className="text-xs font-bold uppercase tracking-wider text-gold-400">Membre</p>
-        <p className="mt-1 text-sm text-navy-100">Formule {membre.planNom} — contestations illimitées.</p>
+        <p className="mt-1 text-sm text-navy-100">Formule {membre.planNom} — dossiers illimités.</p>
       </div>
     );
   }
@@ -187,8 +187,8 @@ function EtatAdhesion({ membre }: { membre: InfosMembre }) {
     <div className="rounded-2xl border border-gold-300 bg-gold-50 p-4">
       <p className="text-sm font-bold text-navy-900">
         {restantes > 0
-          ? `${restantes} contestation${restantes > 1 ? "s" : ""} offerte${restantes > 1 ? "s" : ""}`
-          : "Contestations offertes utilisées"}
+          ? `${restantes} dossier${restantes > 1 ? "s" : ""} offert${restantes > 1 ? "s" : ""}`
+          : "Dossiers offerts utilisés"}
       </p>
       <p className="mt-1 text-xs leading-relaxed text-ink-soft">
         Membre : illimité, relecture par l&apos;association, alertes.

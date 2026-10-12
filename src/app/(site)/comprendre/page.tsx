@@ -10,16 +10,17 @@ import {
   PayerOuContester,
 } from "@/components/guide";
 import { FAQS } from "@/lib/data";
+import { IconeChevron, IconeFleche, IconeLien } from "@/components/icones";
 
 export const metadata: Metadata = {
-  title: "Comprendre votre amende de stationnement",
+  title: "Comprendre votre redevance de stationnement",
   description:
-    "Notification, rappel, mise en demeure, contrainte, huissier : ce que chaque courrier signifie, ce que vous risquez et ce qu'il faut faire à chaque étape.",
+    "Avis, rappel, mise en demeure, contrainte, huissier : ce que chaque courrier signifie, ce que vous risquez et ce qu'il faut faire à chaque étape.",
 };
 
 export default function ComprendrePage() {
   return (
-    <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
+    <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:py-16">
       <PageHead
         kicker="Guide"
         title="Comprendre votre courrier"
@@ -28,11 +29,9 @@ export default function ComprendrePage() {
 
       {/* CE QUE COÛTE CHAQUE ÉTAPE */}
       <section className="mt-12">
-        <h2 className="font-display text-2xl font-bold text-navy-900">
-          Ce que coûte chaque étape
-        </h2>
+        <h2 className="font-display text-2xl font-extrabold text-navy-900">Ce que coûte chaque étape</h2>
         <p className="mt-2 text-ink-soft">
-          Une redevance de 25 € ne reste pas à 25 €. Plus vous réagissez tôt, moins cela vous coûte.
+          Une redevance ne reste jamais à son prix. Plus vous réagissez tôt, moins cela vous coûte.
         </p>
         <div className="mt-6">
           <EscalierProcedure />
@@ -44,9 +43,7 @@ export default function ComprendrePage() {
 
       {/* QUEL COURRIER AVEZ-VOUS REÇU ? */}
       <section className="mt-14">
-        <h2 className="font-display text-2xl font-bold text-navy-900">
-          Quel courrier avez-vous reçu ?
-        </h2>
+        <h2 className="font-display text-2xl font-extrabold text-navy-900">Quel courrier avez-vous reçu ?</h2>
         <p className="mt-2 text-ink-soft">
           Ils arrivent dans cet ordre, du plus doux au plus grave.
         </p>
@@ -61,7 +58,7 @@ export default function ComprendrePage() {
 
       {/* LES NOTIONS DE BASE */}
       <section className="mt-14">
-        <h2 className="font-display text-2xl font-bold text-navy-900">Les notions à connaître</h2>
+        <h2 className="font-display text-2xl font-extrabold text-navy-900">Les notions à connaître</h2>
         <div className="mt-6">
           <NotionsCles />
         </div>
@@ -74,17 +71,15 @@ export default function ComprendrePage() {
 
       {/* FAQ */}
       <section id="faq" className="mt-14 scroll-mt-28">
-        <h2 className="font-display text-2xl font-bold text-navy-900">Questions fréquentes</h2>
-        <div className="mt-6 divide-y divide-line-soft overflow-hidden rounded-xl border border-line bg-card">
+        <h2 className="font-display text-2xl font-extrabold text-navy-900">Questions fréquentes</h2>
+        <div className="mt-6 space-y-3">
           {FAQS.map((faq) => (
-            <details key={faq.question} className="group px-5 py-4">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-semibold text-navy-900">
+            <details key={faq.question} className="group rounded-[var(--radius-carte)] border border-line/80 bg-card shadow-carte">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 font-semibold text-navy-900">
                 {faq.question}
-                <span className="shrink-0 text-xl leading-none text-navy-700 transition group-open:rotate-45">
-                  +
-                </span>
+                <IconeChevron className="h-4 w-4 shrink-0 text-navy-700 transition group-open:rotate-180" />
               </summary>
-              <p className="mt-3 text-sm leading-relaxed text-ink-soft">{faq.reponse}</p>
+              <p className="px-5 pb-5 text-sm leading-relaxed text-ink-soft">{faq.reponse}</p>
             </details>
           ))}
         </div>
@@ -121,10 +116,11 @@ export default function ComprendrePage() {
                 href={l.href}
                 target={l.href.startsWith("http") ? "_blank" : undefined}
                 rel={l.href.startsWith("http") ? "noopener noreferrer" : undefined}
-                className="group rounded-lg border border-line bg-white p-4 transition hover:border-navy-600/40 hover:shadow-sm"
+                className="group rounded-2xl border border-line bg-white p-4 transition hover:border-navy-200 hover:shadow-carte"
               >
-                <p className="font-semibold text-navy-900 group-hover:underline">
-                  {l.titre} {l.href.startsWith("http") ? "↗" : "→"}
+                <p className="flex items-center gap-1.5 font-semibold text-navy-900 group-hover:underline">
+                  {l.titre}
+                  {l.href.startsWith("http") ? <IconeLien className="h-4 w-4" /> : <IconeFleche className="h-4 w-4" />}
                 </p>
                 <p className="mt-1 text-sm leading-relaxed text-ink-soft">{l.texte}</p>
               </a>
@@ -134,16 +130,19 @@ export default function ComprendrePage() {
       </section>
 
       {/* CTA */}
-      <section className="mt-14 rounded-xl bg-navy-900 p-8 text-center text-white">
-        <h2 className="font-display text-xl font-bold">Prêt à passer à l&apos;action ?</h2>
-        <p className="mx-auto mt-3 max-w-lg text-navy-100">
-          Préparez votre lettre en quelques minutes. Ou écrivez-nous, si vous préférez en parler.
-        </p>
-        <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <LinkBtn href="/inscription" variant="gold">
-            Préparer ma lettre
-          </LinkBtn>
-          <BoutonContact variante="outline" />
+      <section className="relative mt-14 overflow-hidden rounded-[1.75rem] bg-navy-900 p-8 text-center text-white">
+        <div className="motif-points absolute inset-0" aria-hidden="true" />
+        <div className="relative">
+          <h2 className="font-display text-2xl font-extrabold">Votre courrier, analysé en une minute</h2>
+          <p className="mx-auto mt-3 max-w-lg text-navy-100">
+            Le moteur lit votre courrier, calcule votre délai et prépare votre lettre. Gratuit, sans compte.
+          </p>
+          <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <LinkBtn href="/#analyser" variant="gold">
+              Analyser mon courrier
+            </LinkBtn>
+            <BoutonContact variante="outline">Nous écrire</BoutonContact>
+          </div>
         </div>
       </section>
     </div>

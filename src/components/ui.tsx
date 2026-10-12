@@ -26,6 +26,8 @@ const btnStyles = {
   ghost: "text-navy-700 hover:bg-navy-50",
   /** Action destructrice : elle doit se voir, et ne jamais être le bouton par défaut. */
   danger: "bg-danger-600 text-white hover:bg-danger-700 shadow-bouton",
+  /** Le lien discret vers une action destructrice (« Supprimer »), avant confirmation. */
+  dangerDiscret: "text-danger-700 hover:bg-danger-50",
 } as const;
 
 const btnTailles = {

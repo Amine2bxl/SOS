@@ -74,7 +74,7 @@ export default async function MesDossiers({ searchParams }: { searchParams: Prom
               {montrerTermines ? "Aucun dossier terminé pour l'instant." : "Aucun dossier en cours. Tout est réglé."}
             </p>
           ) : (
-            <ul className="mt-5 grid gap-3">
+            <ul className="mt-5 grid grid-cols-1 gap-3">
               {liste.map((s) => (
                 <li key={s.dossier.id}>
                   <CarteDossier dossier={s.dossier} action={s.action} />

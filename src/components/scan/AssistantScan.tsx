@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   lireDocument,
@@ -54,6 +54,25 @@ const REGIONS: { id: Region; nom: string }[] = [
   { id: "wallonie", nom: "Wallonie" },
   { id: "flandre", nom: "Flandre" },
 ];
+
+/**
+ * Dans l'espace membre, l'assistant est la page : ses titres sont des h1. Sur
+ * la page d'accueil du site, il vit dans une section qui a déjà son titre : ils
+ * descendent d'un cran, pour garder un seul h1 par page.
+ */
+const NiveauTitre = createContext<"h1" | "h3">("h1");
+
+function Titre({ className, children }: { className: string; children: React.ReactNode }) {
+  return useContext(NiveauTitre) === "h1" ? (
+    <h1 data-titre-etape="" className={className}>
+      {children}
+    </h1>
+  ) : (
+    <h3 data-titre-etape="" className={className}>
+      {children}
+    </h3>
+  );
+}
 
 /** Les faits, tels que le moteur les attend, depuis le formulaire. */
 function faitsDuFormulaire(form: Formulaire, reponses: Record<string, string>): Faits {
@@ -136,19 +155,31 @@ export function AssistantScan({ mode }: { mode: "membre" | "visiteur" }) {
     [allerA],
   );
 
-  // Reprise après création de compte : le brouillon du visiteur est rechargé
-  // et l'analyse relancée, sans rien lui redemander.
+  // Reprise après création de compte : le visiteur avait demandé sa lettre.
+  // Son brouillon devient directement un dossier, et il atterrit sur sa lettre
+  // — sans rien lui redemander. Si la création échoue (plafond atteint), on
+  // lui montre au moins son analyse.
   const repris = useRef(false);
   useEffect(() => {
     if (repris.current || mode !== "membre" || parametres.get("reprise") !== "1") return;
     repris.current = true;
     const b = lireBrouillon();
     if (!b) return;
-    setForm(b.form);
-    setReponses(b.reponses);
-    setEtape("verdict");
-    lancerAnalyse(faitsDuFormulaire(b.form, b.reponses));
-  }, [mode, parametres, lancerAnalyse]);
+    demarrerCreation(async () => {
+      const r = await creerDossier({ ...b.form, reponses: b.reponses, ocrTexte: "", ocrConfiance: b.ocrConfiance });
+      if (r.erreur || !r.id) {
+        setForm(b.form);
+        setReponses(b.reponses);
+        setEtape("verdict");
+        setErreur(r.erreur ?? "Le dossier n'a pas pu être enregistré.");
+        setQuotaAtteint(!!r.quotaAtteint);
+        lancerAnalyse(faitsDuFormulaire(b.form, b.reponses));
+        return;
+      }
+      effacerBrouillon();
+      router.push(`/tableau-de-bord/${r.id}?nouveau=1#lettre`);
+    });
+  }, [mode, parametres, lancerAnalyse, router]);
 
   /* ------------------------------------------------------------- lecture */
   const traiterFichier = async (fichier: File) => {
@@ -176,7 +207,7 @@ export function AssistantScan({ mode }: { mode: "membre" | "visiteur" }) {
         region: lieu.region ?? "",
         langue: lieu.langue ?? "fr",
         plaque: donnees.plaque.valeur ?? "",
-        montant: donnees.montant.valeur !== null ? String(donnees.montant.valeur).replace(".", ",") : "",
+        montant: donnees.montant.valeur !== null ? donnees.montant.valeur.toFixed(2).replace(".", ",") : "",
         dateConstat: donnees.dateConstat.valeur ?? "",
         heureConstat: donnees.heureConstat.valeur ?? "",
         dateEcheance: donnees.dateEcheance.valeur ?? "",
@@ -279,97 +310,103 @@ export function AssistantScan({ mode }: { mode: "membre" | "visiteur" }) {
   const indexVisible = ETAPES_VISIBLES.findIndex((e) => e.id === (etape === "lecture" ? "depot" : etape));
 
   return (
-    <div ref={haut} className="mx-auto w-full max-w-2xl scroll-mt-24">
-      <ol className="mb-6 grid grid-cols-4 gap-2" aria-label="Progression">
-        {ETAPES_VISIBLES.map((e, i) => (
-          <li key={e.id} aria-current={i === indexVisible ? "step" : undefined}>
-            <span
-              className={`block h-1.5 rounded-full transition-colors ${
-                i < indexVisible ? "bg-navy-900" : i === indexVisible ? "bg-gold-400" : "bg-line"
-              }`}
-            />
-            <span
-              className={`mt-1.5 block text-[11px] sm:text-xs ${i === indexVisible ? "font-bold text-navy-900" : "text-ink-faint"}`}
-            >
-              {e.libelle}
-            </span>
-          </li>
-        ))}
-      </ol>
+    <NiveauTitre.Provider value={mode === "membre" ? "h1" : "h3"}>
+      <div ref={haut} className="mx-auto w-full max-w-2xl scroll-mt-24">
+        <ol className="mb-6 grid grid-cols-4 gap-2" aria-label="Progression">
+          {ETAPES_VISIBLES.map((e, i) => (
+            <li key={e.id} aria-current={i === indexVisible ? "step" : undefined}>
+              <span
+                className={`block h-1.5 rounded-full transition-colors ${
+                  i < indexVisible ? "bg-navy-900" : i === indexVisible ? "bg-gold-400" : "bg-line"
+                }`}
+              />
+              <span
+                className={`mt-1.5 block text-[11px] sm:text-xs ${i === indexVisible ? "font-bold text-navy-900" : "text-ink-faint"}`}
+              >
+                {e.libelle}
+              </span>
+            </li>
+          ))}
+        </ol>
 
-      {etape === "depot" && (
-        <EtapeDepot
-          erreur={erreur}
-          surFichier={traiterFichier}
-          saisirALaMain={() => {
-            setExtrait(null);
-            setLecture(null);
-            setForm(FORMULAIRE_VIDE);
-            allerA("verification");
-          }}
-        />
-      )}
+        {etape === "depot" && enCreation && <Patience texte="Création de votre dossier et de votre lettre…" />}
 
-      {etape === "lecture" && <EtapeLecture progression={progression} />}
+        {etape === "depot" && !enCreation && (
+          <EtapeDepot
+            erreur={erreur}
+            surFichier={traiterFichier}
+            saisirALaMain={() => {
+              setExtrait(null);
+              setLecture(null);
+              setForm(FORMULAIRE_VIDE);
+              allerA("verification");
+            }}
+          />
+        )}
 
-      {etape === "verification" && (
-        <EtapeVerification
-          form={form}
-          setForm={setForm}
-          extrait={extrait}
-          lecture={lecture}
-          regionCertaine={regionCertaine}
-          erreur={erreur}
-          retour={() => allerA("depot")}
-          suite={() => {
-            setHistorique([]);
-            setReponses({});
-            allerA("questions");
-          }}
-        />
-      )}
+        {etape === "lecture" && <EtapeLecture progression={progression} />}
 
-      {etape === "questions" && (
-        <EtapeQuestions
-          question={restantes[0] ?? null}
-          rang={historique.length + 1}
-          restantes={restantes.length}
-          enAnalyse={enAnalyse}
-          erreur={erreur}
-          repondre={repondre}
-          revenir={revenir}
-          reessayer={() => {
-            setErreur(null);
-            lancerAnalyse(faits);
-          }}
-        />
-      )}
+        {etape === "verification" && (
+          <EtapeVerification
+            form={form}
+            setForm={setForm}
+            extrait={extrait}
+            lecture={lecture}
+            regionCertaine={regionCertaine}
+            erreur={erreur}
+            retour={() => allerA("depot")}
+            suite={() => {
+              setHistorique([]);
+              setReponses({});
+              allerA("questions");
+            }}
+          />
+        )}
 
-      {etape === "verdict" && analyse && (
-        <EtapeVerdict
-          analyse={analyse}
-          form={form}
-          mode={mode}
-          erreur={erreur}
-          quotaAtteint={quotaAtteint}
-          enCreation={enCreation}
-          creer={creer}
-          modifier={() => allerA("verification")}
-        />
-      )}
-      {etape === "verdict" && !analyse && enAnalyse && <Patience texte="Le moteur reprend votre analyse…" />}
-      {etape === "verdict" && !analyse && !enAnalyse && (
-        <div className="animate-rise">
-          <Erreur texte={erreur ?? "L'analyse n'a pas pu reprendre."} />
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Btn onClick={() => lancerAnalyse(faits)}>Relancer l&apos;analyse</Btn>
-            <Btn variant="ghost" onClick={() => allerA("verification")}>
-              Revoir les informations
-            </Btn>
+        {etape === "questions" && (
+          <EtapeQuestions
+            question={restantes[0] ?? null}
+            rang={historique.length + 1}
+            restantes={restantes.length}
+            enAnalyse={enAnalyse}
+            erreur={erreur}
+            repondre={repondre}
+            revenir={revenir}
+            reessayer={() => {
+              setErreur(null);
+              lancerAnalyse(faits);
+            }}
+          />
+        )}
+
+        {etape === "verdict" && analyse && (
+          <EtapeVerdict
+            analyse={analyse}
+            form={form}
+            mode={mode}
+            erreur={erreur}
+            quotaAtteint={quotaAtteint}
+            enCreation={enCreation}
+            creer={creer}
+            modifier={() => allerA("verification")}
+          />
+        )}
+        {etape === "verdict" && !analyse && (enAnalyse || enCreation) && (
+          <Patience texte={enCreation ? "Création de votre dossier et de votre lettre…" : "Le moteur reprend votre analyse…"} />
+        )}
+        {etape === "verdict" && !analyse && !enAnalyse && !enCreation && (
+          <div className="animate-rise">
+            <Erreur texte={erreur ?? "L'analyse n'a pas pu reprendre."} />
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Btn onClick={() => lancerAnalyse(faits)}>Relancer l&apos;analyse</Btn>
+              <Btn variant="ghost" onClick={() => allerA("verification")}>
+                Revoir les informations
+              </Btn>
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </NiveauTitre.Provider>
   );
 }
 
@@ -392,9 +429,9 @@ function EtapeDepot({
 
   return (
     <div className="animate-rise">
-      <h1 className="font-display text-[1.9rem] font-extrabold leading-tight text-navy-900 sm:text-4xl">
+      <Titre className="font-display text-[1.9rem] font-extrabold leading-tight text-navy-900 sm:text-4xl">
         Montrez-nous votre courrier
-      </h1>
+      </Titre>
       <p className="mt-2 text-[1.05rem] text-ink-soft">
         Une photo suffit. Le moteur lit les dates, le montant, la plaque — vous n&apos;avez rien à retaper.
       </p>
@@ -636,9 +673,9 @@ function EtapeVerification({
 
   return (
     <div className="animate-rise">
-      <h1 className="font-display text-[1.9rem] font-extrabold leading-tight text-navy-900 sm:text-4xl">
+      <Titre className="font-display text-[1.9rem] font-extrabold leading-tight text-navy-900 sm:text-4xl">
         {extrait ? "Voici ce que nous avons lu" : "Les informations du courrier"}
-      </h1>
+      </Titre>
       <p className="mt-2 text-[1.05rem] text-ink-soft">
         {!extrait
           ? "Recopiez ce qui figure sur le courrier. Le reste se fera tout seul."
@@ -756,7 +793,7 @@ function EtapeVerification({
             className="flex w-full items-center justify-between rounded-xl bg-paper px-4 py-3 text-sm font-semibold text-navy-900"
           >
             Heure, rue, zone, organisme, paiement
-            <IconeChevron className={`h-4 w-4 transition ${details ? "rotate-90" : ""}`} />
+            <IconeChevron className={`h-4 w-4 transition ${details ? "rotate-180" : ""}`} />
           </button>
           {details && (
             <div className="grid gap-4 sm:grid-cols-2">
@@ -844,12 +881,12 @@ function EtapeQuestions({
         Question {rang}
         {restantes > 1 && <span className="text-ink-faint"> · encore {restantes - 1} au plus</span>}
       </p>
-      <h1 className="mt-2 font-display text-[1.7rem] font-extrabold leading-tight text-navy-900 sm:text-[2.1rem]">
+      <Titre className="mt-2 font-display text-[1.7rem] font-extrabold leading-tight text-navy-900 sm:text-[2.1rem]">
         {question.intitule}
-      </h1>
+      </Titre>
       <p className="mt-2 text-[0.95rem] text-ink-soft">{question.pourquoi}</p>
 
-      <div className="mt-6 grid gap-3">
+      <div className="mt-6 grid grid-cols-1 gap-3">
         {question.options.map((o) => (
           <button
             key={o.id}
@@ -918,9 +955,9 @@ function EtapeVerdict({
             <IconeCerveau className="h-5 w-5 text-white [--icone-accent:transparent]" />
             L&apos;avis du moteur
           </p>
-          <h1 className="mt-3 font-display text-[2rem] font-extrabold leading-tight sm:text-[2.6rem]">
+          <Titre className="mt-3 font-display text-[2rem] font-extrabold leading-tight sm:text-[2.6rem]">
             {analyse.strategie.titre}
-          </h1>
+          </Titre>
           <p className="mt-3 max-w-xl leading-relaxed text-navy-100">{analyse.strategie.explication}</p>
 
           <div className="mt-6 grid gap-5 sm:grid-cols-[auto_1fr] sm:items-center">

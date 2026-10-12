@@ -31,6 +31,7 @@ const TON_STATUT: Record<string, TonPastille> = {
 };
 
 export function PastilleStatut({ statut }: { statut: string }) {
+  if (!statut) return null;
   const s = STATUTS[statut] ?? { label: statut, ton: "neutre" as const };
   return <Pastille ton={TON_STATUT[s.ton]}>{s.label}</Pastille>;
 }
@@ -94,7 +95,7 @@ export function CompteARebours({
 
   const chiffre = jours === null ? "?" : jours < 0 ? "!" : String(jours);
   const legende =
-    jours === null ? "date à vérifier" : jours < 0 ? "dépassé" : jours === 0 ? "aujourd'hui" : jours === 1 ? "jour" : "jours";
+    jours === null ? "à vérifier" : jours < 0 ? "dépassé" : jours === 0 ? "aujourd'hui" : jours === 1 ? "jour" : "jours";
 
   return (
     <div className="relative shrink-0" style={{ width: dim, height: dim }} role="img" aria-label={jours === null ? "Délai inconnu" : jours < 0 ? "Délai dépassé" : `${jours} jours restants`}>
@@ -118,7 +119,9 @@ export function CompteARebours({
         >
           {chiffre}
         </span>
-        <span className={`mt-1 text-[10px] font-semibold uppercase tracking-wide ${surFonce ? "text-navy-100" : "text-ink-soft"}`}>
+        <span
+          className={`mt-1 max-w-[80%] text-center text-[10px] font-semibold uppercase leading-tight tracking-wide ${surFonce ? "text-navy-100" : "text-ink-soft"}`}
+        >
           {legende}
         </span>
       </div>
@@ -182,7 +185,7 @@ export function FriseProcedure({ stade, surFonce = false }: { stade: string; sur
               }`}
             />
             <span
-              className={`mt-1.5 block truncate text-[10px] sm:text-[11px] ${
+              className={`mt-1.5 block text-[10px] leading-tight sm:text-[11px] ${
                 ici ? `font-bold ${surFonce ? "text-white" : "text-navy-900"}` : surFonce ? "text-navy-200" : "text-ink-faint"
               }`}
             >
@@ -212,7 +215,7 @@ export function CarteDossier({ dossier, action }: { dossier: Dossier; action: Pr
   return (
     <Link
       href={`/tableau-de-bord/${dossier.id}`}
-      className="group relative flex overflow-hidden rounded-[var(--radius-carte)] border border-line/80 bg-card shadow-carte transition hover:-translate-y-0.5 hover:shadow-flotte"
+      className="group relative flex min-w-0 overflow-hidden rounded-[var(--radius-carte)] border border-line/80 bg-card shadow-carte transition hover:-translate-y-0.5 hover:shadow-flotte"
     >
       <span className={`w-1.5 shrink-0 ${bandeau}`} aria-hidden="true" />
       <div className="min-w-0 flex-1 p-4 sm:p-5">

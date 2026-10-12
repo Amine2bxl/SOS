@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { PageHead, Card, Field, TextInput, TextArea, LinkBtn, Check } from "@/components/ui";
+import { PageHead, Card, Field, TextInput, TextArea, LinkBtn } from "@/components/ui";
 import { MailIcon } from "@/components/Logo";
 import { WhatsAppIcon } from "@/components/Contact";
 import { ASSO } from "@/lib/data";
@@ -38,11 +38,11 @@ export default function ContactPage() {
   }, [nom, message]);
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
+    <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
       <PageHead
         kicker="Contact"
         title="Parlons de votre dossier"
-        intro="Un appel ou un e-mail suffit. Nous sommes une petite association : c'est nous qui vous répondons, et l'appel ne vous coûte rien."
+        intro="Un message suffit. Nous sommes une petite association : ce sont nos bénévoles qui vous répondent, par écrit — c'est le plus sûr pour garder une trace de votre dossier."
       />
 
       {/* CONTACT DIRECT — WhatsApp et e-mail, jamais d'appel direct. */}
@@ -51,7 +51,7 @@ export default function ContactPage() {
           href={LIEN_WHATSAPP}
           target="_blank"
           rel="noopener noreferrer"
-          className="group rounded-xl border-2 border-[#25d366]/40 bg-[#25d366]/10 p-6 text-center transition hover:bg-[#25d366]/20"
+          className="group rounded-[var(--radius-carte)] border-2 border-[#25d366]/40 bg-[#25d366]/10 p-6 text-center transition hover:bg-[#25d366]/20"
         >
           <WhatsAppIcon className="mx-auto h-7 w-7 text-[#1da851]" />
           <p className="mt-3 font-display text-lg font-bold text-navy-900">Écrivez-nous sur WhatsApp</p>
@@ -61,7 +61,7 @@ export default function ContactPage() {
 
         <a
           href={`mailto:${ASSO.email}`}
-          className="group rounded-xl border border-line bg-card p-6 text-center shadow-sm transition hover:border-navy-600/50"
+          className="group rounded-[var(--radius-carte)] border border-line/80 bg-card p-6 text-center shadow-carte transition hover:border-navy-200"
         >
           <MailIcon className="mx-auto h-7 w-7 text-navy-700" />
           <p className="mt-3 font-display text-lg font-bold text-navy-900">Écrivez-nous</p>
@@ -79,8 +79,8 @@ export default function ContactPage() {
         <Card title="Ce qu'il faut nous préparer" subtitle="Avec ces éléments, nous pouvons vous aider tout de suite.">
           <ul className="space-y-2.5">
             {A_PREPARER.map((x) => (
-              <li key={x} className="flex gap-2.5 text-sm text-ink">
-                <Check className="mt-0.5 h-4.5 w-4.5 shrink-0 text-ok-600" />
+              <li key={x} className="flex gap-3 text-sm text-ink">
+                <span className="mt-2 h-1 w-3.5 shrink-0 rounded-full bg-gold-400" aria-hidden="true" />
                 {x}
               </li>
             ))}
@@ -118,9 +118,9 @@ export default function ContactPage() {
       {/* L'ASSOCIATION */}
       <Card title="L'association" className="mt-6">
         <p className="text-sm leading-relaxed text-ink-soft">
-          {ASSO.nom} est une association sans but lucratif bruxelloise, créée le {ASSO.constitution},
-          qui aide les habitants à se défendre seuls face à une redevance de stationnement. Identité
-          ci-dessous ; notre rôle exact est décrit dans les mentions légales.
+          {ASSO.nom} est une association sans but lucratif, créée le {ASSO.constitution} à Bruxelles,
+          qui aide les automobilistes de toute la Belgique à se défendre face à une redevance de
+          stationnement. Identité ci-dessous ; notre rôle exact est décrit dans les mentions légales.
         </p>
 
         <dl className="mt-5 grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
@@ -160,9 +160,9 @@ export default function ContactPage() {
       {/* DONNÉES PERSONNELLES */}
       <Card title="Vos données personnelles" className="mt-6">
         <p className="text-sm leading-relaxed text-ink-soft">
-          L&apos;outil de contestation ne garde rien : ce que vous y saisissez reste dans votre
-          navigateur et disparaît quand vous fermez la page. Si vous créez un compte, vos dossiers
-          sont conservés pour vous seul, et vous pouvez les supprimer quand vous voulez.
+          Votre courrier est lu dans votre navigateur : la photo ou le PDF n&apos;est envoyé nulle part.
+          Si vous créez un compte, vos dossiers sont conservés pour vous seul, et vous pouvez tout
+          supprimer vous-même, à tout moment, depuis votre compte.
         </p>
         <p className="mt-3 text-sm leading-relaxed text-ink-soft">
           Si vous nous écrivez, nous gardons votre message le temps de vous accompagner. Demandez sa
@@ -180,8 +180,8 @@ export default function ContactPage() {
       </Card>
 
       <div className="mt-8 text-center">
-        <LinkBtn href="/inscription" variant="secondary">
-          Préparer ma lettre de contestation →
+        <LinkBtn href="/#analyser" variant="gold">
+          Analyser mon courrier
         </LinkBtn>
       </div>
     </div>

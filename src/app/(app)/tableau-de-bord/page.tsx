@@ -73,7 +73,7 @@ export default async function Accueil() {
       ))}
 
       <header className="animate-rise">
-        <p className="text-sm font-medium capitalize text-ink-soft">{aujourdhui}</p>
+        <p className="text-sm font-medium text-ink-soft first-letter:uppercase">{aujourdhui}</p>
         <h1 className="mt-1 font-display text-[2rem] font-extrabold leading-tight text-navy-900 sm:text-4xl">
           {prenom ? `Bonjour ${prenom}` : "Bonjour"}
         </h1>
@@ -108,7 +108,7 @@ export default async function Accueil() {
                 </Link>
               }
             >
-              <ul className="grid gap-3">
+              <ul className="grid grid-cols-1 gap-3">
                 {autres.slice(0, 3).map((s) => (
                   <li key={s.dossier.id}>
                     <CarteDossier dossier={s.dossier} action={s.action} />
@@ -162,7 +162,9 @@ export default async function Accueil() {
                 <IconeSceau className="h-7 w-7" />
               </span>
               <div>
-                <h2 className="font-display text-lg font-bold text-navy-900">Membre {plan.nom}</h2>
+                <h2 className="font-display text-lg font-bold text-navy-900">
+                  {plan.id === "membre" ? "Vous êtes membre" : `Membre — formule ${plan.nom}`}
+                </h2>
                 <p className="text-sm text-ink-soft">Dossiers illimités. Merci de soutenir l&apos;association.</p>
               </div>
             </div>
@@ -229,7 +231,7 @@ function CartePriorite({ dossier, action }: { dossier: Dossier; action: Prochain
             </LinkBtn>
           </div>
         </div>
-        {action.ton !== "neutre" && (
+        {action.jours !== null && (
           <div className="hidden sm:block">
             <CompteARebours jours={action.jours} taille="lg" surFonce />
           </div>

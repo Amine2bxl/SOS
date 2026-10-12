@@ -49,7 +49,7 @@ export default async function MonCompte() {
             </span>
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-gold-400">Votre formule</p>
-              <p className="font-display text-xl font-bold">{plan.id === "gratuit" ? "Découverte" : `Membre ${plan.nom}`}</p>
+              <p className="font-display text-xl font-bold">{plan.id === "gratuit" ? "Découverte" : `Formule ${plan.nom}`}</p>
               <p className="text-sm text-navy-100">
                 {plan.id !== "gratuit"
                   ? "Dossiers illimités. Merci de soutenir l'association."

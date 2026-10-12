@@ -115,10 +115,15 @@ export default async function FicheDossier({
               {dossier.region ? ` · ${NOMS_REGION[dossier.region]}` : ""}
             </p>
           </div>
-          <div className="shrink-0 text-right">
+          <div className="hidden shrink-0 text-right sm:block">
             <p className="font-display text-2xl font-extrabold text-navy-900">{formatMontant(dossier.montant)}</p>
             {dossier.plaque && <Plaque valeur={dossier.plaque} className="mt-1" />}
           </div>
+        </div>
+        {/* Sur téléphone, le montant et la plaque passent sous le titre : le titre garde toute la largeur. */}
+        <div className="-mt-1 flex items-center justify-between gap-3 px-5 pb-4 sm:hidden">
+          <p className="font-display text-2xl font-extrabold text-navy-900">{formatMontant(dossier.montant)}</p>
+          {dossier.plaque && <Plaque valeur={dossier.plaque} />}
         </div>
         <div className="border-t border-line px-5 py-4 sm:px-6">
           <FriseProcedure stade={dossier.type_document} />
@@ -134,7 +139,7 @@ export default async function FicheDossier({
       >
         {!termine && <div className="motif-points absolute inset-0" aria-hidden="true" />}
         <div className="relative flex items-center gap-5">
-          {!termine && action.ton !== "neutre" && <CompteARebours jours={action.jours} surFonce />}
+          {!termine && action.jours !== null && <CompteARebours jours={action.jours} surFonce />}
           <div className="min-w-0 flex-1">
             <p className={`text-xs font-bold uppercase tracking-[0.16em] ${termine ? "text-ok-700" : "text-gold-400"}`}>
               Prochaine étape

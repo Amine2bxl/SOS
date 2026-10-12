@@ -135,7 +135,7 @@ export function AlerteReglementaire({ alerte }: { alerte: Alerte }) {
               rel="noopener noreferrer"
               className="font-semibold text-navy-700 underline"
             >
-              Lire la source officielle ↗
+              Lire la source officielle
             </a>
           </p>
         )}
@@ -167,7 +167,7 @@ export function AlerteReglementaire({ alerte }: { alerte: Alerte }) {
             rel="noopener noreferrer"
             className="text-sm font-semibold text-navy-700 underline"
           >
-            Source officielle ↗
+            Source officielle
           </a>
         )}
       </div>
