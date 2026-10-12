@@ -923,3 +923,13 @@ export function Icone({ nom, ...p }: PropsIcone & { nom: NomIcone }) {
   const Composant = ICONES[nom];
   return <Composant {...p} />;
 }
+
+/**
+ * Icône choisie par une donnée venue d'ailleurs — le moteur, une base — dont
+ * le nom n'est pas vérifié par le compilateur. Un nom inconnu retombe sur le
+ * ticket plutôt que de casser l'écran.
+ */
+export function IconeLibre({ nom, ...p }: PropsIcone & { nom: string }) {
+  const Composant = (ICONES as Record<string, (p: PropsIcone) => React.ReactElement>)[nom] ?? IconeTicket;
+  return <Composant {...p} />;
+}

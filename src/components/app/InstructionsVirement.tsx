@@ -11,7 +11,7 @@ import { CopierTexte } from "@/components/CopierTexte";
  *
  * La **communication structurée** est l'élément central de l'écran, et pas une
  * ligne de bas de page. C'est elle, et elle seule, qui relie le virement à la
- * personne : sans elle, l'association voit arriver 60 € d'un nom qui ne
+ * personne : sans elle, l'association voit arriver 70 € d'un nom qui ne
  * correspond à aucun compte — parce que c'est le conjoint ou l'employeur qui a
  * payé — et l'accès reste bloqué pendant des jours. Le bouton de copie n'est
  * pas une coquetterie : une communication structurée mal recopiée est refusée

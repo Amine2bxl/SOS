@@ -2,17 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useTransition } from "react";
-import { Logo } from "@/components/Logo";
-import { BoutonContact } from "@/components/Contact";
-import { IconeModule } from "@/components/app/IconeModule";
-import {
-  MODULES_COMPTE,
-  MODULES_DOSSIERS,
-  MODULES_OUTILS,
-  moduleActif,
-  type Module,
-} from "@/components/app/modules";
+import { useTransition } from "react";
+import { Logo, MarqueSos } from "@/components/Logo";
+import { ICONES, IconeScanDoc, IconeSortie } from "@/components/icones";
+import { MODULES, moduleActif, type Module } from "@/components/app/modules";
 import { seDeconnecter } from "@/lib/auth-actions";
 
 export type InfosMembre = {
@@ -26,284 +19,186 @@ export type InfosMembre = {
   estGratuit: boolean;
 };
 
-function LienModule({
-  module,
-  actif,
-  onNavigue,
-}: {
-  module: Module;
-  actif: boolean;
-  onNavigue?: () => void;
-}) {
+/**
+ * La coquille de l'espace membre.
+ *
+ * Sur ordinateur, une barre latérale claire : la marque, le bouton qui compte
+ * (« Nouveau courrier »), quatre destinations, et l'état de l'adhésion.
+ * Sur téléphone, une barre d'onglets en bas d'écran, là où tombe le pouce,
+ * avec le scan au centre — c'est le geste qu'on vient faire.
+ */
+export function CoquilleApp({ membre, children }: { membre: InfosMembre; children: React.ReactNode }) {
+  const chemin = usePathname();
+  const actif = moduleActif(chemin);
+  const [deconnexion, demarrer] = useTransition();
+  const principal = MODULES.find((m) => m.principal)!;
+  const destinations = MODULES.filter((m) => !m.principal);
+
+  const sortir = () => demarrer(() => seDeconnecter());
+
+  return (
+    <div className="flex min-h-screen flex-1 bg-paper">
+      {/* ------------------------------------------------ barre latérale */}
+      <aside className="sticky top-0 hidden h-screen w-[264px] shrink-0 flex-col border-r border-line bg-card lg:flex">
+        <div className="px-5 pb-4 pt-6">
+          <Link href="/tableau-de-bord" aria-label="Accueil de mon espace">
+            <Logo surClair />
+          </Link>
+        </div>
+
+        <div className="px-4">
+          <Link
+            href={principal.href}
+            className="flex h-12 items-center justify-center gap-2.5 rounded-full bg-gold-400 font-bold text-navy-950 shadow-bouton transition hover:bg-gold-300 active:scale-[0.98]"
+          >
+            <IconeScanDoc className="h-5 w-5 [--icone-accent:transparent]" />
+            {principal.titre}
+          </Link>
+        </div>
+
+        <nav aria-label="Navigation de l'espace membre" className="mt-6 flex-1 space-y-1 px-3">
+          {destinations.map((m) => (
+            <LienLateral key={m.href} module={m} actif={actif?.href === m.href} />
+          ))}
+        </nav>
+
+        <div className="space-y-3 p-4">
+          <EtatAdhesion membre={membre} />
+          <div className="flex items-center gap-3 rounded-2xl px-2 py-1.5">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-navy-900 font-display text-sm font-bold text-gold-400">
+              {membre.initiale}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-semibold text-navy-900">
+                {[membre.prenom, membre.nom].filter(Boolean).join(" ") || "Mon compte"}
+              </span>
+              <span className="block truncate text-xs text-ink-soft">{membre.email}</span>
+            </span>
+            <button
+              type="button"
+              onClick={sortir}
+              disabled={deconnexion}
+              aria-label="Se déconnecter"
+              title="Se déconnecter"
+              className="rounded-full p-2 text-ink-soft transition hover:bg-navy-50 hover:text-navy-900"
+            >
+              <IconeSortie className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* ---------------------------------------- barre du haut (téléphone) */}
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-line bg-card/95 px-4 py-2.5 backdrop-blur lg:hidden">
+          <Link href="/tableau-de-bord" aria-label="Accueil de mon espace" className="flex items-center gap-2">
+            <MarqueSos className="h-8 w-8" />
+            <span className="font-display text-base font-bold text-navy-900">
+              {actif?.titre ?? "Mon espace"}
+            </span>
+          </Link>
+          <Link
+            href="/tableau-de-bord/compte"
+            aria-label="Mon compte"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-navy-900 font-display text-sm font-bold text-gold-400"
+          >
+            {membre.initiale}
+          </Link>
+        </header>
+
+        <main id="contenu" className="flex-1 pb-28 lg:pb-12">
+          {children}
+        </main>
+
+        {/* ------------------------------------- barre d'onglets (téléphone) */}
+        <nav
+          aria-label="Navigation de l'espace membre"
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+        >
+          <ul className="mx-auto grid max-w-lg grid-cols-5 items-end px-2">
+            {MODULES.map((m) => (
+              <li key={m.href} className="flex justify-center">
+                <OngletMobile module={m} actif={actif?.href === m.href} />
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+    </div>
+  );
+}
+
+function LienLateral({ module, actif }: { module: Module; actif: boolean }) {
+  const Icone = ICONES[module.icone];
   return (
     <Link
       href={module.href}
-      onClick={onNavigue}
       aria-current={actif ? "page" : undefined}
       title={module.phrase}
-      className={`group flex items-start gap-3 rounded-lg px-3 py-2.5 transition ${
-        actif
-          ? "bg-navy-800 text-white shadow-inner"
-          : "text-navy-100 hover:bg-navy-800/60 hover:text-white"
+      className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 text-[0.95rem] font-semibold transition ${
+        actif ? "bg-navy-900 text-white" : "text-navy-800 hover:bg-navy-50"
       }`}
     >
-      <span
-        className={`mt-0.5 shrink-0 ${actif ? "text-gold-400" : "text-navy-100/60 group-hover:text-gold-300"}`}
-      >
-        <IconeModule nom={module.icone} className="h-5 w-5" />
-      </span>
-      <span className="min-w-0">
-        <span className="block text-sm font-semibold leading-tight">{module.titre}</span>
-        <span className="mt-0.5 block text-[11.5px] leading-snug text-navy-100/60">
-          {module.phrase}
-        </span>
-      </span>
+      <Icone className={`h-6 w-6 ${actif ? "text-white" : "text-navy-900"}`} />
+      {module.titre}
     </Link>
   );
 }
 
-function GroupeModules({
-  titre,
-  modules,
-  chemin,
-  onNavigue,
-}: {
-  titre: string;
-  modules: Module[];
-  chemin: string;
-  onNavigue?: () => void;
-}) {
-  const actif = moduleActif(chemin);
-  return (
-    <div>
-      <p className="px-3 pb-1.5 text-[10.5px] font-bold uppercase tracking-[0.16em] text-navy-100/45">
-        {titre}
-      </p>
-      <div className="grid gap-0.5">
-        {modules.map((m) => (
-          <LienModule key={m.href} module={m} actif={actif?.href === m.href} onNavigue={onNavigue} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/** Contenu de la barre latérale, partagé entre le bureau et le tiroir mobile. */
-function ContenuLateral({
-  membre,
-  chemin,
-  onNavigue,
-}: {
-  membre: InfosMembre;
-  chemin: string;
-  onNavigue?: () => void;
-}) {
-  const [enCours, demarrer] = useTransition();
-
-  return (
-    <div className="flex h-full flex-col">
-      <div className="border-b border-navy-800 px-4 py-4">
-        <Link href="/tableau-de-bord" onClick={onNavigue} aria-label="Mon espace SOS Citizens">
-          <Logo />
-        </Link>
-      </div>
-
-      <nav aria-label="Modules de mon espace" className="flex-1 space-y-5 overflow-y-auto px-2 py-4">
-        <GroupeModules titre="Mes dossiers" modules={MODULES_DOSSIERS} chemin={chemin} onNavigue={onNavigue} />
-        <GroupeModules titre="Mes outils" modules={MODULES_OUTILS} chemin={chemin} onNavigue={onNavigue} />
-        <GroupeModules titre="Mon compte" modules={MODULES_COMPTE} chemin={chemin} onNavigue={onNavigue} />
-      </nav>
-
-      <div className="space-y-2 border-t border-navy-800 px-3 py-3">
-        {membre.estGratuit && (
-          <Link
-            href="/tableau-de-bord/abonnement"
-            onClick={onNavigue}
-            className="block rounded-lg bg-gold-400/10 p-3 ring-1 ring-gold-400/30 transition hover:bg-gold-400/20"
-          >
-            <p className="text-sm font-bold text-gold-300">Devenir membre</p>
-            <p className="mt-0.5 text-[11.5px] leading-snug text-navy-100/70">
-              Contestations illimitées et relecture de vos lettres par l&apos;association.
-            </p>
-          </Link>
-        )}
-        <Link
-          href="/"
-          onClick={onNavigue}
-          className="block rounded-lg px-3 py-2 text-[12.5px] font-medium text-navy-100/70 transition hover:bg-navy-800/60 hover:text-white"
-        >
-          ← Revenir au site public
-        </Link>
-        <button
-          type="button"
-          disabled={enCours}
-          onClick={() => demarrer(async () => void (await seDeconnecter()))}
-          className="w-full rounded-lg px-3 py-2 text-left text-[12.5px] font-semibold text-danger-100/90 transition hover:bg-danger-700/40 disabled:opacity-50"
-        >
-          {enCours ? "Déconnexion…" : "Se déconnecter"}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/** Menu du compte, à droite de la barre supérieure. */
-function MenuMembre({ membre }: { membre: InfosMembre }) {
-  const [ouvert, setOuvert] = useState(false);
-  const [enCours, demarrer] = useTransition();
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setOuvert(!ouvert)}
-        aria-haspopup="menu"
-        aria-expanded={ouvert}
-        aria-label="Menu de mon compte"
-        className="flex items-center gap-2 rounded-full border border-line bg-white py-1 pl-1 pr-2.5 transition hover:border-navy-600/40"
+function OngletMobile({ module, actif }: { module: Module; actif: boolean }) {
+  const Icone = ICONES[module.icone];
+  if (module.principal) {
+    return (
+      <Link
+        href={module.href}
+        aria-current={actif ? "page" : undefined}
+        className="-mt-5 flex flex-col items-center gap-1 pb-2"
       >
-        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-navy-900 text-xs font-black text-gold-300">
-          {membre.initiale}
+        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-gold-400 text-navy-950 shadow-flotte ring-4 ring-card transition active:scale-95">
+          <Icone className="h-7 w-7 [--icone-accent:transparent]" />
         </span>
-        <span className="hidden max-w-28 truncate text-sm font-semibold text-navy-900 sm:inline">
-          {membre.prenom || "Mon compte"}
-        </span>
-      </button>
-
-      {ouvert && (
-        <>
-          <div className="fixed inset-0 z-40" aria-hidden="true" onClick={() => setOuvert(false)} />
-          <div
-            role="menu"
-            className="animate-rise absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-xl border border-line bg-card shadow-2xl"
-          >
-            <div className="border-b border-line-soft bg-navy-50/60 px-4 py-3">
-              <p className="truncate font-display text-sm font-bold text-navy-900">
-                {[membre.prenom, membre.nom].filter(Boolean).join(" ") || "Mon compte"}
-              </p>
-              <p className="mt-0.5 truncate text-xs text-ink-soft">{membre.email ?? ""}</p>
-            </div>
-            <div className="p-1.5">
-              {MODULES_COMPTE.map((m) => (
-                <Link
-                  key={m.href}
-                  href={m.href}
-                  role="menuitem"
-                  onClick={() => setOuvert(false)}
-                  className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-navy-700 transition hover:bg-navy-50"
-                >
-                  {m.titre}
-                </Link>
-              ))}
-            </div>
-            <div className="border-t border-line-soft p-1.5">
-              <button
-                type="button"
-                role="menuitem"
-                disabled={enCours}
-                onClick={() => demarrer(async () => void (await seDeconnecter()))}
-                className="w-full rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-danger-700 transition hover:bg-danger-100 disabled:opacity-50"
-              >
-                {enCours ? "…" : "Se déconnecter"}
-              </button>
-            </div>
-          </div>
-        </>
-      )}
-    </div>
+        <span className="text-[11px] font-bold text-navy-900">{module.court}</span>
+      </Link>
+    );
+  }
+  return (
+    <Link
+      href={module.href}
+      aria-current={actif ? "page" : undefined}
+      className={`flex flex-col items-center gap-1 px-1 pb-2 pt-2.5 ${actif ? "text-navy-900" : "text-ink-soft"}`}
+    >
+      <Icone className={`h-6 w-6 ${actif ? "" : "[--icone-accent:transparent] opacity-80"}`} />
+      <span className={`text-[11px] ${actif ? "font-bold" : "font-medium"}`}>{module.court}</span>
+    </Link>
   );
 }
 
-/**
- * Coquille de l'espace membre.
- *
- * C'est ici que le site devient une application : barre latérale persistante
- * qui nomme et explique chaque module, barre supérieure qui rappelle où l'on
- * est et sous quelle formule, aucun contenu marketing. Le site public a sa
- * propre coquille — on ne mélange plus les deux.
- */
-export function CoquilleApp({
-  membre,
-  children,
-}: {
-  membre: InfosMembre;
-  children: React.ReactNode;
-}) {
-  const chemin = usePathname();
-  const [tiroir, setTiroir] = useState(false);
-  const actif = moduleActif(chemin);
-
-  return (
-    <div className="flex min-h-screen flex-1 bg-paper">
-      {/* Barre latérale — bureau */}
-      <aside className="sticky top-0 hidden h-screen w-72 shrink-0 border-r border-navy-800 bg-navy-950 lg:block print:hidden">
-        <ContenuLateral membre={membre} chemin={chemin} />
-      </aside>
-
-      {/* Tiroir — mobile */}
-      {tiroir && (
-        <div className="fixed inset-0 z-50 lg:hidden print:hidden">
-          <div
-            className="absolute inset-0 bg-navy-950/60 backdrop-blur-sm"
-            aria-hidden="true"
-            onClick={() => setTiroir(false)}
-          />
-          <div className="animate-rise absolute inset-y-0 left-0 w-[19rem] max-w-[85%] bg-navy-950 shadow-2xl">
-            <ContenuLateral membre={membre} chemin={chemin} onNavigue={() => setTiroir(false)} />
-          </div>
-        </div>
-      )}
-
-      <div className="flex min-w-0 flex-1 flex-col">
-        {/* Barre supérieure */}
-        <header className="sticky top-0 z-30 border-b border-line bg-card/95 backdrop-blur print:hidden">
-          <div className="flex items-center gap-3 px-3 py-2.5 sm:px-6">
-            <button
-              type="button"
-              onClick={() => setTiroir(true)}
-              aria-label="Ouvrir le menu de mon espace"
-              className="rounded-md border border-line p-2 text-navy-900 lg:hidden"
-            >
-              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M4 7h16M4 12h16M4 17h16" />
-              </svg>
-            </button>
-
-            <div className="min-w-0 flex-1">
-              <p className="text-[10.5px] font-bold uppercase tracking-[0.16em] text-ink-soft">
-                Espace membre
-              </p>
-              <h1 className="truncate font-display text-base font-bold leading-tight text-navy-900 sm:text-lg">
-                {actif?.titre ?? "Mon espace"}
-              </h1>
-            </div>
-
-            <Link
-              href="/tableau-de-bord/abonnement"
-              className={`hidden items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold transition sm:inline-flex ${
-                membre.estGratuit
-                  ? "bg-gold-400 text-navy-950 hover:bg-gold-300"
-                  : "bg-navy-50 text-navy-900 hover:bg-navy-100"
-              }`}
-            >
-              {membre.estGratuit ? "Devenir membre" : membre.planNom}
-              {membre.contestationsRestantes !== null && (
-                <span className="font-medium text-navy-950/70">
-                  {membre.contestationsRestantes} restante
-                  {membre.contestationsRestantes > 1 ? "s" : ""}
-                </span>
-              )}
-            </Link>
-
-            <BoutonContact variante="secondaire" className="hidden px-3 py-2 md:inline-flex" />
-            <MenuMembre membre={membre} />
-          </div>
-        </header>
-
-        <main id="contenu" className="flex-1">
-          {children}
-        </main>
+function EtatAdhesion({ membre }: { membre: InfosMembre }) {
+  if (!membre.estGratuit) {
+    return (
+      <div className="rounded-2xl bg-navy-900 p-4 text-white">
+        <p className="text-xs font-bold uppercase tracking-wider text-gold-400">Membre</p>
+        <p className="mt-1 text-sm text-navy-100">Formule {membre.planNom} — contestations illimitées.</p>
       </div>
+    );
+  }
+  const restantes = membre.contestationsRestantes ?? 0;
+  return (
+    <div className="rounded-2xl border border-gold-300 bg-gold-50 p-4">
+      <p className="text-sm font-bold text-navy-900">
+        {restantes > 0
+          ? `${restantes} contestation${restantes > 1 ? "s" : ""} offerte${restantes > 1 ? "s" : ""}`
+          : "Contestations offertes utilisées"}
+      </p>
+      <p className="mt-1 text-xs leading-relaxed text-ink-soft">
+        Membre : illimité, relecture par l&apos;association, alertes.
+      </p>
+      <Link
+        href="/adherer"
+        className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-navy-900 underline decoration-gold-500 decoration-2 underline-offset-4"
+      >
+        Adhérer — 70 € / an
+      </Link>
     </div>
   );
 }

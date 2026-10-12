@@ -19,25 +19,16 @@ import {
   composerLettre,
   rechercherSavoir,
   type Analyse,
-  type Faits,
   type Identite,
   type Langue,
   type LettreComposee,
-  type Region,
   type ReponseSavoir,
-  type Stade,
   type TypeLettre,
 } from "@/cerveau";
+import { faitsDepuisDossier, nettoyerFaits } from "@/lib/faits";
+import { estUuid } from "@/lib/validation";
+import type { Dossier, Profil } from "@/lib/dossiers-format";
 
-const REGIONS_VALIDES: Region[] = ["bruxelles", "wallonie", "flandre"];
-const STADES_VALIDES: Stade[] = [
-  "notification",
-  "premier_rappel",
-  "deuxieme_rappel",
-  "mise_en_demeure",
-  "contrainte",
-  "courrier_huissier",
-];
 const TYPES_LETTRE: TypeLettre[] = [
   "contestation",
   "relance",
@@ -45,60 +36,12 @@ const TYPES_LETTRE: TypeLettre[] = [
   "demande_preuves",
   "remboursement",
 ];
-const QUESTIONS_VALIDES = [
-  "paiement",
-  "carte",
-  "vehicule",
-  "signalisation",
-  "tentative_paiement",
-  "duree",
-  "courrier_initial",
-  "deja_conteste",
-  "deja_paye",
-  "doublon",
-] as const;
 
 const texte = (v: unknown, max: number): string | null =>
   typeof v === "string" && v.trim() ? v.trim().slice(0, max) : null;
 
 const dateIso = (v: unknown): string | null =>
   typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null;
-
-/** Ramène des faits venus du navigateur à ce que le moteur accepte. */
-function nettoyerFaits(brut: unknown): Faits {
-  const f = (brut && typeof brut === "object" ? brut : {}) as Record<string, unknown>;
-  const reponsesBrutes = (f.reponses && typeof f.reponses === "object" ? f.reponses : {}) as Record<string, unknown>;
-
-  const reponses: Faits["reponses"] = {};
-  for (const id of QUESTIONS_VALIDES) {
-    const v = reponsesBrutes[id];
-    if (typeof v === "string" && /^[a-z_]{1,24}$/.test(v)) reponses[id] = v;
-  }
-
-  const montant =
-    typeof f.montant === "number" && Number.isFinite(f.montant) && f.montant >= 0 && f.montant <= 100000
-      ? f.montant
-      : null;
-
-  return {
-    region: REGIONS_VALIDES.includes(f.region as Region) ? (f.region as Region) : null,
-    commune: texte(f.commune, 60),
-    crediteur: texte(f.crediteur, 80),
-    stade: STADES_VALIDES.includes(f.stade as Stade) ? (f.stade as Stade) : "notification",
-    montant,
-    dateConstat: dateIso(f.dateConstat),
-    heureConstat: typeof f.heureConstat === "string" && /^\d{2}:\d{2}$/.test(f.heureConstat) ? f.heureConstat : null,
-    dateEnvoi: dateIso(f.dateEnvoi),
-    dateEcheance: dateIso(f.dateEcheance),
-    plaque: texte(f.plaque, 20),
-    lieu: texte(f.lieu, 120),
-    zone: texte(f.zone, 30),
-    reference: texte(f.reference, 60),
-    communication: texte(f.communication, 30),
-    langueDocument: f.langueDocument === "nl" ? "nl" : f.langueDocument === "fr" ? "fr" : null,
-    reponses,
-  };
-}
 
 /** Adresse IP du visiteur, pour limiter le débit des appels anonymes. */
 async function ipVisiteur(): Promise<string> {
@@ -124,15 +67,19 @@ export async function analyserFaits(faitsBruts: unknown): Promise<ResultatAnalys
 
 export type ResultatLettre = { lettre?: LettreComposee; erreur?: string };
 
-/** Rédaction d'une lettre. Réservée aux membres connectés. */
-export async function redigerLettre(entree: {
+/**
+ * Rédaction d'une lettre pour un dossier. Réservée à son propriétaire.
+ *
+ * Tout est relu sur le serveur — les faits dans le dossier, l'identité dans
+ * le profil — : le navigateur ne dit que quelle lettre il veut, dans quelle
+ * langue, et avec quels arguments.
+ */
+export async function redigerLettreDossier(entree: {
+  dossierId: string;
   type: string;
   langue: string;
-  faits: unknown;
-  identite: Partial<Identite>;
   moyens?: string[];
   explication?: string;
-  datePremiereContestation?: string | null;
   ibanRemboursement?: string | null;
 }): Promise<ResultatLettre> {
   const supabase = await creerClientServeur();
@@ -141,33 +88,41 @@ export async function redigerLettre(entree: {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { erreur: "Connectez-vous pour obtenir votre lettre." };
+  if (!estUuid(entree.dossierId)) return { erreur: "Ce dossier est introuvable." };
 
   if (!(await consommerJeton("lettre", user.id))) {
     return { erreur: messageQuotaAtteint("lettre") };
   }
 
+  const [{ data: dossier }, { data: profil }] = await Promise.all([
+    supabase.from("dossiers").select("*").eq("id", entree.dossierId).eq("user_id", user.id).maybeSingle(),
+    supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+  ]);
+  if (!dossier) return { erreur: "Ce dossier est introuvable." };
+
+  const p = (profil ?? {}) as Partial<Profil>;
+  const d = dossier as Dossier;
   const type = TYPES_LETTRE.includes(entree.type as TypeLettre) ? (entree.type as TypeLettre) : "contestation";
   const langue: Langue = entree.langue === "nl" ? "nl" : "fr";
-  const i = entree.identite ?? {};
 
   const lettre = composerLettre({
     type,
     langue,
-    faits: nettoyerFaits(entree.faits),
+    faits: faitsDepuisDossier(d),
     identite: {
-      prenom: texte(i.prenom, 60) ?? "",
-      nom: texte(i.nom, 60) ?? "",
-      adresse: texte(i.adresse, 120) ?? "",
-      codePostal: texte(i.codePostal, 10) ?? "",
-      ville: texte(i.ville, 60) ?? "",
-      email: texte(i.email, 120) ?? user.email ?? "",
-      telephone: texte(i.telephone, 30) ?? "",
+      prenom: texte(p.prenom, 60) ?? "",
+      nom: texte(p.nom, 60) ?? "",
+      adresse: texte(p.adresse, 120) ?? "",
+      codePostal: texte(p.code_postal, 10) ?? "",
+      ville: texte(p.commune, 60) ?? "",
+      email: texte(p.email, 120) ?? user.email ?? "",
+      telephone: texte(p.telephone, 30) ?? "",
     },
     moyens: Array.isArray(entree.moyens)
       ? entree.moyens.filter((m): m is string => typeof m === "string").slice(0, 20)
       : undefined,
     explication: texte(entree.explication, 3000) ?? undefined,
-    datePremiereContestation: dateIso(entree.datePremiereContestation),
+    datePremiereContestation: dateIso(d.date_envoi_contestation),
     ibanRemboursement: texte(entree.ibanRemboursement, 40),
   });
 

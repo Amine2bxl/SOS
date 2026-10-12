@@ -1,46 +1,52 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { listerDossiers, lireProfil } from "@/lib/dossiers";
-import { quotaAtteint, planById } from "@/lib/plans";
-import { Card, LinkBtn } from "@/components/ui";
-import { ScannerDocument } from "./ScannerDocument";
+import { quotaAtteint } from "@/lib/plans";
+import { LinkBtn } from "@/components/ui";
+import { AssistantScan } from "@/components/scan/AssistantScan";
+import { IconeSceau } from "@/components/icones";
 
-export const metadata: Metadata = { title: "Nouvelle contestation" };
+export const metadata: Metadata = { title: "Nouveau courrier" };
 export const dynamic = "force-dynamic";
 
-export default async function NouveauDossierPage() {
+export default async function NouveauCourrier() {
   const [dossiers, profil] = await Promise.all([listerDossiers(), lireProfil()]);
 
-  // Le quota est aussi appliqué en base ; ce contrôle sert à l'annoncer avant
-  // que l'utilisateur ne perde du temps à scanner son document.
+  // Le plafond est aussi appliqué en base ; on l'annonce ici, avant que
+  // l'utilisateur ne prenne la peine de scanner son courrier.
   if (quotaAtteint(profil?.plan, dossiers.length)) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-20 sm:px-6">
-        <Card className="border-2 border-gold-400 bg-gold-100/60 text-center">
-          <h1 className="font-display text-2xl font-bold text-navy-900">
-            Vos 2 contestations gratuites sont utilisées
-          </h1>
-          <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-            Vos dossiers restent accessibles et vous continuez à les suivre. L&apos;adhésion ouvre
-            les contestations illimitées.
-          </p>
-          <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-            <LinkBtn href="/tableau-de-bord/abonnement" variant="gold">Voir les formules</LinkBtn>
-            <LinkBtn href="/tableau-de-bord" variant="secondary">Retour au tableau de bord</LinkBtn>
+      <div className="mx-auto max-w-lg px-4 py-12 sm:px-6 lg:py-20">
+        <section className="relative overflow-hidden rounded-[1.75rem] bg-navy-900 p-7 text-center text-white shadow-flotte">
+          <div className="motif-points absolute inset-0" aria-hidden="true" />
+          <div className="relative">
+            <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-white text-navy-900">
+              <IconeSceau className="h-10 w-10" />
+            </span>
+            <h1 className="mt-5 font-display text-2xl font-extrabold">Vos 2 dossiers offerts sont utilisés</h1>
+            <p className="mt-3 text-sm leading-relaxed text-navy-100">
+              Vos dossiers restent ouverts et suivis. Pour en ouvrir un nouveau, devenez membre de
+              l&apos;association : dossiers illimités toute l&apos;année.
+            </p>
+            <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+              <LinkBtn href="/adherer" variant="gold" taille="lg">
+                Adhérer — 70 € / an
+              </LinkBtn>
+              <LinkBtn href="/tableau-de-bord/dossiers" variant="outline" taille="lg">
+                Mes dossiers
+              </LinkBtn>
+            </div>
           </div>
-        </Card>
+        </section>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-      <ScannerDocument
-        formule={planById(profil?.plan).nom}
-        profil={{
-          prenom: profil?.prenom ?? "",
-          nom: profil?.nom ?? "",
-        }}
-      />
+    <div className="px-4 py-6 sm:px-6 lg:py-10">
+      <Suspense>
+        <AssistantScan mode="membre" />
+      </Suspense>
     </div>
   );
 }

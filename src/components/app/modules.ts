@@ -1,96 +1,91 @@
 /**
- * Les modules de l'espace membre.
+ * La navigation de l'espace membre.
  *
- * Une seule source de vérité : la barre latérale, le menu mobile et les cartes
- * du tableau de bord lisent cette liste. Chaque module porte une phrase qui dit
- * ce qu'il fait — c'est ce qui permet de comprendre, sans cliquer, la
- * différence entre « scanner un courrier » et « rédiger une lettre ».
+ * Cinq entrées, pas une de plus. L'ancienne version en comptait sept, dont
+ * trois qui faisaient presque la même chose (« Contester », « Rédiger ma
+ * lettre », « Règles de ma commune »). Tout ce qui concerne un dossier vit
+ * maintenant DANS le dossier : sa lettre, son analyse, son suivi. La
+ * navigation ne sert plus qu'à aller d'un lieu à un autre.
+ *
+ * Une seule source de vérité : la barre latérale, la barre d'onglets mobile
+ * et le titre de page lisent cette liste.
  */
 
 export type Module = {
   href: string;
   titre: string;
-  /** Une phrase, à la deuxième personne, qui dit à quoi sert le module. */
+  /** Titre court, pour la barre d'onglets du téléphone. */
+  court: string;
+  /** Une phrase, à la deuxième personne, qui dit à quoi sert l'entrée. */
   phrase: string;
-  icone: "boussole" | "scan" | "lettre" | "livre" | "carte" | "reglages";
-  /** Autres chemins qui appartiennent à ce module (étapes internes). */
+  icone: "maison" | "dossiers" | "scan-doc" | "bouee" | "personne";
+  /** L'action principale : mise en avant (bouton jaune, onglet central). */
+  principal?: boolean;
+  /** Autres chemins qui appartiennent à cette entrée. */
   alias?: string[];
 };
 
-export const MODULES_DOSSIERS: Module[] = [
-  {
-    href: "/tableau-de-bord/contester",
-    titre: "Contester ma redevance",
-    phrase: "Le chemin guidé, en trois étapes. À tout moment, une seule chose à faire.",
-    icone: "scan",
-    // Le scan est la première étape du chemin : il ne mérite pas sa propre
-    // entrée de menu, mais il doit allumer celle-ci.
-    alias: ["/tableau-de-bord/nouveau"],
-  },
+export const MODULES: Module[] = [
   {
     href: "/tableau-de-bord",
+    titre: "Accueil",
+    court: "Accueil",
+    phrase: "Ce qui demande votre attention aujourd'hui, en un coup d'œil.",
+    icone: "maison",
+  },
+  {
+    href: "/tableau-de-bord/dossiers",
     titre: "Mes dossiers",
-    phrase: "La vue d'ensemble : vos échéances, vos montants en jeu, l'avancement de chacun.",
-    icone: "boussole",
-  },
-];
-
-export const MODULES_OUTILS: Module[] = [
-  {
-    href: "/tableau-de-bord/lettre",
-    titre: "Rédiger ma lettre",
-    phrase: "Votre contestation écrite avec les bons arguments, prête à envoyer.",
-    icone: "lettre",
+    court: "Dossiers",
+    phrase: "Chaque courrier reçu, sa lettre, son échéance et son suivi.",
+    icone: "dossiers",
   },
   {
-    href: "/tableau-de-bord/regles",
-    titre: "Règles de ma commune",
-    phrase: "Zones, tarifs et voie de contestation, commune par commune.",
-    icone: "carte",
+    href: "/tableau-de-bord/nouveau",
+    titre: "Nouveau courrier",
+    court: "Scanner",
+    phrase: "Une photo ou un PDF : le moteur lit tout et prépare votre défense.",
+    icone: "scan-doc",
+    principal: true,
   },
   {
-    href: "/tableau-de-bord/guides",
-    titre: "Guides",
-    phrase: "Décoder votre courrier, ce que coûte chaque étape et les preuves qui comptent.",
-    icone: "livre",
-  },
-];
-
-export const MODULES_COMPTE: Module[] = [
-  {
-    href: "/tableau-de-bord/abonnement",
-    titre: "Mon abonnement",
-    phrase: "Votre formule, votre quota et votre adhésion.",
-    icone: "reglages",
+    href: "/tableau-de-bord/aide",
+    titre: "Aide",
+    court: "Aide",
+    phrase: "Posez votre question : la réponse vient de notre base de savoir.",
+    icone: "bouee",
   },
   {
     href: "/tableau-de-bord/compte",
-    titre: "Mes paramètres",
-    phrase: "Vos coordonnées, votre mot de passe, vos données.",
-    icone: "reglages",
+    titre: "Mon compte",
+    court: "Compte",
+    phrase: "Vos coordonnées, votre adhésion, vos données.",
+    icone: "personne",
+    alias: ["/adherer"],
   },
 ];
 
-export const TOUS_LES_MODULES = [...MODULES_DOSSIERS, ...MODULES_OUTILS, ...MODULES_COMPTE];
-
 /**
- * Module correspondant au chemin courant, pour le titre et l'état actif.
+ * L'entrée correspondant au chemin courant, pour l'état actif et le titre.
  *
- * Le chemin le plus long gagne : `/tableau-de-bord/nouveau` désigne « Scanner
- * un courrier », tandis qu'une fiche de dossier `/tableau-de-bord/<id>` reste
- * rattachée au tableau de bord — on n'est jamais nulle part.
+ * Un alias l'emporte, puis le chemin le plus long : une fiche de dossier
+ * `/tableau-de-bord/<id>` reste rattachée à « Mes dossiers » — on n'est
+ * jamais nulle part.
  */
 export function moduleActif(chemin: string): Module | undefined {
   const correspond = (base: string) => chemin === base || chemin.startsWith(base + "/");
 
-  // Un alias l'emporte sur la correspondance par préfixe : /tableau-de-bord/nouveau
-  // appartient à « Contester », pas à « Mes dossiers ».
-  const parAlias = TOUS_LES_MODULES.find((m) => m.alias?.some(correspond));
+  const parAlias = MODULES.find((m) => m.alias?.some(correspond));
   if (parAlias) return parAlias;
 
-  // Sinon le chemin le plus long gagne, et une fiche de dossier reste
-  // rattachée à « Mes dossiers » — on n'est jamais nulle part.
-  return TOUS_LES_MODULES.filter((m) => correspond(m.href)).sort(
+  const exact = MODULES.filter((m) => m.href !== "/tableau-de-bord" && correspond(m.href)).sort(
     (a, b) => b.href.length - a.href.length,
   )[0];
+  if (exact) return exact;
+
+  // Une fiche de dossier (/tableau-de-bord/<identifiant>) appartient à la
+  // liste des dossiers ; la racine, à l'accueil.
+  if (chemin === "/tableau-de-bord") return MODULES[0];
+  if (correspond("/tableau-de-bord")) return MODULES[1];
+  return undefined;
 }

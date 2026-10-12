@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { creerClientServeur } from "@/lib/supabase/server";
+import { cheminSur } from "@/lib/chemin-sur";
 
 /**
  * L'arrivée des liens de connexion : e-mail de code, lien magique, Google.
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const racine = url.origin;
   const brute = url.searchParams.get("suite") ?? url.searchParams.get("next") ?? "/tableau-de-bord";
-  const suite = brute.startsWith("/") && !brute.startsWith("//") ? brute : "/tableau-de-bord";
+  const suite = cheminSur(brute);
 
   const echec = (raison: string) => {
     const retour = new URL("/connexion", racine);

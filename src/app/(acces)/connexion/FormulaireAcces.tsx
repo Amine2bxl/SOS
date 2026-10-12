@@ -7,6 +7,7 @@ import { creerClientNavigateur } from "@/lib/supabase/client";
 import { Btn } from "@/components/ui";
 import { IconeFlecheGauche, IconeMail } from "@/components/icones";
 import { MarqueSos } from "@/components/Logo";
+import { cheminSur } from "@/lib/chemin-sur";
 
 /**
  * Entrer dans son espace : une adresse, un code. Rien d'autre.
@@ -94,7 +95,7 @@ export function FormulaireAcces({
 }) {
   const parametres = useSearchParams();
   const brute = parametres.get("suite") ?? "/tableau-de-bord";
-  const suite = brute.startsWith("/") && !brute.startsWith("//") ? brute : "/tableau-de-bord";
+  const suite = cheminSur(brute);
   const erreurUrl = ERREURS_URL[parametres.get("erreur") ?? ""] ?? null;
 
   const [envoi, envoyer, envoiEnCours] = useActionState<EtatAuth, FormData>(envoyerCode, {});

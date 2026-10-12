@@ -110,6 +110,12 @@ export type Question = {
   quand: (f: Faits) => boolean;
 };
 
+/**
+ * Une question telle qu'elle voyage vers le navigateur : sans sa condition,
+ * qui est une fonction et reste sur le serveur.
+ */
+export type QuestionPublique = Omit<Question, "quand">;
+
 export type TexteBilingue = { fr: string; nl: string };
 
 export type Moyen = {
@@ -224,7 +230,7 @@ export type Analyse = {
   /** Points de vigilance à afficher en évidence. */
   alertes: string[];
   /** Questions encore utiles pour affiner l'analyse. */
-  questions: Question[];
+  questions: QuestionPublique[];
   /** Langue proposée pour la lettre. */
   langueLettre: Langue;
   /** Combien de vérifications le moteur a effectuées. */

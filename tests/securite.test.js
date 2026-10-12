@@ -145,3 +145,16 @@ test("la forme d'adresse est vérifiée sans excès de zèle", () => {
   assert.equal(emailValide("a@b"), false);
   assert.equal(emailValide("a..b@exemple.be"), false);
 });
+
+/* ------------------------------------------------- adresse de retour */
+
+const { cheminSur } = require("../.test-build/lib/chemin-sur.js");
+
+test("l'adresse de retour reste sur le site", () => {
+  assert.equal(cheminSur("/tableau-de-bord/nouveau?reprise=1"), "/tableau-de-bord/nouveau?reprise=1");
+  assert.equal(cheminSur("/adherer"), "/adherer");
+  // Adresses absolues déguisées : un navigateur les suivrait hors du site.
+  for (const piege of ["//exemple.com", "/\\exemple.com", "/\texemple.com", "/\t/exemple.com", "https://exemple.com", "exemple.com", "", null, 42]) {
+    assert.equal(cheminSur(piege), "/tableau-de-bord", `devrait refuser ${JSON.stringify(piege)}`);
+  }
+});

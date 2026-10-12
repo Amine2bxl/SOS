@@ -336,7 +336,14 @@ export function analyser(faitsBruts: Faits): Analyse {
     pieces,
     etapes,
     alertes,
-    questions: questionsAPoser(faits),
+    // Sans leur condition : l'analyse doit pouvoir voyager jusqu'au
+    // navigateur, et une fonction ne se sérialise pas.
+    questions: questionsAPoser(faits).map((q) => ({
+      id: q.id,
+      intitule: q.intitule,
+      pourquoi: q.pourquoi,
+      options: q.options,
+    })),
     langueLettre: langueProposee(faits),
     // Le compte est réel : chaque moyen examiné, chaque question évaluée, et
     // les quatre contrôles fixes (stade, délai, urgence, coût de l'inaction).

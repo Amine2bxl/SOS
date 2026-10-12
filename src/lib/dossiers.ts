@@ -1,7 +1,9 @@
 import "server-only";
 import { cache } from "react";
 import { creerClientServeur, lireUtilisateur } from "@/lib/supabase/server";
-import type { Dossier, Evenement, Profil, Alerte } from "@/lib/dossiers-format";
+import type { Dossier, Evenement, Profil, Alerte, Lettre } from "@/lib/dossiers-format";
+import { analyser, type Analyse } from "@/cerveau";
+import { faitsDepuisDossier } from "@/lib/faits";
 
 /**
  * Ces lectures sont mises en cache pour la durée d'une requête.
@@ -102,3 +104,27 @@ export const lireAdhesionEnAttente = cache(
     };
   },
 );
+
+
+/** Les lettres d'un dossier, la plus récente d'abord. */
+export async function listerLettres(dossierId: string): Promise<Lettre[]> {
+  const supabase = await creerClientServeur();
+  if (!supabase) return [];
+  const { data } = await supabase
+    .from("lettres")
+    .select("id, dossier_id, type, langue, contenu, created_at")
+    .eq("dossier_id", dossierId)
+    .order("created_at", { ascending: false });
+  return (data as Lettre[]) ?? [];
+}
+
+/**
+ * L'analyse d'un dossier, refaite à la date du jour.
+ *
+ * L'instantané conservé en base dit ce qui avait été conseillé à la création ;
+ * l'affichage, lui, a besoin des jours restants AUJOURD'HUI. Le moteur tourne
+ * en quelques millisecondes : on le relance à chaque affichage.
+ */
+export function analyserDossier(d: Dossier): Analyse {
+  return analyser(faitsDepuisDossier(d));
+}

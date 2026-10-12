@@ -5,6 +5,7 @@ import Link from "next/link";
 import { marquerAlerteVue } from "@/lib/dossiers-actions";
 import { Btn } from "@/components/ui";
 import { Modale } from "@/components/Modale";
+import { IconeHotelDeVille } from "@/components/icones";
 
 import type { Alerte } from "@/lib/dossiers-format";
 
@@ -85,10 +86,8 @@ export function AlerteReglementaire({ alerte }: { alerte: Alerte }) {
         largeur="max-w-lg"
       >
         <div className="flex items-start gap-4">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-danger-100">
-            <svg viewBox="0 0 24 24" className="h-6 w-6 text-danger-600" fill="currentColor" aria-hidden="true">
-              <path d="M12 2 1 21h22L12 2Zm1 14h-2v2h2v-2Zm0-7h-2v5h2V9Z" />
-            </svg>
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-danger-100 text-danger-700">
+            <IconeHotelDeVille className="h-7 w-7" />
           </span>
           <div className="min-w-0">
             <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-danger-700">
@@ -98,7 +97,7 @@ export function AlerteReglementaire({ alerte }: { alerte: Alerte }) {
               {alerte.titre}
             </h2>
             <p className="mt-1 text-xs text-ink-soft">
-              {alerte.commune_slug ? `Concerne votre commune · ` : "Toute la Région bruxelloise · "}
+              {alerte.commune_slug ? `Concerne votre commune · ` : "Concerne toutes les communes · "}
               publié le {dateLisible}
             </p>
           </div>
@@ -106,7 +105,7 @@ export function AlerteReglementaire({ alerte }: { alerte: Alerte }) {
 
         <p className="mt-5 text-sm leading-relaxed text-ink">{alerte.resume}</p>
 
-        <div className="mt-5 rounded-lg border-l-4 border-gold-400 bg-gold-100/60 p-4">
+        <div className="mt-5 rounded-2xl border-l-4 border-gold-400 bg-gold-50 p-4">
           <p className="text-sm font-bold text-navy-900">Ce que cela change pour vous</p>
           <p className="mt-1 text-sm leading-relaxed text-ink">
             Si une contestation est en cours, vérifiez qu&apos;elle respecte encore cette règle.
@@ -120,11 +119,11 @@ export function AlerteReglementaire({ alerte }: { alerte: Alerte }) {
             J&apos;ai compris
           </Btn>
           <Link
-            href="/tableau-de-bord/regles"
+            href="/tableau-de-bord/dossiers"
             onClick={accuser}
-            className="inline-flex flex-1 items-center justify-center rounded-md border border-line bg-white px-4 py-2.5 text-sm font-semibold text-navy-900 transition hover:bg-navy-50"
+            className="inline-flex h-11 flex-1 items-center justify-center rounded-full border border-line bg-white px-5 text-sm font-semibold text-navy-900 transition hover:bg-navy-50"
           >
-            Voir les règles de ma commune
+            Vérifier mes dossiers
           </Link>
         </div>
 
@@ -146,7 +145,7 @@ export function AlerteReglementaire({ alerte }: { alerte: Alerte }) {
 
   /* --------------------------------------- information non bloquante */
   return (
-    <div role="status" className={`mb-6 rounded-xl border-2 ${ton.bordure} ${ton.fond} p-5`}>
+    <div role="status" className={`mb-6 rounded-[var(--radius-carte)] border-l-4 ${ton.bordure} ${ton.fond} p-5`}>
       <div className="flex flex-wrap items-center gap-2">
         <span className={`rounded-full bg-white px-3 py-1 text-xs font-bold ${ton.texte}`}>
           {ton.etiquette}

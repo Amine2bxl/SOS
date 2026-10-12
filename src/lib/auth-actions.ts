@@ -22,6 +22,7 @@
  */
 
 import { headers } from "next/headers";
+import { cheminSur } from "@/lib/chemin-sur";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { creerClientServeur } from "@/lib/supabase/server";
@@ -54,11 +55,6 @@ export async function modeConfirmation(): Promise<ModeConfirmation> {
 }
 
 /** Redirection sûre : un chemin interne, jamais une autre origine. */
-function cheminSur(brut: unknown): string {
-  const s = typeof brut === "string" ? brut : "";
-  return s.startsWith("/") && !s.startsWith("//") ? s : "/tableau-de-bord";
-}
-
 async function ipVisiteur(): Promise<string> {
   const h = await headers();
   return (h.get("x-forwarded-for") ?? "").split(",")[0].trim() || h.get("x-real-ip") || "inconnue";
