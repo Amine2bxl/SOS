@@ -4,7 +4,6 @@ import { lireProfil, listerDossiers } from "@/lib/dossiers";
 import { Card, LinkBtn } from "@/components/ui";
 import { BoutonContact } from "@/components/Contact";
 import { FormulaireProfil } from "./FormulaireProfil";
-import { FormulaireSecurite } from "./FormulaireSecurite";
 import { SupprimerCompte } from "./SupprimerCompte";
 
 export const metadata: Metadata = { title: "Mon compte" };
@@ -33,10 +32,6 @@ export default async function ComptePage() {
           codePostal={profil?.code_postal ?? ""}
           commune={profil?.commune ?? ""}
         />
-      </Card>
-
-      <Card title="Sécurité" subtitle="Votre adresse de connexion et votre mot de passe." className="mt-6">
-        <FormulaireSecurite email={utilisateur?.email ?? null} />
       </Card>
 
       <Card title="Gérer mon compte" className="mt-6">

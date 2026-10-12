@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { creerClientServeur } from "@/lib/supabase/server";
 import { creerClientAdmin } from "@/lib/supabase/admin";
-import { motDePasseTropFaible } from "@/lib/mot-de-passe";
 
 export type EtatProfil = { erreur?: string; message?: string };
 
@@ -42,43 +41,6 @@ export async function enregistrerProfil(_precedent: EtatProfil, donnees: FormDat
   return { message: "Vos informations sont enregistrées." };
 }
 
-/** Vérifie le mot de passe actuel puis le remplace. */
-export async function changerMotDePasse(_precedent: EtatProfil, donnees: FormData): Promise<EtatProfil> {
-  const supabase = await creerClientServeur();
-  if (!supabase) return { erreur: "Service indisponible." };
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { erreur: "Connectez-vous pour modifier votre mot de passe." };
-
-  const ancien = String(donnees.get("ancienMotDePasse") ?? "");
-  const nouveau = String(donnees.get("nouveauMotDePasse") ?? "");
-  const confirmation = String(donnees.get("confirmation") ?? "");
-
-  if (!ancien) return { erreur: "Renseignez votre mot de passe actuel." };
-  if (nouveau !== confirmation) return { erreur: "Les deux mots de passe ne correspondent pas." };
-  if (nouveau === ancien) return { erreur: "Le nouveau mot de passe est identique à l'ancien." };
-
-  const faible = motDePasseTropFaible(nouveau, {
-    email: user.email ?? undefined,
-    prenom: String(user.user_metadata?.prenom ?? ""),
-    nom: String(user.user_metadata?.nom ?? ""),
-  });
-  if (faible) return { erreur: faible };
-
-  const { error: erreurVerification } = await supabase.auth.signInWithPassword({
-    email: user.email ?? "",
-    password: ancien,
-  });
-  if (erreurVerification) return { erreur: "Votre mot de passe actuel est incorrect." };
-
-  const { error } = await supabase.auth.updateUser({ password: nouveau });
-  if (error) return { erreur: "Le mot de passe n'a pas pu être modifié. Réessayez." };
-
-  revalidatePath("/tableau-de-bord/compte");
-  return { message: "Votre mot de passe a été modifié." };
-}
 /**
  * Supprime le compte et tout ce qui s'y rattache.
  *

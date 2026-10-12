@@ -1,75 +1,178 @@
 @import "tailwindcss";
 
+/*
+ * Direction artistique SOS Citizens.
+ *
+ * Trois idées tiennent l'identité, et toutes viennent de la rue :
+ *
+ * - L'ENCRE, un bleu nuit presque noir : la confiance, le sérieux d'une
+ *   démarche administrative. C'est la couleur du texte et des fonds forts.
+ * - Le SIGNAL, le jaune des marquages au sol et du drapeau : l'énergie, l'action.
+ *   Il est réservé à ce qui se clique ou à ce qui doit se voir en premier — s'il
+ *   est partout, il ne signale plus rien.
+ * - Le BLEU P, celui du panneau de stationnement : l'information neutre (un
+ *   dossier en attente, un lien). Utilisé avec parcimonie.
+ *
+ * Les noms historiques (`navy`, `gold`) sont conservés pour ne pas réécrire
+ * chaque classe du projet : `navy` porte l'encre, `gold` porte le signal.
+ */
+
 @theme {
-  --font-sans: "Public Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Fraunces", Georgia, serif;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque", "DM Sans", ui-sans-serif, sans-serif;
 
-  --color-paper: #f6f4ee;
-  --color-card: #fffdf8;
-  --color-ink: #1b2a36;
-  --color-ink-soft: #4c5b66;
-  --color-line: #e4ddcd;
-  --color-line-soft: #efe9dc;
+  /* Fonds et neutres : un blanc légèrement froid, pas de beige. */
+  --color-paper: #f5f7fb;
+  --color-card: #ffffff;
+  --color-ink: #0f1e3d;
+  --color-ink-soft: #55607a;
+  --color-ink-faint: #8a93a8;
+  --color-line: #e2e7f0;
+  --color-line-soft: #eef1f7;
 
-  --color-navy-950: #07172e;
-  --color-navy-900: #0b2545;
-  --color-navy-800: #123159;
-  --color-navy-700: #1b4073;
-  --color-navy-600: #27548f;
-  --color-navy-100: #dde6f2;
-  --color-navy-50: #eef3fa;
+  /* Encre */
+  --color-navy-950: #08122a;
+  --color-navy-900: #0f1e3d;
+  --color-navy-800: #172b53;
+  --color-navy-700: #22396b;
+  --color-navy-600: #34508f;
+  --color-navy-200: #c7d1e6;
+  --color-navy-100: #e3e9f4;
+  --color-navy-50: #f1f4fa;
 
-  --color-gold-600: #b97e00;
-  --color-gold-500: #d99a00;
-  --color-gold-400: #f2b705;
-  --color-gold-300: #ffd34d;
-  --color-gold-100: #fdf3d3;
+  /* Signal */
+  --color-gold-700: #a86f00;
+  --color-gold-600: #cf8c00;
+  --color-gold-500: #f2ab00;
+  --color-gold-400: #ffc629;
+  --color-gold-300: #ffd866;
+  --color-gold-100: #fff2c7;
+  --color-gold-50: #fff9e5;
 
-  --color-ok-700: #146c43;
-  --color-ok-600: #178a50;
-  --color-ok-100: #ddf2e4;
-  --color-warn-700: #92580a;
-  --color-warn-600: #b45309;
-  --color-warn-100: #fbeed3;
-  --color-danger-700: #96271c;
-  --color-danger-600: #b3261e;
-  --color-danger-100: #fbe3e0;
+  /* Bleu P (panneau de stationnement) */
+  --color-azur-700: #1844a8;
+  --color-azur-600: #1f5bd6;
+  --color-azur-100: #e2ebfc;
+  --color-azur-50: #f0f5fe;
+
+  /* La plaque belge : caractères rouges sur fond blanc. */
+  --color-plaque: #c8102e;
+
+  /* États */
+  --color-ok-700: #0d6a44;
+  --color-ok-600: #12895a;
+  --color-ok-100: #dbf3e7;
+  --color-ok-50: #effaf4;
+  --color-warn-700: #8a5300;
+  --color-warn-600: #b26b00;
+  --color-warn-100: #fdefd1;
+  --color-danger-700: #9b1c1c;
+  --color-danger-600: #c2261e;
+  --color-danger-100: #fce4e2;
+  --color-danger-50: #fef3f2;
+
+  --radius-carte: 1.25rem;
+
+  --shadow-carte: 0 1px 2px rgb(15 30 61 / 0.05), 0 10px 30px -14px rgb(15 30 61 / 0.18);
+  --shadow-flotte: 0 2px 4px rgb(15 30 61 / 0.06), 0 24px 48px -20px rgb(15 30 61 / 0.32);
+  --shadow-bouton: 0 1px 0 rgb(255 255 255 / 0.35) inset, 0 6px 16px -8px rgb(15 30 61 / 0.45);
 }
 
 html {
   scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   background-color: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv11";
 }
 
-@keyframes heartbeat {
-  0%, 100% { transform: scale(1); }
-  12% { transform: scale(1.18); }
-  24% { transform: scale(1); }
-  36% { transform: scale(1.12); }
-  48% { transform: scale(1); }
+/* Les titres en Bricolage : serrés, francs. */
+.font-display {
+  letter-spacing: -0.025em;
+  font-variation-settings: "opsz" 48;
 }
-.animate-heartbeat {
-  animation: heartbeat 3.2s ease-in-out infinite;
-  transform-origin: center;
+
+::selection {
+  background: var(--color-gold-300);
+  color: var(--color-navy-950);
 }
+
+:focus-visible {
+  outline: 3px solid var(--color-gold-400);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Motifs signature                                                          */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * Le MARQUAGE : les hachures jaune et encre des zones interdites au
+ * stationnement. Une bande fine suffit à signer une section.
+ */
+.motif-marquage {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--color-gold-400) 0 10px,
+    var(--color-navy-900) 10px 20px
+  );
+}
+.motif-marquage-doux {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgb(255 198 41 / 0.16) 0 12px,
+    transparent 12px 24px
+  );
+}
+
+/* Trame de points discrète pour les fonds sombres. */
+.motif-points {
+  background-image: radial-gradient(rgb(255 255 255 / 0.09) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+/*
+ * Le TICKET : une carte aux bords crantés comme un ticket de stationnement.
+ * Les encoches latérales sont découpées par un masque, sans image.
+ */
+.forme-ticket {
+  --encoche: 12px;
+  -webkit-mask:
+    radial-gradient(circle var(--encoche) at 0 50%, transparent 98%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle var(--encoche) at 100% 50%, transparent 98%, #000) right / 51% 100% no-repeat;
+  mask:
+    radial-gradient(circle var(--encoche) at 0 50%, transparent 98%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle var(--encoche) at 100% 50%, transparent 98%, #000) right / 51% 100% no-repeat;
+}
+
+/* Ligne pointillée de détachement, entre deux parties d'un ticket. */
+.trait-detache {
+  background-image: linear-gradient(to right, var(--color-line) 50%, transparent 50%);
+  background-size: 12px 2px;
+  background-repeat: repeat-x;
+  height: 2px;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Animations                                                                */
+/* -------------------------------------------------------------------------- */
 
 @keyframes rise {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
 .animate-rise {
-  animation: rise 0.45s ease-out both;
+  animation: rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-/* Coche de validation : le rond apparaît, puis le trait se dessine. */
 @keyframes pop {
-  0% { transform: scale(0); }
-  70% { transform: scale(1.12); }
+  0% { transform: scale(0.6); opacity: 0; }
+  70% { transform: scale(1.06); opacity: 1; }
   100% { transform: scale(1); }
 }
 .animate-pop {
@@ -86,6 +189,25 @@ body {
   animation: draw 0.5s 0.35s ease-out forwards;
 }
 
+/* Le faisceau qui balaie un document pendant l'analyse. */
+@keyframes balayage {
+  0% { transform: translateY(-10%); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(110%); opacity: 0; }
+}
+.animate-balayage {
+  animation: balayage 2.2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+@keyframes pulse-doux {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+.animate-pulse-doux {
+  animation: pulse-doux 1.6s ease-in-out infinite;
+}
+
 @keyframes barre-avance {
   from { width: 0; }
   to { width: 100%; }
@@ -94,23 +216,26 @@ body {
   animation: barre-avance 1.4s linear forwards;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/*  La lettre                                                                 */
+/* -------------------------------------------------------------------------- */
+
 .letter-paper {
   font-family: Georgia, "Times New Roman", serif;
   line-height: 1.65;
   white-space: pre-wrap;
 }
 
-.btn-danger {
-  background-color: var(--color-danger-700);
-}
-.btn-danger:hover {
-  background-color: var(--color-danger-600);
-}
-.btn-danger:disabled {
-  background-color: var(--color-danger-700);
-  opacity: 0.5;
-}
-
+/* L'impression ne garde que la zone marquée : la lettre, sans l'interface. */
 @media print {
   body * {
     visibility: hidden;
@@ -123,5 +248,7 @@ body {
     inset: 0;
     padding: 2cm;
     background: white;
+    color: black;
+    font-size: 11pt;
   }
 }

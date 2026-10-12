@@ -1,5 +1,27 @@
 "use server";
 
+/**
+ * Connexion et création de compte : un seul geste, sans mot de passe.
+ *
+ * On entre son adresse, on reçoit un code, on le saisit. C'est tout. Il n'y a
+ * plus de différence entre « créer un compte » et « se connecter » : la
+ * première fois, le code crée le compte ; les fois suivantes, il l'ouvre.
+ * Personne n'a de mot de passe à inventer, à retenir, ni à se faire voler.
+ *
+ * Deux façons d'envoyer le code, selon ce qui est configuré :
+ *
+ *  - `code` (la voie voulue) : nous fabriquons le code avec la clé de service
+ *    Supabase et envoyons NOTRE e-mail par Resend, depuis le domaine de
+ *    l'association. Le code et un lien de secours y figurent.
+ *  - `lien` (le repli) : Supabase envoie son propre e-mail. Son gabarit par
+ *    défaut ne contient qu'un lien ; si le gabarit a été modifié pour inclure
+ *    le code (`{{ .Token }}`), l'écran accepte aussi le code. L'expéditeur par
+ *    défaut de Supabase est plafonné à quelques envois par heure : c'est la
+ *    raison pour laquelle des e-mails « n'arrivaient pas ». Il ne convient pas
+ *    à un service ouvert au public.
+ */
+
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { creerClientServeur } from "@/lib/supabase/server";
@@ -8,232 +30,180 @@ import { envoyerEmail, mailConfigure, urlDuSite } from "@/lib/mail/envoyer";
 import { emailConfirmation } from "@/lib/mail/gabarits";
 import { traduireErreur } from "@/lib/auth-erreurs";
 import { consommerJeton, messageQuotaAtteint } from "@/lib/limites";
-import { motDePasseTropFaible } from "@/lib/mot-de-passe";
+import { canoniserEmail, domaineJetable, emailValide } from "@/lib/email-canonique";
+import { verifierHumain } from "@/lib/anti-robot";
+
+export type ModeConfirmation = "code" | "lien";
 
 export type EtatAuth = {
   erreur?: string;
   message?: string;
-  otpEnvoye?: boolean;
+  /** L'e-mail est parti : l'écran passe à la saisie du code. */
+  envoye?: boolean;
+  /** Le code est bon : la session est ouverte. */
   verifie?: boolean;
-  /** Adresse à laquelle le code vient d'être envoyé (réaffichée dans la fenêtre). */
   email?: string;
-  /** L'adresse a déjà un compte : on oriente vers la connexion, pas vers un code. */
-  compteExistant?: boolean;
-  /** Comment l'utilisateur doit confirmer : saisir un code, ou cliquer un lien. */
   mode?: ModeConfirmation;
+  /** Première connexion : le compte vient d'être créé. */
+  nouveau?: boolean;
 };
-
-/**
- * Deux façons de confirmer une adresse, selon ce qui est configuré.
- *
- * - `code` : nous fabriquons le code et envoyons notre propre e-mail. C'est le
- *   mode voulu, et le seul qui affiche une fenêtre de saisie à 6 chiffres.
- * - `lien` : repli sur le mailer de Supabase. Son gabarit par défaut ne
- *   contient **que** le lien de confirmation, jamais de code — afficher une
- *   fenêtre de saisie dans ce mode revient à demander un code qui n'existe
- *   nulle part. On demande donc de cliquer sur le lien, ce qui fonctionne sans
- *   aucune configuration.
- */
-export type ModeConfirmation = "code" | "lien";
 
 /** Le mode réellement actif, décidé par les variables d'environnement. */
 export async function modeConfirmation(): Promise<ModeConfirmation> {
   return creerClientAdmin() && mailConfigure() ? "code" : "lien";
 }
 
-/**
- * Envoi maison du code de confirmation.
- *
- * `generateLink` fabrique le compte (ou un nouveau code pour un compte
- * existant) et nous rend le code à 6 chiffres SANS envoyer d'e-mail : c'est
- * nous qui envoyons, avec notre gabarit. Renvoie `null` quand l'envoi maison
- * n'est pas branché, pour que l'appelant retombe sur le mailer Supabase.
- */
-async function envoyerCodeMaison({
-  type,
-  email,
-  motDePasse,
-  prenom,
-  nom,
-}: {
-  type: "signup" | "magiclink";
-  email: string;
-  motDePasse?: string;
-  prenom?: string;
-  nom?: string;
-}): Promise<{ ok: true } | { ok: false; erreur: string } | null> {
-  const admin = creerClientAdmin();
-  if (!admin || !mailConfigure()) return null;
-
-  const site = urlDuSite();
-  const { data, error } =
-    type === "signup"
-      ? await admin.auth.admin.generateLink({
-          type: "signup",
-          email,
-          password: motDePasse ?? "",
-          options: {
-            data: { prenom: prenom ?? "", nom: nom ?? "" },
-            redirectTo: `${site}/auth/confirm`,
-          },
-        })
-      : await admin.auth.admin.generateLink({
-          type: "magiclink",
-          email,
-          options: { redirectTo: `${site}/auth/confirm` },
-        });
-
-  if (error) return { ok: false, erreur: traduireErreur(error.message) };
-
-  const code = data?.properties?.email_otp;
-  if (!code) return { ok: false, erreur: "Nous n'avons pas pu produire votre code. Réessayez." };
-
-  const jeton = data.properties.hashed_token;
-  const gabarit = emailConfirmation({
-    prenom: prenom ?? String(data.user?.user_metadata?.prenom ?? ""),
-    code,
-    lienConfirmation: jeton
-      ? `${site}/auth/confirm?token_hash=${jeton}&type=${type === "signup" ? "signup" : "email"}`
-      : null,
-    urlSite: site,
-  });
-
-  const envoi = await envoyerEmail({
-    destinataire: email,
-    sujet: gabarit.sujet,
-    html: gabarit.html,
-    texte: gabarit.texte,
-  });
-
-  if (!envoi.ok) {
-    return {
-      ok: false,
-      erreur:
-        "Votre compte est créé, mais l'e-mail n'a pas pu partir. Réessayez dans un instant avec « renvoyer le code ».",
-    };
-  }
-  return { ok: true };
+/** Redirection sûre : un chemin interne, jamais une autre origine. */
+function cheminSur(brut: unknown): string {
+  const s = typeof brut === "string" ? brut : "";
+  return s.startsWith("/") && !s.startsWith("//") ? s : "/tableau-de-bord";
 }
 
-export async function sInscrire(_precedent: EtatAuth, donnees: FormData): Promise<EtatAuth> {
+async function ipVisiteur(): Promise<string> {
+  const h = await headers();
+  return (h.get("x-forwarded-for") ?? "").split(",")[0].trim() || h.get("x-real-ip") || "inconnue";
+}
+
+/** Mot de passe technique, jamais montré : la connexion se fait par code. */
+function motDePasseTechnique(): string {
+  return `${crypto.randomUUID()}${crypto.randomUUID()}`;
+}
+
+/**
+ * Envoie un code de connexion — et crée le compte s'il n'existe pas.
+ */
+export async function envoyerCode(_precedent: EtatAuth, donnees: FormData): Promise<EtatAuth> {
   const supabase = await creerClientServeur();
-  if (!supabase) return { erreur: "La création de compte n'est pas disponible pour le moment." };
+  if (!supabase) return { erreur: "La connexion n'est pas disponible pour le moment." };
 
   const email = String(donnees.get("email") ?? "").trim().toLowerCase();
-  const motDePasse = String(donnees.get("motDePasse") ?? "");
-  const confirmation = String(donnees.get("confirmation") ?? "");
-  const prenom = String(donnees.get("prenom") ?? "").trim();
-  const nom = String(donnees.get("nom") ?? "").trim();
+  const jetonHumain = String(donnees.get("cf-turnstile-response") ?? "") || null;
+  const suite = cheminSur(donnees.get("suite"));
+  const ip = await ipVisiteur();
 
-  if (!email || !motDePasse) return { erreur: "Renseignez votre e-mail et un mot de passe." };
-  if (motDePasse.length < 8) return { erreur: "Choisissez un mot de passe d'au moins 8 caractères." };
-  if (motDePasse !== confirmation) return { erreur: "Les deux mots de passe ne correspondent pas." };
-
-  const faible = motDePasseTropFaible(motDePasse, { email, prenom, nom });
-  if (faible) return { erreur: faible };
-
-  // Le quota se consomme après les contrôles de forme — une faute de frappe
-  // dans la confirmation ne doit pas user une tentative — mais avant tout
-  // envoi d'e-mail, qui est la ressource à protéger.
-  if (!(await consommerJeton("inscription", email))) {
-    return { erreur: messageQuotaAtteint("inscription") };
+  if (!emailValide(email)) return { erreur: "Cette adresse e-mail ne semble pas valide." };
+  if (domaineJetable(email)) {
+    return {
+      erreur:
+        "Les adresses jetables ne sont pas acceptées : votre adresse sert à vous envoyer les rappels de vos dossiers. Utilisez votre adresse habituelle.",
+    };
   }
 
-  // Voie normale : nous fabriquons le code et nous envoyons notre e-mail.
-  const maison = await envoyerCodeMaison({ type: "signup", email, motDePasse, prenom, nom });
-  if (maison) {
-    // Le compte existe désormais : la fenêtre de code reste ouverte même en
-    // cas d'échec d'envoi, pour que l'utilisateur puisse demander un renvoi.
-    if (!maison.ok) return { otpEnvoye: true, email, mode: "code", erreur: maison.erreur };
-    return { otpEnvoye: true, email, mode: "code" };
+  if (!(await verifierHumain(jetonHumain, ip))) {
+    return { erreur: "La vérification anti-robot a échoué. Rechargez la page et réessayez." };
   }
 
-  // Repli tant que Resend et la clé service_role ne sont pas configurés :
-  // Supabase envoie son propre e-mail de confirmation.
-  const { data, error } = await supabase.auth.signUp({
+  // Deux compteurs : par adresse (on ne bombarde pas une boîte) et par
+  // adresse IP (on n'arrose pas des centaines d'adresses depuis un poste).
+  const canonique = canoniserEmail(email);
+  if (!(await consommerJeton("codeConnexion", canonique)) || !(await consommerJeton("codeConnexion", `ip:${ip}`))) {
+    return { erreur: messageQuotaAtteint("codeConnexion") };
+  }
+
+  const admin = creerClientAdmin();
+
+  // Une variante d'une adresse déjà inscrite (points, « +… ») n'ouvre pas un
+  // second compte. On oriente vers l'adresse d'origine, sans la dévoiler.
+  let existant: { email: string | null } | null = null;
+  if (admin) {
+    const { data } = await admin
+      .from("profiles")
+      .select("email")
+      .eq("email_canonique", canonique)
+      .maybeSingle();
+    existant = data;
+    if (existant?.email && existant.email.toLowerCase() !== email) {
+      return {
+        erreur:
+          "Un compte existe déjà pour une variante de cette adresse. Connectez-vous avec l'adresse que vous aviez utilisée à l'inscription.",
+      };
+    }
+  }
+
+  /* ---------------------------------------------- voie normale : notre e-mail */
+  if (admin && mailConfigure()) {
+    const site = urlDuSite();
+    const redirectTo = `${site}/auth/confirm?suite=${encodeURIComponent(suite)}`;
+    let nouveau = !existant;
+    let { data, error } = nouveau
+      ? await admin.auth.admin.generateLink({ type: "signup", email, password: motDePasseTechnique(), options: { redirectTo } })
+      : await admin.auth.admin.generateLink({ type: "magiclink", email, options: { redirectTo } });
+
+    // Compte présent dans l'authentification mais sans profil (cas rare) :
+    // on bascule sur un code de connexion plutôt que d'afficher une impasse.
+    if (error && nouveau && /already|registered|exists/i.test(error.message)) {
+      nouveau = false;
+      ({ data, error } = await admin.auth.admin.generateLink({ type: "magiclink", email, options: { redirectTo } }));
+    }
+
+    if (error) return { erreur: traduireErreur(error.message) };
+
+    const code = data?.properties?.email_otp;
+    const jeton = data?.properties?.hashed_token;
+    if (!code) return { erreur: "Nous n'avons pas pu produire votre code. Réessayez dans un instant." };
+
+    const gabarit = emailConfirmation({
+      prenom: String(data.user?.user_metadata?.prenom ?? ""),
+      code,
+      lienConfirmation: jeton
+        ? `${site}/auth/confirm?token_hash=${jeton}&type=${nouveau ? "signup" : "email"}&suite=${encodeURIComponent(suite)}`
+        : null,
+      urlSite: site,
+      nouveau,
+    });
+
+    const envoi = await envoyerEmail({
+      destinataire: email,
+      sujet: gabarit.sujet,
+      html: gabarit.html,
+      texte: gabarit.texte,
+    });
+    if (!envoi.ok) {
+      return { erreur: "L'e-mail n'a pas pu partir. Réessayez dans un instant." };
+    }
+    return { envoye: true, email, mode: "code", nouveau };
+  }
+
+  /* ---------------------------------------- repli : l'e-mail de Supabase */
+  const { error } = await supabase.auth.signInWithOtp({
     email,
-    password: motDePasse,
-    options: { data: { prenom, nom } },
+    options: {
+      shouldCreateUser: true,
+      emailRedirectTo: `${urlDuSite()}/auth/confirm?suite=${encodeURIComponent(suite)}`,
+    },
   });
   if (error) return { erreur: traduireErreur(error.message) };
-
-  if (data.session) {
-    revalidatePath("/", "layout");
-    redirect("/tableau-de-bord");
-  }
-
-  // Adresse déjà inscrite : Supabase répond 200 sans rien créer ni envoyer,
-  // pour ne pas révéler quels e-mails ont un compte. La marque de ce cas est
-  // une liste d'identités vide. Sans ce contrôle, on ouvrait la fenêtre de
-  // code et l'utilisateur attendait un e-mail qui ne partirait jamais — c'est
-  // exactement la panne constatée en production.
-  if (data.user && (data.user.identities?.length ?? 0) === 0) {
-    return { erreur: "Un compte existe déjà avec cette adresse.", compteExistant: true, email };
-  }
-
-  // Mode lien : le gabarit par défaut de Supabase ne porte pas de code. On
-  // n'ouvre donc aucune fenêtre de saisie, on renvoie vers la boîte mail.
-  return { otpEnvoye: true, email, mode: "lien" };
+  return { envoye: true, email, mode: "lien" };
 }
 
-/** Vérifie le code à 6 chiffres reçu par e-mail et ouvre la session. */
-export async function verifierOtp(_precedent: EtatAuth, donnees: FormData): Promise<EtatAuth> {
+/** Vérifie le code à 6 chiffres et ouvre la session. */
+export async function verifierCode(_precedent: EtatAuth, donnees: FormData): Promise<EtatAuth> {
   const supabase = await creerClientServeur();
   if (!supabase) return { erreur: "La vérification n'est pas disponible pour le moment." };
 
   const email = String(donnees.get("email") ?? "").trim().toLowerCase();
   const code = String(donnees.get("code") ?? "").replace(/\D/g, "");
   if (!email) return { erreur: "Nous n'avons pas votre adresse e-mail." };
-  if (!/^\d{6}$/.test(code)) return { erreur: "Saisissez les 6 chiffres du code reçu par e-mail." };
+  if (!/^\d{6}$/.test(code)) return { erreur: "Saisissez les 6 chiffres du code reçu par e-mail.", email };
 
   // Un code à 6 chiffres, c'est un million de combinaisons : sans plafond,
-  // elles se testent. Supabase en expire un au bout d'une heure, ce qui laisse
-  // largement le temps à un script.
-  if (!(await consommerJeton("verificationCode", email))) {
-    return { erreur: messageQuotaAtteint("verificationCode") };
+  // elles se testent.
+  if (!(await consommerJeton("verificationCode", canoniserEmail(email)))) {
+    return { erreur: messageQuotaAtteint("verificationCode"), email };
   }
 
-  // Un code d'inscription se vérifie en « signup », un code de renvoi en
-  // « email ». On accepte les deux sans que l'utilisateur ait à le savoir.
-  const premier = await supabase.auth.verifyOtp({ email, token: code, type: "signup" });
+  // Un code de création de compte se vérifie en « signup », un code de
+  // connexion en « email ». On essaie les deux sans que la personne ait à le
+  // savoir.
+  const premier = await supabase.auth.verifyOtp({ email, token: code, type: "email" });
   const resultat = premier.error
-    ? await supabase.auth.verifyOtp({ email, token: code, type: "email" })
+    ? await supabase.auth.verifyOtp({ email, token: code, type: "signup" })
     : premier;
 
-  if (resultat.error) return { erreur: traduireErreur(resultat.error.message) };
+  if (resultat.error) return { erreur: traduireErreur(resultat.error.message), email };
 
   revalidatePath("/", "layout");
   return { verifie: true, email };
-}
-
-/** Renvoie un nouveau code de confirmation par e-mail. */
-export async function renvoyerCode(_precedent: EtatAuth, donnees: FormData): Promise<EtatAuth> {
-  const supabase = await creerClientServeur();
-  if (!supabase) return { erreur: "L'envoi du code n'est pas disponible pour le moment." };
-
-  const email = String(donnees.get("email") ?? "").trim().toLowerCase();
-  if (!email) return { erreur: "Nous n'avons pas votre adresse e-mail." };
-
-  if (!(await consommerJeton("renvoiCode", email))) {
-    return { erreur: messageQuotaAtteint("renvoiCode") };
-  }
-
-  // Le compte existe déjà : « signup » serait refusé, on demande un lien magique
-  // qui produit lui aussi un code à 6 chiffres.
-  const maison = await envoyerCodeMaison({ type: "magiclink", email });
-  if (maison) {
-    if (!maison.ok) return { erreur: maison.erreur, email, mode: "code" };
-    return { message: "Un nouveau code vient d'être envoyé.", email, mode: "code" };
-  }
-
-  const { error } = await supabase.auth.resend({ type: "signup", email });
-  if (error) return { erreur: traduireErreur(error.message), mode: "lien" };
-
-  return {
-    message: "Un nouveau lien de confirmation vient d'être envoyé.",
-    email,
-    mode: "lien",
-  };
 }
 
 export async function seDeconnecter() {

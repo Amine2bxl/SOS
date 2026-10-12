@@ -52,6 +52,14 @@ export const QUOTAS = {
   creationDossier: { max: 20, fenetreSecondes: 3600 },
   /** Demande d'adhésion : rien ne justifie d'en faire plus. */
   adhesion: { max: 5, fenetreSecondes: 3600 },
+  /** Analyse par le moteur (ouverte aux visiteurs, comptée par adresse IP). */
+  analyse: { max: 60, fenetreSecondes: 3600 },
+  /** Rédaction d'une lettre (membres connectés). */
+  lettre: { max: 60, fenetreSecondes: 3600 },
+  /** « Demandez à SOS » (ouvert aux visiteurs, compté par adresse IP). */
+  question: { max: 120, fenetreSecondes: 3600 },
+  /** Envoi d'un code de connexion : un e-mail part à chaque appel. */
+  codeConnexion: { max: 6, fenetreSecondes: 3600 },
 } satisfies Record<string, Quota>;
 
 /**

@@ -4,7 +4,11 @@ import { NextResponse, type NextRequest } from "next/server";
 /** Pages qui exigent d'être connecté : tout l'espace membre. */
 const PAGES_PROTEGEES = ["/tableau-de-bord", "/adherer"];
 
-export async function middleware(request: NextRequest) {
+/**
+ * Next 16 a renommé `middleware` en `proxy` : même rôle, nom plus juste. Ce
+ * fichier s'exécute avant chaque page concernée par l'authentification.
+ */
+export async function proxy(request: NextRequest) {
   const chemin = request.nextUrl.pathname;
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

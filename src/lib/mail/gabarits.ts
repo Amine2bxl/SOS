@@ -14,14 +14,15 @@ import { ASSO, ADRESSE_COMPLETE } from "../data";
 
 export type Gabarit = { sujet: string; html: string; texte: string };
 
+// Palette de la marque (voir src/app/globals.css) : encre, signal, blanc froid.
 const COULEURS = {
-  fond: "#f6f4ee",
+  fond: "#f5f7fb",
   carte: "#ffffff",
-  navy: "#0b2545",
-  or: "#f2b705",
-  encre: "#1b2a36",
-  encreDouce: "#4c5b66",
-  piedFond: "#eef3fa",
+  navy: "#0f1e3d",
+  or: "#ffc629",
+  encre: "#0f1e3d",
+  encreDouce: "#55607a",
+  piedFond: "#f1f4fa",
 };
 
 /** Échappe le texte inséré dans le HTML (un prénom peut contenir n'importe quoi). */
@@ -65,7 +66,7 @@ function coquille({
           <tr>
             <td style="background-color:${COULEURS.navy};border-radius:12px 12px 0 0;padding:22px 28px;">
               <img src="${urlSite}/logo-email.png" alt="" width="44" height="48" style="display:inline-block;vertical-align:middle;margin-right:10px;">
-              <span style="font-size:20px;font-weight:bold;color:${COULEURS.or};letter-spacing:0.5px;vertical-align:middle;">SOS&nbsp;CITIZENS&nbsp;<span style="color:#ffffff;">ASBL</span></span>
+              <span style="font-size:20px;font-weight:bold;color:${COULEURS.or};letter-spacing:0.2px;vertical-align:middle;">SOS&nbsp;<span style="color:#ffffff;">Citizens</span></span>
             </td>
           </tr>
           <tr>
@@ -113,13 +114,21 @@ export function emailConfirmation({
   code,
   lienConfirmation,
   urlSite,
+  nouveau = true,
 }: {
   prenom?: string | null;
   code: string;
   lienConfirmation?: string | null;
   urlSite: string;
+  /**
+   * Vrai pour une première inscription. Faux pour une personne qui revient :
+   * la connexion se fait par le même code, mais on ne lui souhaite pas la
+   * bienvenue une deuxième fois.
+   */
+  nouveau?: boolean;
 }): Gabarit {
   const bonjour = prenom?.trim() ? `Bonjour ${prenom.trim()}` : "Bonjour";
+  if (!nouveau) return emailCodeConnexion({ bonjour, code, lienConfirmation, urlSite });
   const sujet = `${code} — votre code de confirmation SOS Citizens`;
 
   const lienHtml = lienConfirmation
@@ -190,6 +199,62 @@ ${lienHtml}
       corps,
       urlSite,
     }),
+    texte,
+  };
+}
+
+
+/**
+ * Le code de connexion d'une personne qui a déjà un compte.
+ *
+ * Plus court que l'e-mail de bienvenue : elle connaît le service, elle veut
+ * son code. Il figure dans l'objet, pour se lire depuis la notification.
+ */
+function emailCodeConnexion({
+  bonjour,
+  code,
+  lienConfirmation,
+  urlSite,
+}: {
+  bonjour: string;
+  code: string;
+  lienConfirmation?: string | null;
+  urlSite: string;
+}): Gabarit {
+  const sujet = `${code} — votre code de connexion SOS Citizens`;
+  const lienHtml = lienConfirmation
+    ? `              <p style="margin:22px 0 0;font-size:13px;line-height:1.6;color:${COULEURS.encreDouce};">
+                Ou en un clic&nbsp;: <a href="${lienConfirmation}" style="color:${COULEURS.navy};font-weight:bold;">ouvrir mon espace</a>.
+              </p>`
+    : "";
+
+  const corps = `              <h1 style="margin:0 0 12px;font-size:23px;line-height:1.3;color:${COULEURS.navy};">${echapper(bonjour)}, voici votre code.</h1>
+              <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:${COULEURS.encreDouce};">
+                Saisissez-le sur le site pour retrouver vos dossiers.
+              </p>
+              <div style="background-color:${COULEURS.fond};border:2px dashed ${COULEURS.or};border-radius:12px;padding:22px;text-align:center;">
+                <p style="margin:0 0 6px;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:${COULEURS.encreDouce};">Votre code de connexion</p>
+                <p style="margin:0;font-size:38px;font-weight:bold;letter-spacing:10px;color:${COULEURS.navy};">${echapper(code)}</p>
+                <p style="margin:12px 0 0;font-size:12px;color:#8a5300;">Valable une heure — ne le communiquez à personne, pas même à nous.</p>
+              </div>
+${lienHtml}
+              <p style="margin:22px 0 0;font-size:12px;line-height:1.6;color:${COULEURS.encreDouce};">
+                Vous n&rsquo;avez rien demandé&nbsp;? <strong>Ignorez cet e-mail</strong> : sans ce code, personne ne peut ouvrir votre compte.
+              </p>`;
+
+  const texte = [
+    `${bonjour}, voici votre code de connexion : ${code}`,
+    "Valable une heure. Ne le communiquez à personne.",
+    ...(lienConfirmation ? ["", `Ou en un clic : ${lienConfirmation}`] : []),
+    "",
+    "Vous n'avez rien demandé ? Ignorez cet e-mail : sans ce code, personne ne peut ouvrir votre compte.",
+    "",
+    `L'équipe de ${ASSO.nom}`,
+  ].join("\n");
+
+  return {
+    sujet,
+    html: coquille({ titre: sujet, preheader: `Votre code : ${code}`, corps, urlSite }),
     texte,
   };
 }

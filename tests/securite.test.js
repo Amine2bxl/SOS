@@ -17,7 +17,6 @@ const {
   STATUTS_DOSSIER,
   TYPES_DOCUMENT,
 } = require("../.test-build/lib/validation.js");
-const { motDePasseTropFaible } = require("../.test-build/lib/mot-de-passe.js");
 const { ibanValide, formaterIban } = require("../.test-build/lib/iban.js");
 
 /* ------------------------------------------------------------------ UUID */
@@ -92,44 +91,6 @@ test("les listes de valeurs correspondent aux contraintes de la base", () => {
   );
 });
 
-/* ---------------------------------------------------------- mots de passe */
-
-test("les mots de passe les plus courants sont refusés", () => {
-  for (const faible of ["12345678", "password", "motdepasse", "azerty123", "P@ssw0rd"]) {
-    assert.ok(motDePasseTropFaible(faible), `devrait refuser « ${faible} »`);
-  }
-});
-
-test("les suites et répétitions sont refusées", () => {
-  assert.ok(motDePasseTropFaible("12345678"));
-  assert.ok(motDePasseTropFaible("87654321"));
-  assert.ok(motDePasseTropFaible("aaaaaaaa"));
-});
-
-test("un mot de passe qui reprend le nom ou l'adresse est refusé", () => {
-  assert.ok(
-    motDePasseTropFaible("azouzi2024!", { nom: "Azouzi" }),
-    "le nom de famille ne doit pas servir de mot de passe",
-  );
-  assert.ok(motDePasseTropFaible("mohamed-bruxelles", { prenom: "Mohamed" }));
-  // Trois lettres, c'est trop court pour conclure : on ne refuse pas.
-  assert.equal(motDePasseTropFaible("lesptitsbateaux", { prenom: "Ali" }), null);
-});
-
-test("une phrase de passe ordinaire est acceptée", () => {
-  for (const bon of [
-    "le chat dort sur le toit",
-    "Tr0is-Chameaux-Verts",
-    "jaimelesfritesaucheddar",
-  ]) {
-    assert.equal(motDePasseTropFaible(bon), null, `devrait accepter « ${bon} »`);
-  }
-});
-
-test("un mot de passe trop court est refusé avant tout le reste", () => {
-  assert.match(motDePasseTropFaible("court1"), /8 caractères/);
-});
-
 /* ------------------------------------------------------------------ IBAN */
 
 test("ibanValide accepte des IBAN dont la clé tombe juste", () => {
@@ -154,4 +115,33 @@ test("ibanValide détecte un chiffre mal lu", () => {
 test("formaterIban regroupe par quatre", () => {
   assert.equal(formaterIban("BE68539007547034"), "BE68 5390 0754 7034");
   assert.equal(formaterIban("be68 5390-0754.7034"), "BE68 5390 0754 7034");
+});
+
+/* ------------------------------------------------------- e-mail canonique */
+
+const { canoniserEmail, domaineJetable, emailValide } = require("../.test-build/lib/email-canonique.js");
+
+test("la forme canonique ramène les variantes Gmail à une seule adresse", () => {
+  // Mêmes entrées que celles vérifiées sur la fonction SQL public.canoniser_email :
+  // les deux implémentations doivent rester identiques.
+  assert.equal(canoniserEmail("Jean.Dupont+sos@GoogleMail.com"), "jeandupont@gmail.com");
+  assert.equal(canoniserEmail("jean.dupont@gmail.com"), "jeandupont@gmail.com");
+  assert.equal(canoniserEmail("marie+test@proton.me"), "marie@proton.me");
+  // Hors Gmail, les points comptent : on ne les retire pas.
+  assert.equal(canoniserEmail("a.b@outlook.be"), "a.b@outlook.be");
+});
+
+test("les boîtes jetables sont refusées, les vraies acceptées", () => {
+  assert.equal(domaineJetable("x@yopmail.com"), true);
+  assert.equal(domaineJetable("x@mailinator.com"), true);
+  assert.equal(domaineJetable("x@gmail.com"), false);
+  assert.equal(domaineJetable("x@skynet.be"), false);
+});
+
+test("la forme d'adresse est vérifiée sans excès de zèle", () => {
+  assert.equal(emailValide("jeanne@exemple.be"), true);
+  assert.equal(emailValide("j.d+tag@sous.domaine.org"), true);
+  assert.equal(emailValide("pas-une-adresse"), false);
+  assert.equal(emailValide("a@b"), false);
+  assert.equal(emailValide("a..b@exemple.be"), false);
 });
