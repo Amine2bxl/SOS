@@ -64,8 +64,9 @@ export default function ConfidentialitePage() {
         <p className="mt-4 text-xs leading-relaxed text-ink-soft">
           L&apos;outil de lettre en libre accès (page « Contester ») fonctionne entièrement dans votre
           navigateur : rien n&apos;y est enregistré, rien n&apos;y est envoyé. La lecture des documents
-          par le scanner se fait également dans votre navigateur ; seul le texte des informations
-          confirmées est conservé dans votre dossier.
+          par le scanner se fait également dans votre navigateur : votre photo ou votre PDF ne
+          quittent jamais votre appareil, et nous ne les stockons nulle part. Seul le texte lu en est
+          enregistré, dans votre dossier, et il est effacé au bout de six mois.
         </p>
       </Card>
 
@@ -87,13 +88,29 @@ export default function ConfidentialitePage() {
       </Card>
 
       <Card title="Combien de temps conservons-nous vos données ?" className="mt-6">
-        <p className="text-sm leading-relaxed text-ink-soft">
-          Votre compte et vos dossiers sont conservés aussi longtemps que vous les gardez. Vous pouvez
-          les supprimer à tout moment depuis votre espace, ou nous demander leur effacement. Les e-mails
-          reçus sont conservés le temps de vous accompagner, puis supprimés sur demande. Les données
-          nécessaires à la preuve d&apos;une transaction (adhésion) peuvent être conservées le temps
-          requis par les obligations légales.
-        </p>
+        <ul className="space-y-2.5 text-sm leading-relaxed text-ink">
+          <li>
+            <strong className="text-navy-900">Votre compte et vos dossiers</strong> : aussi longtemps
+            que vous les gardez. Vous les supprimez vous-même, depuis « Mon compte », sans avoir à
+            nous le demander et sans délai.
+          </li>
+          <li>
+            <strong className="text-navy-900">Le texte lu sur vos courriers scannés</strong> : effacé
+            automatiquement six mois après le scan. Il ne sert qu&apos;à vous permettre de
+            revérifier une information qui vous paraîtrait mal lue ; passé le délai de recours et de
+            traitement, il n&apos;a plus d&apos;usage. Les informations que vous avez confirmées,
+            elles, restent dans votre dossier.
+          </li>
+          <li>
+            <strong className="text-navy-900">Les e-mails que vous nous envoyez</strong> : le temps de
+            vous accompagner, puis supprimés sur demande.
+          </li>
+          <li>
+            <strong className="text-navy-900">La trace d&apos;une adhésion payée</strong> : conservée
+            le temps requis par les obligations comptables. Elle ne contient ni votre nom, ni votre
+            adresse, ni votre plaque — seulement la formule, le montant et la référence du paiement.
+          </li>
+        </ul>
       </Card>
 
       <Card title="À qui vos données sont-elles confiées ?" className="mt-6">

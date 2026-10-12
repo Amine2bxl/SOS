@@ -10,7 +10,7 @@ import {
   type ResultatLecture,
 } from "@/lib/ocr";
 import {
-  extraireDonnees,
+  extraireDeTextes,
   tauxDeReconnaissance,
   champsAVerifier,
   type DonneesExtraites,
@@ -110,7 +110,9 @@ export function ScannerDocument({ formule }: { formule: string; profil: { prenom
         );
       }
 
-      const donnees = extraireDonnees(resultat.texte);
+      // Toutes les lectures sont exploitées, pas seulement la meilleure : un
+      // essai globalement moins bon est parfois le seul à avoir lu la plaque.
+      const donnees = extraireDeTextes(resultat.textes);
       setLecture(resultat);
       setExtrait(donnees);
       setForm({

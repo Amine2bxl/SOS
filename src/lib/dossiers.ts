@@ -71,3 +71,34 @@ export const lireAlertesNonVues = cache(async (): Promise<Alerte[]> => {
   const { data } = await requete;
   return (data as Alerte[]) ?? [];
 });
+
+/**
+ * L'adhésion en attente de paiement, s'il y en a une.
+ *
+ * C'est elle qui porte la référence du virement. On la relit à chaque
+ * affichage de la page d'adhésion plutôt que de se fier au drapeau
+ * `plan_demande` du profil : le drapeau dit qu'une formule a été demandée, pas
+ * avec quelle référence elle doit être payée.
+ */
+export const lireAdhesionEnAttente = cache(
+  async (): Promise<{ formule: string; montant: number; communication: string } | null> => {
+    const [supabase, user] = await Promise.all([creerClientServeur(), lireUtilisateur()]);
+    if (!supabase || !user) return null;
+
+    const { data } = await supabase
+      .from("adhesions")
+      .select("formule, montant, communication")
+      .eq("user_id", user.id)
+      .eq("statut", "en_attente")
+      .order("demandee_le", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!data) return null;
+    return {
+      formule: data.formule as string,
+      montant: Number(data.montant),
+      communication: data.communication as string,
+    };
+  },
+);

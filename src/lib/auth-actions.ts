@@ -7,6 +7,8 @@ import { creerClientAdmin } from "@/lib/supabase/admin";
 import { envoyerEmail, mailConfigure, urlDuSite } from "@/lib/mail/envoyer";
 import { emailConfirmation } from "@/lib/mail/gabarits";
 import { traduireErreur } from "@/lib/auth-erreurs";
+import { consommerJeton, messageQuotaAtteint } from "@/lib/limites";
+import { motDePasseTropFaible } from "@/lib/mot-de-passe";
 
 export type EtatAuth = {
   erreur?: string;
@@ -127,6 +129,16 @@ export async function sInscrire(_precedent: EtatAuth, donnees: FormData): Promis
   if (motDePasse.length < 8) return { erreur: "Choisissez un mot de passe d'au moins 8 caractères." };
   if (motDePasse !== confirmation) return { erreur: "Les deux mots de passe ne correspondent pas." };
 
+  const faible = motDePasseTropFaible(motDePasse, { email, prenom, nom });
+  if (faible) return { erreur: faible };
+
+  // Le quota se consomme après les contrôles de forme — une faute de frappe
+  // dans la confirmation ne doit pas user une tentative — mais avant tout
+  // envoi d'e-mail, qui est la ressource à protéger.
+  if (!(await consommerJeton("inscription", email))) {
+    return { erreur: messageQuotaAtteint("inscription") };
+  }
+
   // Voie normale : nous fabriquons le code et nous envoyons notre e-mail.
   const maison = await envoyerCodeMaison({ type: "signup", email, motDePasse, prenom, nom });
   if (maison) {
@@ -174,6 +186,13 @@ export async function verifierOtp(_precedent: EtatAuth, donnees: FormData): Prom
   if (!email) return { erreur: "Nous n'avons pas votre adresse e-mail." };
   if (!/^\d{6}$/.test(code)) return { erreur: "Saisissez les 6 chiffres du code reçu par e-mail." };
 
+  // Un code à 6 chiffres, c'est un million de combinaisons : sans plafond,
+  // elles se testent. Supabase en expire un au bout d'une heure, ce qui laisse
+  // largement le temps à un script.
+  if (!(await consommerJeton("verificationCode", email))) {
+    return { erreur: messageQuotaAtteint("verificationCode") };
+  }
+
   // Un code d'inscription se vérifie en « signup », un code de renvoi en
   // « email ». On accepte les deux sans que l'utilisateur ait à le savoir.
   const premier = await supabase.auth.verifyOtp({ email, token: code, type: "signup" });
@@ -194,6 +213,10 @@ export async function renvoyerCode(_precedent: EtatAuth, donnees: FormData): Pro
 
   const email = String(donnees.get("email") ?? "").trim().toLowerCase();
   if (!email) return { erreur: "Nous n'avons pas votre adresse e-mail." };
+
+  if (!(await consommerJeton("renvoiCode", email))) {
+    return { erreur: messageQuotaAtteint("renvoiCode") };
+  }
 
   // Le compte existe déjà : « signup » serait refusé, on demande un lien magique
   // qui produit lui aussi un code à 6 chiffres.

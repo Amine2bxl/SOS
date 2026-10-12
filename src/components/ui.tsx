@@ -129,6 +129,8 @@ const btnStyles = {
   /** Variante à utiliser sur les fonds sombres (bleu marine). */
   outline: "border border-navy-600 bg-transparent text-white hover:bg-navy-800",
   ghost: "text-navy-700 hover:bg-navy-50",
+  /** Action destructrice : elle doit se voir, et ne jamais être le bouton par défaut. */
+  danger: "bg-danger-600 text-white hover:bg-danger-700 shadow-sm",
 } as const;
 
 type Variant = keyof typeof btnStyles;

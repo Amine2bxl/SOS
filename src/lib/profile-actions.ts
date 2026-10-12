@@ -1,7 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { creerClientServeur } from "@/lib/supabase/server";
+import { creerClientAdmin } from "@/lib/supabase/admin";
+import { motDePasseTropFaible } from "@/lib/mot-de-passe";
 
 export type EtatProfil = { erreur?: string; message?: string };
 
@@ -54,8 +57,15 @@ export async function changerMotDePasse(_precedent: EtatProfil, donnees: FormDat
   const confirmation = String(donnees.get("confirmation") ?? "");
 
   if (!ancien) return { erreur: "Renseignez votre mot de passe actuel." };
-  if (nouveau.length < 8) return { erreur: "Choisissez un mot de passe d'au moins 8 caractères." };
   if (nouveau !== confirmation) return { erreur: "Les deux mots de passe ne correspondent pas." };
+  if (nouveau === ancien) return { erreur: "Le nouveau mot de passe est identique à l'ancien." };
+
+  const faible = motDePasseTropFaible(nouveau, {
+    email: user.email ?? undefined,
+    prenom: String(user.user_metadata?.prenom ?? ""),
+    nom: String(user.user_metadata?.nom ?? ""),
+  });
+  if (faible) return { erreur: faible };
 
   const { error: erreurVerification } = await supabase.auth.signInWithPassword({
     email: user.email ?? "",
@@ -68,4 +78,55 @@ export async function changerMotDePasse(_precedent: EtatProfil, donnees: FormDat
 
   revalidatePath("/tableau-de-bord/compte");
   return { message: "Votre mot de passe a été modifié." };
+}
+/**
+ * Supprime le compte et tout ce qui s'y rattache.
+ *
+ * Le RGPD donne un droit à l'effacement, et jusqu'ici l'exercer demandait de
+ * nous écrire — c'est-à-dire d'attendre qu'un bénévole trouve le temps de le
+ * faire à la main. La page des conditions promettait « supprimez-les quand vous
+ * voulez » : voilà de quoi tenir cette promesse.
+ *
+ * L'ordre importe. Les dossiers et les événements partent d'abord, pendant que
+ * la session est encore valable et que les politiques RLS cantonnent la
+ * suppression au propriétaire. Le compte d'authentification part en dernier,
+ * et seulement si la clé `service_role` est disponible : lui seul peut effacer
+ * une ligne de `auth.users`. Sans cette clé, les données personnelles sont
+ * toutes parties et il ne reste qu'une coquille vide sans aucune information —
+ * le résultat est atteint même si le nettoyage final attend.
+ *
+ * `adhesions` n'est pas effacée ici : elle part en cascade avec le compte
+ * d'authentification. Une trace comptable d'un paiement reçu se conserve, et
+ * elle ne contient ni nom, ni adresse, ni plaque.
+ */
+export async function supprimerMonCompte(
+  _precedent: EtatProfil,
+  donnees: FormData,
+): Promise<EtatProfil> {
+  const supabase = await creerClientServeur();
+  if (!supabase) return { erreur: "Service indisponible." };
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { erreur: "Connectez-vous pour supprimer votre compte." };
+
+  // Une suppression irréversible se confirme en recopiant un mot : un clic mal
+  // placé ne doit pas effacer les dossiers de quelqu'un dont le délai court.
+  const confirmation = String(donnees.get("confirmation") ?? "").trim().toUpperCase();
+  if (confirmation !== "SUPPRIMER") {
+    return { erreur: "Recopiez SUPPRIMER en majuscules pour confirmer." };
+  }
+
+  await supabase.from("evenements").delete().eq("user_id", user.id);
+  await supabase.from("alertes_vues").delete().eq("user_id", user.id);
+  await supabase.from("dossiers").delete().eq("user_id", user.id);
+  await supabase.from("profiles").delete().eq("id", user.id);
+
+  const admin = creerClientAdmin();
+  if (admin) await admin.auth.admin.deleteUser(user.id);
+
+  await supabase.auth.signOut();
+  revalidatePath("/", "layout");
+  redirect("/?compte=supprime");
 }
