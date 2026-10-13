@@ -8,7 +8,15 @@ import { Btn } from "@/components/ui";
 import { IconeFlecheGauche, IconeMail } from "@/components/icones";
 import { MarqueSos } from "@/components/Logo";
 import { cheminSur } from "@/lib/chemin-sur";
-import { CLE_ATTENTE_AUTH, lireAttenteAuth, secondesAvantRenvoi, type AttenteAuth } from "@/lib/auth-attente";
+import {
+  CLE_ATTENTE_AUTH,
+  LONGUEUR_CODE_MAX,
+  LONGUEUR_CODE_MIN,
+  lireAttenteAuth,
+  longueurCodeValide,
+  secondesAvantRenvoi,
+  type AttenteAuth,
+} from "@/lib/auth-attente";
 
 function lireStockage(): string | null {
   try { return sessionStorage.getItem(CLE_ATTENTE_AUTH); } catch { return null; }
@@ -141,13 +149,23 @@ export function FormulaireAcces({
   const adresse = enAttente?.email ?? email;
   const modeEnvoi = enAttente?.mode ?? mode;
   const attente = enAttente ? secondesAvantRenvoi(enAttente.envoyeLe, horloge) : 0;
+  // La longueur exacte du code quand le serveur la connaît (6 à 10 chiffres,
+  // selon le réglage Supabase) ; sinon on accepte toute la plage.
+  const longueurCode = enAttente?.longueur ?? null;
+  const codeComplet = longueurCode ? code.length === longueurCode : code.length >= LONGUEUR_CODE_MIN;
 
   const [envoi, envoyer, envoiEnCours] = useActionState<EtatAuth, FormData>(async (precedent, donnees) => {
     const resultat = await envoyerCode(precedent, donnees);
     setJetonHumain("");
     setCycleHumain((n) => n + 1);
     if (resultat.envoye && resultat.email) {
-      const a: AttenteAuth = { email: resultat.email, suite, mode: resultat.mode ?? mode, envoyeLe: Date.now() };
+      const a: AttenteAuth = {
+        email: resultat.email,
+        suite,
+        mode: resultat.mode ?? mode,
+        envoyeLe: Date.now(),
+        ...(longueurCodeValide(resultat.longueur) ? { longueur: resultat.longueur } : {}),
+      };
       setDemande(a);
       stockerAttente(a);
       setHorloge(a.envoyeLe);
@@ -282,11 +300,11 @@ export function FormulaireAcces({
               name="code"
               value={code}
               onChange={(e) => {
-                const chiffres = e.target.value.replace(/\D/g, "").slice(0, 6);
+                const chiffres = e.target.value.replace(/\D/g, "").slice(0, longueurCode ?? LONGUEUR_CODE_MAX);
                 setCode(chiffres);
                 setErreurVerification(null);
-                // Six chiffres : on valide sans attendre le clic.
-                if (chiffres.length === 6 && !verifEnCours && derniereSoumission.current !== chiffres) {
+                // Le code est complet : on valide sans attendre le clic.
+                if (longueurCode && chiffres.length === longueurCode && !verifEnCours && derniereSoumission.current !== chiffres) {
                   derniereSoumission.current = chiffres;
                   setTimeout(() => formulaireCode.current?.requestSubmit(), 0);
                 }
@@ -295,14 +313,16 @@ export function FormulaireAcces({
               autoComplete="one-time-code"
               autoFocus
               required
-              minLength={6}
-              maxLength={6}
-              pattern="[0-9]{6}"
+              minLength={longueurCode ?? LONGUEUR_CODE_MIN}
+              maxLength={longueurCode ?? LONGUEUR_CODE_MAX}
+              pattern={longueurCode ? `[0-9]{${longueurCode}}` : `[0-9]{${LONGUEUR_CODE_MIN},${LONGUEUR_CODE_MAX}}`}
               disabled={verifEnCours}
               aria-invalid={!!erreurVerification}
-              placeholder="••••••"
+              placeholder={"•".repeat(longueurCode ?? LONGUEUR_CODE_MIN)}
               aria-describedby="aide-code"
-              className="h-16 w-full rounded-2xl border-2 border-line bg-white text-center font-display text-3xl font-extrabold tracking-[0.5em] text-navy-900 outline-none transition placeholder:text-line focus:border-navy-600 focus:ring-4 focus:ring-gold-300/40"
+              className={`h-16 w-full rounded-2xl border-2 border-line bg-white text-center font-display font-extrabold text-navy-900 outline-none transition placeholder:text-line focus:border-navy-600 focus:ring-4 focus:ring-gold-300/40 ${
+                (longueurCode ?? LONGUEUR_CODE_MIN) > 6 ? "text-[1.7rem] tracking-[0.3em]" : "text-3xl tracking-[0.5em]"
+              }`}
             />
           </label>
           <p id="aide-code" className="mt-2 text-xs text-ink-soft">
@@ -315,7 +335,7 @@ export function FormulaireAcces({
             </p>
           )}
 
-          <Btn type="submit" variant="gold" taille="lg" className="mt-5 w-full" disabled={verifEnCours || code.length !== 6}>
+          <Btn type="submit" variant="gold" taille="lg" className="mt-5 w-full" disabled={verifEnCours || !codeComplet}>
             {verifEnCours ? "Vérification…" : "Entrer dans mon espace"}
           </Btn>
         </form>

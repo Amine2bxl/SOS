@@ -78,7 +78,9 @@ un modèle qui ne contient qu'un lien. Pour l'utiliser quand même :
    définir Site URL sur `https://soscitizens.vercel.app` et autoriser
    `https://soscitizens.vercel.app/auth/confirm`.
 
-Dans les deux cas, garder les codes sur **6 chiffres** (réglage par défaut).
+Le formulaire accepte les codes de 6 à 10 chiffres et suit la longueur réelle
+du code envoyé. Pour des codes à 6 chiffres, régler « Email OTP Length » sur 6
+dans [Sign In / Providers → Email](https://supabase.com/dashboard/project/vlbmkzuffnbgktqspdvp/auth/providers).
 
 Documentation : [OTP](https://supabase.com/docs/guides/auth/auth-email-passwordless),
 [modèles](https://supabase.com/docs/guides/auth/auth-email-templates),
@@ -87,7 +89,7 @@ Documentation : [OTP](https://supabase.com/docs/guides/auth/auth-email-passwordl
 ## Validation du parcours
 
 - Demander un code : l'étape change seulement après un envoi réussi.
-- Copier les six chiffres : la vérification automatique n'est déclenchée qu'une
+- Copier le code : la vérification automatique n'est déclenchée qu'une
   fois ; une erreur laisse la saisie disponible.
 - Vérifier : la confirmation apparaît sur la même page, avec un bouton pour
   continuer. Le paramètre `confirme=1` seul ne valide jamais une session.

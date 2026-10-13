@@ -25,6 +25,17 @@ const COULEURS = {
   piedFond: "#f1f4fa",
 };
 
+/**
+ * Taille du code dans l'e-mail : Supabase fabrique des codes de 6 à 10
+ * chiffres selon le réglage du projet, et ils doivent tenir sur une ligne,
+ * même sur un petit écran de téléphone.
+ */
+function tailleCode(code: string): string {
+  if (code.length <= 6) return "font-size:38px;letter-spacing:10px;";
+  if (code.length <= 8) return "font-size:32px;letter-spacing:6px;";
+  return "font-size:26px;letter-spacing:4px;";
+}
+
 /** Échappe le texte inséré dans le HTML (un prénom peut contenir n'importe quoi). */
 function echapper(valeur: string): string {
   return valeur
@@ -104,7 +115,7 @@ const CE_QUI_ATTEND = [
 ];
 
 /**
- * E-mail de confirmation d'adresse, avec le code à 6 chiffres.
+ * E-mail de confirmation d'adresse, avec le code reçu de Supabase.
  *
  * Le code figure aussi dans l'objet : sur téléphone, la notification suffit
  * alors à le lire sans même ouvrir le message.
@@ -147,7 +158,7 @@ export function emailConfirmation({
 
               <div style="background-color:${COULEURS.fond};border:2px dashed ${COULEURS.or};border-radius:12px;padding:22px;text-align:center;">
                 <p style="margin:0 0 6px;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:${COULEURS.encreDouce};">Votre code de confirmation</p>
-                <p style="margin:0;font-size:38px;font-weight:bold;letter-spacing:10px;color:${COULEURS.navy};">${echapper(code)}</p>
+                <p style="margin:0;${tailleCode(code)}font-weight:bold;color:${COULEURS.navy};">${echapper(code)}</p>
                 <p style="margin:12px 0 0;font-size:12px;color:#92580a;">Valable une heure — ce code est personnel, ne le partagez avec personne.</p>
               </div>
 
@@ -234,7 +245,7 @@ function emailCodeConnexion({
               </p>
               <div style="background-color:${COULEURS.fond};border:2px dashed ${COULEURS.or};border-radius:12px;padding:22px;text-align:center;">
                 <p style="margin:0 0 6px;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:${COULEURS.encreDouce};">Votre code de connexion</p>
-                <p style="margin:0;font-size:38px;font-weight:bold;letter-spacing:10px;color:${COULEURS.navy};">${echapper(code)}</p>
+                <p style="margin:0;${tailleCode(code)}font-weight:bold;color:${COULEURS.navy};">${echapper(code)}</p>
                 <p style="margin:12px 0 0;font-size:12px;color:#8a5300;">Valable une heure — ne le communiquez à personne, pas même à nous.</p>
               </div>
 ${lienHtml}

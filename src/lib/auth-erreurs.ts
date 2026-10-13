@@ -21,7 +21,7 @@ export function traduireErreur(message: string): string {
   // périmé : dire « expiré » pousserait à redemander un code pour une faute
   // de frappe.
   if (m.includes("expired or is invalid"))
-    return "Ce code ne correspond pas ou a expiré. Vérifiez les 6 chiffres du dernier e-mail reçu, ou demandez un nouveau code.";
+    return "Ce code ne correspond pas ou a expiré. Vérifiez le code du dernier e-mail reçu, ou demandez-en un nouveau.";
   if (m.includes("otp expired") || m.includes("token has expired") || m.includes("expired"))
     return "Ce code a expiré. Demandez-en un nouveau.";
   if (m.includes("invalid token") || m.includes("invalid otp") || m.includes("token") || m.includes("otp"))
