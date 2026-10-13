@@ -9,6 +9,7 @@ import { IconeFlecheGauche, IconeMail } from "@/components/icones";
 import { MarqueSos } from "@/components/Logo";
 import { cheminSur } from "@/lib/chemin-sur";
 import { CLE_ATTENTE_AUTH, lireAttenteAuth, secondesAvantRenvoi, type AttenteAuth } from "@/lib/auth-attente";
+import { LONGUEUR_CODE_AUTH, MOTIF_CODE_AUTH } from "@/lib/auth-otp";
 
 function lireStockage(): string | null {
   try { return sessionStorage.getItem(CLE_ATTENTE_AUTH); } catch { return null; }
@@ -266,17 +267,17 @@ export function FormulaireAcces({
           <input type="hidden" name="email" value={adresse} />
           <label className="block">
             <span className="mb-2 block text-sm font-semibold text-navy-900">
-              Code reçu par e-mail
+              Code reçu par e-mail ({LONGUEUR_CODE_AUTH} chiffres)
             </span>
             <input
               name="code"
               value={code}
               onChange={(e) => {
-                const chiffres = e.target.value.replace(/\D/g, "").slice(0, 6);
+                const chiffres = e.target.value.replace(/\D/g, "").slice(0, LONGUEUR_CODE_AUTH);
                 setCode(chiffres);
                 setErreurVerification(null);
-                // Six chiffres : on valide sans attendre le clic.
-                if (chiffres.length === 6 && !verifEnCours && derniereSoumission.current !== chiffres) {
+                // On attend le code entier avant de lancer la vérification.
+                if (chiffres.length === LONGUEUR_CODE_AUTH && !verifEnCours && derniereSoumission.current !== chiffres) {
                   derniereSoumission.current = chiffres;
                   setTimeout(() => formulaireCode.current?.requestSubmit(), 0);
                 }
@@ -285,12 +286,12 @@ export function FormulaireAcces({
               autoComplete="one-time-code"
               autoFocus
               required
-              minLength={6}
-              maxLength={6}
-              pattern="[0-9]{6}"
+              minLength={LONGUEUR_CODE_AUTH}
+              maxLength={LONGUEUR_CODE_AUTH}
+              pattern={MOTIF_CODE_AUTH}
               disabled={verifEnCours}
               aria-invalid={!!erreurVerification}
-              placeholder="••••••"
+              placeholder={"•".repeat(LONGUEUR_CODE_AUTH)}
               aria-describedby="aide-code"
               className="h-16 w-full rounded-2xl border-2 border-line bg-white text-center font-display text-3xl font-extrabold tracking-[0.5em] text-navy-900 outline-none transition placeholder:text-line focus:border-navy-600 focus:ring-4 focus:ring-gold-300/40"
             />
@@ -305,7 +306,7 @@ export function FormulaireAcces({
             </p>
           )}
 
-          <Btn type="submit" variant="gold" taille="lg" className="mt-5 w-full" disabled={verifEnCours || code.length !== 6}>
+          <Btn type="submit" variant="gold" taille="lg" className="mt-5 w-full" disabled={verifEnCours || code.length !== LONGUEUR_CODE_AUTH}>
             {verifEnCours ? "Vérification…" : "Entrer dans mon espace"}
           </Btn>
         </form>
