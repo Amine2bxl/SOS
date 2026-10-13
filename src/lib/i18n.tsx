@@ -45,7 +45,7 @@ const FR = {
   "footer.confidentialite": "Confidentialité",
   "footer.conditions": "Conditions d'utilisation",
   "footer.tagline":
-    "Association citoyenne qui aide à comprendre et contester les redevances de stationnement, partout en Belgique.",
+    "Association citoyenne qui aide à comprendre et contester les redevances de stationnement, dans les 19 communes de Bruxelles-Capitale.",
   "footer.identite": "Association d'information et d'accompagnement citoyen, non un cabinet d'avocats : aucune annulation n'est garantie.",
 };
 
@@ -78,7 +78,7 @@ const EN: Record<string, string> = {
   "footer.confidentialite": "Privacy",
   "footer.conditions": "Terms of use",
   "footer.tagline":
-    "A citizens' association helping people understand and contest parking charges, everywhere in Belgium.",
+    "A citizens' association helping people understand and contest parking charges in the 19 municipalities of the Brussels-Capital Region.",
   "footer.identite":
     "An information and support association, not a law firm: no annulment is guaranteed.",
 };
@@ -112,7 +112,7 @@ const NL: Record<string, string> = {
   "footer.confidentialite": "Privacy",
   "footer.conditions": "Gebruiksvoorwaarden",
   "footer.tagline":
-    "Een burgervereniging die helpt parkeerretributies te begrijpen en te betwisten, overal in België.",
+    "Een burgervereniging die helpt parkeerretributies te begrijpen en te betwisten, in de 19 gemeenten van het Brussels Hoofdstedelijk Gewest.",
   "footer.identite":
     "Een vereniging voor informatie en begeleiding, geen advocatenkantoor: geen annulering wordt gegarandeerd.",
 };
@@ -146,7 +146,7 @@ const DE: Record<string, string> = {
   "footer.confidentialite": "Datenschutz",
   "footer.conditions": "Nutzungsbedingungen",
   "footer.tagline":
-    "Ein Bürgerverein, der hilft, Parkgebühren zu verstehen und anzufechten, überall in Belgien.",
+    "Ein Bürgerverein, der hilft, Parkgebühren zu verstehen und anzufechten – in den 19 Gemeinden der Region Brüssel-Hauptstadt.",
   "footer.identite":
     "Ein Informations- und Begleitverein, keine Anwaltskanzlei: keine Annullierung wird garantiert.",
 };

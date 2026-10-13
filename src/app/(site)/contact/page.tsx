@@ -119,8 +119,8 @@ export default function ContactPage() {
       <Card title="L'association" className="mt-6">
         <p className="text-sm leading-relaxed text-ink-soft">
           {ASSO.nom} est une association sans but lucratif, créée le {ASSO.constitution} à Bruxelles,
-          qui aide les automobilistes de toute la Belgique à se défendre face à une redevance de
-          stationnement. Identité ci-dessous ; notre rôle exact est décrit dans les mentions légales.
+          qui aide les automobilistes à se défendre face à une redevance de stationnement — aujourd&apos;hui
+          dans les 19 communes de la Région de Bruxelles-Capitale. Identité ci-dessous ; notre rôle exact est décrit dans les mentions légales.
         </p>
 
         <dl className="mt-5 grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">

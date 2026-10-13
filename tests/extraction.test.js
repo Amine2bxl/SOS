@@ -114,6 +114,30 @@ test("la commune au nom composé n'est pas masquée par un nom plus court", () =
   assert.equal(d.commune.valeur, "Woluwe-Saint-Pierre");
 });
 
+test("un courrier bruxellois en néerlandais donne la commune sous son nom français", () => {
+  const d = extraireDonnees("Gemeente Elsene — Parkeerretributie\nPlaats van de vaststelling : Baljuwstraat 42, 1050 Elsene");
+  assert.equal(d.commune.valeur, "Ixelles");
+  assert.equal(d.commune.confiance, "haute");
+});
+
+test("un courrier bilingue ne fait pas douter de la commune", () => {
+  const d = extraireDonnees("Commune de Saint-Gilles / Gemeente Sint-Gillis\nRedevance de stationnement");
+  assert.equal(d.commune.valeur, "Saint-Gilles");
+  assert.equal(d.commune.confiance, "haute");
+});
+
+test("une commune ne surgit pas du milieu d'un mot", () => {
+  const d = extraireDonnees("Un contrôle sévère a été effectué. Votre véhicule projette une ombre.");
+  assert.equal(d.commune.valeur, null);
+});
+
+test("« Brussel » seul est une localité postale, pas la Ville de Bruxelles", () => {
+  const d = extraireDonnees("Parkeerretributie — Adres : Wetstraat 16, 1000 Brussel");
+  assert.equal(d.commune.valeur, null);
+  const ville = extraireDonnees("Stad Brussel — Dienst Parkeren");
+  assert.equal(ville.commune.valeur, "Bruxelles-Ville");
+});
+
 /* -------------------------------------------------------------------------- */
 /*  Les champs que le formulaire de contestation réclame                      */
 /* -------------------------------------------------------------------------- */

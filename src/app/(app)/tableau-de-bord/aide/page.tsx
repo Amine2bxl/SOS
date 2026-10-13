@@ -15,7 +15,7 @@ const CATEGORIES: { id: Fiche["categorie"]; titre: string; icone: string }[] = [
   { id: "preuves", titre: "Les preuves à réunir", icone: "preuve" },
   { id: "droits", titre: "Vos droits", icone: "bouclier" },
   { id: "pratique", titre: "En pratique", icone: "ampoule" },
-  { id: "regions", titre: "Bruxelles, Wallonie, Flandre", icone: "belgique" },
+  { id: "regions", titre: "Bruxelles-Capitale, et les régions à venir", icone: "belgique" },
   { id: "corpus", titre: "Les ressources de l'association", icone: "dossiers" },
 ];
 

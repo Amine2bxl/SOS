@@ -278,6 +278,21 @@ Montant : 25,00 EUR`);
   assert.equal(l.langue, "fr");
 });
 
+test("un courrier bruxellois en néerlandais reste à Bruxelles", () => {
+  const l = detecterLieu(`Gemeente Sint-Gillis — Dienst Parkeren
+Parkeerretributie voor het parkeren op de openbare weg
+Plaats van de vaststelling : Waterloosesteenweg 120, 1060 Sint-Gillis
+Te betalen bedrag : 25,00 EUR`);
+  assert.equal(l.region, "bruxelles");
+  assert.equal(l.langue, "nl");
+});
+
+test("une commune lue sous son nom néerlandais compte comme bruxelloise", () => {
+  const l = detecterLieu("Parkeerretributie", "Schaarbeek");
+  assert.equal(l.region, "bruxelles");
+  assert.equal(l.commune, "Schaerbeek");
+});
+
 test("un courrier gantois en néerlandais est reconnu comme flamand", () => {
   const l = detecterLieu(`Stad Gent — Mobiliteitsbedrijf
 Parkeerretributie

@@ -19,6 +19,7 @@ près, signalée plus bas.
 | `…_duree_de_vie_texte_ocr.sql` | Effacement automatique du texte brut lu sur les courriers (RGPD) |
 | `…_adhesions_et_reconciliation.sql` | Adhésions, communication structurée, application et expiration des formules |
 | `…_droit_a_l_effacement.sql` | Politiques permettant à chacun de supprimer ses propres données |
+| `…_registre_des_communes.sql` | Registre des communes couvertes (Bruxelles-Capitale), fiches de règles complètes, suivi en direct par la page « Communes » |
 
 Les appels `cron.schedule(...)` échouent si la tâche existe déjà. Pour rejouer
 une migration qui en contient un, supprimer d'abord la tâche :
@@ -85,3 +86,39 @@ update public.adhesions
 
 À faire avec la clé `service_role` ou depuis l'éditeur SQL : un membre ne peut
 pas modifier ses propres adhésions, et c'est voulu.
+
+## Modifier les règles d'une commune
+
+La page **Communes** du site (la carte de Bruxelles) lit trois tables à chaque
+visite, et les écoute en direct : une modification enregistrée s'affiche sans
+recharger, sur la carte comme dans la fiche.
+
+| Table | Ce qu'on y fait |
+| --- | --- |
+| `communes_regles` | Corriger une fiche : zones, horaires, gratuité, paiement, cartes de riverain, tarifs, contestation, « à retenir ». Une colonne vide retombe sur le repère du site. |
+| `regles_changements` | Annoncer un changement. Avec `commune_slug`, la commune passe en jaune sur la carte pendant un an ; sans, le changement vaut pour toute la Région et s'affiche en bandeau (`important` ou `urgent`). |
+| `communes` | Le registre. `ouverte = false` met une commune en « cours de vérification ». C'est aussi là qu'entreront les communes de Flandre et de Wallonie, le jour où ces régions ouvriront. |
+
+Depuis l'éditeur de tables de Supabase, ou en SQL :
+
+```sql
+-- Corriger les horaires d'Ixelles : la fiche change aussitôt.
+update public.communes_regles
+   set horaires = 'Payant du lundi au samedi, de 9 h à 21 h.'
+ where commune_slug = 'ixelles' and version = 1;
+
+-- Annoncer un changement : Ixelles passe en jaune sur la carte.
+insert into public.regles_changements (commune_slug, titre, resume, importance, publie_le, source_url)
+values ('ixelles', 'Nouvelles zones rouges autour de la place Flagey',
+        'Le stationnement devient payant jusqu''à 21 h dans les rues autour de la place.',
+        'important', current_date, 'https://www.ixelles.be/…');
+
+-- Un nouveau règlement voté : nouvelle version, datée de son entrée en vigueur.
+-- La fiche l'annonce, puis bascule toute seule le jour venu.
+insert into public.communes_regles (commune_slug, commune_nom, version, en_vigueur_depuis, zones, horaires)
+values ('ixelles', 'Ixelles', 2, '2027-01-01', '…', '…');
+```
+
+Un lien (`source_url`) doit commencer par `https://`, et `commune_slug` doit
+exister dans `communes` : une faute de frappe est refusée tout de suite, au lieu
+de ne jamais s'afficher.

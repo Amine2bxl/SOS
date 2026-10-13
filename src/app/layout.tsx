@@ -35,10 +35,10 @@ export const metadata: Metadata = {
     template: "%s — SOS Citizens",
   },
   description:
-    "Une photo de votre courrier suffit. Le moteur SOS lit la redevance, calcule votre délai, trouve vos arguments et rédige votre lettre de contestation. Association sans but lucratif, partout en Belgique.",
+    "Une photo de votre courrier suffit. Le moteur SOS lit la redevance, calcule votre délai, trouve vos arguments et rédige votre lettre de contestation. Association sans but lucratif, pour les 19 communes de Bruxelles-Capitale.",
   keywords: [
     "contester redevance stationnement",
-    "redevance de stationnement Belgique",
+    "redevance de stationnement Bruxelles",
     "parking.brussels contestation",
     "parkeerretributie betwisten",
     "lettre de contestation stationnement",
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "SOS Citizens — Contestez votre redevance de stationnement",
     description:
-      "Une photo, une analyse, une lettre prête à envoyer. Par une association citoyenne, partout en Belgique.",
+      "Une photo, une analyse, une lettre prête à envoyer. Par une association citoyenne bruxelloise, pour les 19 communes de la Région.",
     locale: "fr_BE",
     type: "website",
   },
@@ -65,7 +65,7 @@ const jsonLd = {
   "@type": "NGO",
   name: ASSO.nom,
   description:
-    "Association sans but lucratif qui aide les citoyens à comprendre et contester les redevances de stationnement en Belgique.",
+    "Association sans but lucratif qui aide les citoyens à comprendre et contester les redevances de stationnement dans les 19 communes de la Région de Bruxelles-Capitale.",
   foundingDate: "2024-08-16",
   telephone: ASSO.telephone,
   email: ASSO.email,

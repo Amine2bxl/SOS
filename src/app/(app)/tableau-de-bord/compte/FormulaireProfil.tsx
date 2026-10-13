@@ -6,7 +6,8 @@ import { Field, TextInput, Btn } from "@/components/ui";
 
 /**
  * Les coordonnées, saisies une fois pour toutes : chaque lettre les reprend.
- * La commune est libre — Bruxelles, la Wallonie et la Flandre sont couvertes.
+ * La commune est libre : le site couvre Bruxelles-Capitale, mais une adresse en Flandre ou en
+ * Wallonie reste une adresse — c'est celle qui figure sur les lettres.
  */
 export function FormulaireProfil(props: {
   prenom: string;
