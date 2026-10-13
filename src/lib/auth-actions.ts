@@ -52,6 +52,8 @@ export type EtatAuth = {
   mode?: ModeConfirmation;
   /** Première connexion : le compte vient d'être créé. */
   nouveau?: boolean;
+  /** Nombre de chiffres du code envoyé (réglage Supabase « Email OTP Length »). */
+  longueur?: number;
 };
 
 /** Le mode réellement actif, décidé par les variables d'environnement. */
@@ -166,7 +168,7 @@ async function envoyerCodeInterne(_precedent: EtatAuth, donnees: FormData): Prom
     if (!envoi.ok) {
       return { erreur: "L'e-mail n'a pas pu partir. Réessayez dans un instant." };
     }
-    return { envoye: true, email, mode: "code", nouveau };
+    return { envoye: true, email, mode: "code", nouveau, longueur: code.length };
   }
 
   /* ---------------------------------------- repli : l'e-mail de Supabase */
@@ -183,7 +185,7 @@ async function envoyerCodeInterne(_precedent: EtatAuth, donnees: FormData): Prom
   return { envoye: true, email, mode: "lien" };
 }
 
-/** Vérifie le code à 6 chiffres et ouvre la session. */
+/** Vérifie le code reçu par e-mail et ouvre la session. */
 export async function verifierCode(precedent: EtatAuth, donnees: FormData): Promise<EtatAuth> {
   try {
     return await verifierCodeInterne(precedent, donnees);
@@ -199,7 +201,8 @@ async function verifierCodeInterne(_precedent: EtatAuth, donnees: FormData): Pro
   const email = String(donnees.get("email") ?? "").trim().toLowerCase();
   const code = String(donnees.get("code") ?? "").replace(/\D/g, "");
   if (!emailValide(email)) return { erreur: "Cette adresse e-mail ne semble pas valide." };
-  if (!/^\d{6}$/.test(code)) return { erreur: "Saisissez les 6 chiffres du code reçu par e-mail.", email };
+  // Supabase fabrique des codes de 6 à 10 chiffres selon le réglage du projet.
+  if (!/^\d{6,10}$/.test(code)) return { erreur: "Saisissez tous les chiffres du code reçu par e-mail.", email };
 
   // Un code à 6 chiffres, c'est un million de combinaisons : sans plafond,
   // elles se testent.

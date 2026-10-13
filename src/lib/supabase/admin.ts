@@ -4,8 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 /**
  * Client d'administration (clé `service_role`).
  *
- * Il sert à une seule chose : fabriquer nous-mêmes le code de confirmation à
- * 6 chiffres, sans que Supabase envoie son propre e-mail. C'est ce qui nous
+ * Il sert à une seule chose : fabriquer nous-mêmes le code de confirmation,
+ * sans que Supabase envoie son propre e-mail. C'est ce qui nous
  * permet d'envoyer NOTRE e-mail SOS Citizens, écrit et versionné dans ce dépôt,
  * au lieu d'un gabarit à recopier à la main dans un tableau de bord.
  *

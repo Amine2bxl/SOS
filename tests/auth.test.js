@@ -132,7 +132,7 @@ test('une réponse sans session ne constitue jamais un succès', async () => {
 test('les codes incomplets et le quota local empêchent les appels réseau', async () => {
   let appels = 0;
   const verifyOtp = async () => { appels++; return {}; };
-  assert.match((await actions({ verifyOtp }).verifierCode({}, formulaire({ email: 'citoyen@example.be', code: '123' }))).erreur, /6 chiffres/);
+  assert.match((await actions({ verifyOtp }).verifierCode({}, formulaire({ email: 'citoyen@example.be', code: '123' }))).erreur, /tous les chiffres/);
   assert.match((await actions({ verifyOtp, quota: false }).verifierCode({}, verification())).erreur, /Trop de tentatives/);
   assert.equal(appels, 0);
 });
@@ -255,4 +255,36 @@ test('la session d\'un lien n\'est ouverte qu\'après vérification par Supabase
   assert.equal((await b.ouvrirSessionDepuisLien('pas-un-jwt', 'r3fr3sh-t0ken')).ok, false);
   assert.equal((await actions({ quota: false }).ouvrirSessionDepuisLien(JWT_TEST, 'r3fr3sh-t0ken')).ok, false);
   assert.equal(appels, 0);
+});
+
+/* ------------------------------------- codes de 6 à 10 chiffres (réglage Supabase) */
+
+test('un code à 8 chiffres est vérifié tel quel, sans être tronqué', async () => {
+  let recu;
+  const a = actions({ verifyOtp: async (p) => { recu = p; return { error: null, data: { session: {}, user: {} } }; } });
+  const r = await a.verifierCode({}, formulaire({ email: 'citoyen@example.be', code: '1234 5678' }));
+  assert.equal(r.verifie, true);
+  assert.equal(recu.token, '12345678');
+  assert.match((await a.verifierCode({}, formulaire({ email: 'citoyen@example.be', code: '12345678901' }))).erreur, /tous les chiffres/);
+});
+
+test('l\'envoi par notre e-mail annonce la longueur réelle du code au formulaire', async () => {
+  const admin = {
+    from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { email: 'citoyen@example.be' } }) }) }) }),
+    auth: { admin: { generateLink: async () => ({ error: null, data: {
+      properties: { email_otp: '48291375', hashed_token: 'h' }, user: { user_metadata: {} },
+    } }) } },
+  };
+  let message;
+  const a = actions({ admin, mail: true, envoi: async (m) => { message = m; return { ok: true }; } });
+  const r = await a.envoyerCode({}, demande());
+  assert.equal(r.longueur, 8);
+  assert.match(message.sujet, /48291375/);
+});
+
+test('l\'attente mémorise la longueur du code, et seulement une longueur plausible', () => {
+  const base = { email: 'citoyen@example.be', suite: '/adherer', mode: 'code', envoyeLe: 1000 };
+  assert.equal(lireAttenteAuth(JSON.stringify({ ...base, longueur: 8 }), '/adherer', 2000).longueur, 8);
+  assert.equal(lireAttenteAuth(JSON.stringify({ ...base, longueur: 4 }), '/adherer', 2000), null);
+  assert.equal(lireAttenteAuth(JSON.stringify(base), '/adherer', 2000).longueur, undefined);
 });

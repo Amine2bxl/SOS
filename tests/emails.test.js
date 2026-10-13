@@ -110,3 +110,9 @@ test("Resend, quand il est configuré, passe avant le SMTP", () => {
   assert.equal(canal.expediteur, "SOS Citizens ASBL <onboarding@resend.dev>");
   assert.equal(canalEnvoi({ RESEND_API_KEY: "re_123", EMAIL_EXPEDITEUR: "SOS <code@sos.be>" }).expediteur, "SOS <code@sos.be>");
 });
+
+test("un code à 8 chiffres tient sur une ligne et figure partout", () => {
+  const { sujet, html, texte } = emailConfirmation({ ...BASE, code: "48291375", nouveau: false });
+  assert.ok(sujet.includes("48291375") && html.includes("48291375") && texte.includes("48291375"));
+  assert.ok(html.includes("font-size:32px"), "taille réduite pour 8 chiffres");
+});
