@@ -68,7 +68,7 @@ export function HeaderSite() {
   const estActif = (href: string) => !href.includes("#") && (pathname === href || pathname.startsWith(href + "/"));
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-navy-900/95 text-white backdrop-blur print:hidden">
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-navy-900 text-white print:hidden">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
         <Link href="/" aria-label="SOS Citizens ASBL — accueil" className="shrink-0">
           <Logo />

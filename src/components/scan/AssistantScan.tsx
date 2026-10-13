@@ -1101,7 +1101,7 @@ function EtapeVerdict({
       )}
 
       <div
-        className={`sticky z-20 rounded-[1.5rem] border border-line bg-card/95 p-4 shadow-flotte backdrop-blur lg:bottom-4 ${
+        className={`sticky z-20 rounded-[1.5rem] border border-line bg-card p-4 shadow-flotte lg:bottom-4 ${
           mode === "membre" ? "bottom-24" : "bottom-4"
         }`}
       >

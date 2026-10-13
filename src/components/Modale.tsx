@@ -11,12 +11,12 @@ import { IconeFermer } from "@/components/icones";
  * une était un vrai bug en production :
  *
  * 1. **Le portail.** Une fenêtre `position: fixed` rendue à l'intérieur d'un
- *    élément qui porte `backdrop-filter` (notre barre supérieure d'application
- *    en a un) se positionne par rapport à cet élément, pas à l'écran : le
- *    popup de contact ouvert depuis l'en-tête apparaissait décalé en haut à
- *    gauche au lieu d'être centré. Passer par `document.body` supprime le
- *    problème définitivement, quel que soit l'endroit d'où la fenêtre est
- *    ouverte.
+ *    élément qui porte `backdrop-filter` ou `transform` (comme la barre
+ *    supérieure d'application, à l'époque) se positionne par rapport à cet
+ *    élément, pas à l'écran : le popup de contact ouvert depuis l'en-tête
+ *    apparaissait décalé en haut à gauche au lieu d'être centré. Passer par
+ *    `document.body` supprime le problème définitivement, quel que soit
+ *    l'endroit d'où la fenêtre est ouverte.
  * 2. **Le fond figé.** Sans blocage, la page continue de défiler derrière la
  *    fenêtre — sur téléphone, on perd la fenêtre de vue en scrollant. Le
  *    verrou compense aussi la largeur de la barre de défilement, pour que la

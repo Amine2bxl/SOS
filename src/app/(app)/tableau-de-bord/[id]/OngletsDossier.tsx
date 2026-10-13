@@ -36,7 +36,7 @@ export function OngletsDossier({ onglets }: { onglets: Onglet[] }) {
       <div
         role="tablist"
         aria-label="Sections du dossier"
-        className="sticky top-[57px] z-20 -mx-4 overflow-x-auto bg-paper/95 px-4 py-2 backdrop-blur sm:mx-0 sm:px-0 lg:top-0"
+        className="sticky top-[57px] z-20 -mx-4 overflow-x-auto bg-paper px-4 py-2 sm:mx-0 sm:px-0 lg:top-0"
       >
         <div className="inline-flex min-w-full gap-1 rounded-full border border-line bg-card p-1 sm:min-w-0">
           {onglets.map((o) => (
