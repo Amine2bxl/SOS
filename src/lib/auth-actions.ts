@@ -33,6 +33,7 @@ import { traduireErreur } from "@/lib/auth-erreurs";
 import { consommerJeton, messageQuotaAtteint } from "@/lib/limites";
 import { canoniserEmail, domaineJetable, emailValide } from "@/lib/email-canonique";
 import { verifierHumain } from "@/lib/anti-robot";
+import { LONGUEUR_CODE_AUTH, MOTIF_CODE_AUTH } from "@/lib/auth-otp";
 
 export type ModeConfirmation = "code" | "lien";
 
@@ -176,7 +177,7 @@ async function envoyerCodeInterne(_precedent: EtatAuth, donnees: FormData): Prom
   return { envoye: true, email, mode: "lien" };
 }
 
-/** Vérifie le code à 6 chiffres et ouvre la session. */
+/** Vérifie le code complet configuré dans Supabase et ouvre la session. */
 export async function verifierCode(precedent: EtatAuth, donnees: FormData): Promise<EtatAuth> {
   try {
     return await verifierCodeInterne(precedent, donnees);
@@ -192,10 +193,11 @@ async function verifierCodeInterne(_precedent: EtatAuth, donnees: FormData): Pro
   const email = String(donnees.get("email") ?? "").trim().toLowerCase();
   const code = String(donnees.get("code") ?? "").replace(/\D/g, "");
   if (!emailValide(email)) return { erreur: "Cette adresse e-mail ne semble pas valide." };
-  if (!/^\d{6}$/.test(code)) return { erreur: "Saisissez les 6 chiffres du code reçu par e-mail.", email };
+  if (!new RegExp(`^${MOTIF_CODE_AUTH}$`).test(code)) {
+    return { erreur: `Saisissez les ${LONGUEUR_CODE_AUTH} chiffres du code reçu par e-mail.`, email };
+  }
 
-  // Un code à 6 chiffres, c'est un million de combinaisons : sans plafond,
-  // elles se testent.
+  // Même avec huit chiffres, le nombre de tentatives doit rester limité.
   if (!(await consommerJeton("verificationCode", canoniserEmail(email)))) {
     return { erreur: messageQuotaAtteint("verificationCode"), email };
   }

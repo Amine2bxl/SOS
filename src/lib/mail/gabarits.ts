@@ -104,7 +104,7 @@ const CE_QUI_ATTEND = [
 ];
 
 /**
- * E-mail de confirmation d'adresse, avec le code à 6 chiffres.
+ * E-mail de confirmation d'adresse, avec le code fourni par Supabase.
  *
  * Le code figure aussi dans l'objet : sur téléphone, la notification suffit
  * alors à le lire sans même ouvrir le message.

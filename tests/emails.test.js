@@ -1,7 +1,7 @@
 /**
  * Tests du gabarit d'e-mail de confirmation.
  *
- * L'enjeu est simple mais critique : si le code à 6 chiffres n'apparaît pas
+ * L'enjeu est simple mais critique : si le code à 8 chiffres n'apparaît pas
  * dans le message, personne ne peut activer son compte — c'est exactement la
  * panne qui a motivé ce travail. Ces cas figent le contrat du gabarit.
  *
@@ -11,13 +11,13 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const { emailConfirmation } = require("../.test-build/lib/mail/gabarits.js");
 
-const BASE = { code: "482913", urlSite: "https://sos-citizens.be" };
+const BASE = { code: "04829137", urlSite: "https://sos-citizens.be" };
 
 test("le code figure dans l'objet, le HTML et la version texte", () => {
   const { sujet, html, texte } = emailConfirmation({ ...BASE, prenom: "Amine" });
-  assert.ok(sujet.includes("482913"), "objet sans le code");
-  assert.ok(html.includes("482913"), "HTML sans le code");
-  assert.ok(texte.includes("482913"), "texte sans le code");
+  assert.ok(sujet.includes("04829137"), "objet sans le code");
+  assert.ok(html.includes("04829137"), "HTML sans le code");
+  assert.ok(texte.includes("04829137"), "texte sans le code");
 });
 
 test("le prénom personnalise le message", () => {

@@ -42,6 +42,7 @@ function actions({ verifyOtp, signInWithOtp, getUser, quota = true, admin = null
     '@/lib/mail/envoyer': { mailConfigure: () => mail, urlDuSite: () => 'https://soscitizens.vercel.app', envoyerEmail: async (message) => typeof envoi === 'function' ? envoi(message) : envoi },
     '@/lib/mail/gabarits': require('../.test-build/lib/mail/gabarits.js'),
     '@/lib/auth-erreurs': { traduireErreur },
+    '@/lib/auth-otp': require('../.test-build/lib/auth-otp.js'),
     '@/lib/limites': { consommerJeton: async () => quota, messageQuotaAtteint: () => 'Trop de tentatives.' },
     '@/lib/email-canonique': require('../.test-build/lib/email-canonique.js'),
     '@/lib/anti-robot': { verifierHumain: async () => true },
@@ -54,7 +55,7 @@ function formulaire(valeurs) {
   return data;
 }
 const demande = () => formulaire({ email: 'citoyen@example.be', suite: '/tableau-de-bord/nouveau?reprise=1' });
-const verification = () => formulaire({ email: 'citoyen@example.be', code: '123456' });
+const verification = () => formulaire({ email: 'citoyen@example.be', code: '01234567' });
 
 test('un envoi Supabase réussi conserve le parcours demandé', async () => {
   let appel;
@@ -84,22 +85,27 @@ test('Resend reçoit un code visible sans lien de connexion et un refus ne valid
   const admin = {
     from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null }) }) }) }),
     auth: { admin: { generateLink: async () => ({ error: null, data: {
-      properties: { email_otp: '123456', hashed_token: 'secret-test' }, user: { user_metadata: {} },
+      properties: { email_otp: '01234567', hashed_token: 'secret-test' }, user: { user_metadata: {} },
     } }) } },
   };
   const a = actions({ admin, mail: true, envoi: async (m) => { message = m; return { ok: true }; } });
   assert.equal((await a.envoyerCode({}, demande())).mode, 'code');
-  assert.match(message.html, /123456/);
-  assert.match(message.texte, /123456/);
+  assert.match(message.html, /01234567/);
+  assert.match(message.texte, /01234567/);
   assert.equal(message.html.includes('token_hash='), false);
   assert.equal(message.texte.includes('secret-test'), false);
   const b = actions({ admin, mail: true, envoi: { ok: false } });
   assert.equal((await b.envoyerCode({}, demande())).envoye, undefined);
 });
 
-test('un code de connexion ouvre une vraie session', async () => {
-  const a = actions();
+test('un code complet à huit chiffres conserve son zéro initial et ouvre une vraie session', async () => {
+  let jeton;
+  const a = actions({ verifyOtp: async ({ token }) => {
+    jeton = token;
+    return { error: null, data: { session: {}, user: {} } };
+  } });
   assert.equal((await a.verifierCode({}, verification())).verifie, true);
+  assert.equal(jeton, '01234567');
 });
 
 test('un code de première inscription est vérifié après le type email', async () => {
@@ -125,10 +131,12 @@ test('une réponse sans session ne constitue jamais un succès', async () => {
   assert.equal((await a.verifierCode({}, verification())).verifie, undefined);
 });
 
-test('les codes incomplets et le quota local empêchent les appels réseau', async () => {
+test('les codes tronqués ou trop longs et le quota local empêchent les appels réseau', async () => {
   let appels = 0;
   const verifyOtp = async () => { appels++; return {}; };
-  assert.match((await actions({ verifyOtp }).verifierCode({}, formulaire({ email: 'citoyen@example.be', code: '123' }))).erreur, /6 chiffres/);
+  for (const code of ['123', '123456', '1234567', '123456789']) {
+    assert.match((await actions({ verifyOtp }).verifierCode({}, formulaire({ email: 'citoyen@example.be', code }))).erreur, /8 chiffres/);
+  }
   assert.match((await actions({ verifyOtp, quota: false }).verifierCode({}, verification())).erreur, /Trop de tentatives/);
   assert.equal(appels, 0);
 });

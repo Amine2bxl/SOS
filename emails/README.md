@@ -33,12 +33,16 @@ ni clé Resend dans l'application.
    `signInWithOtp` utilise le modèle **Magic Link** pour les personnes déjà
    inscrites. Modifier seulement Confirm signup laisse ces personnes sans code.
    Les fichiers du dépôt ne sont pas appliqués automatiquement au projet hébergé.
+   Sur l'offre gratuite, Supabase exige un SMTP personnalisé avant d'autoriser
+   la modification de ces modèles.
 3. Dans [URL Configuration](https://supabase.com/dashboard/project/vlbmkzuffnbgktqspdvp/auth/url-configuration),
    définir Site URL sur `https://soscitizens.vercel.app` et autoriser
    `https://soscitizens.vercel.app/auth/confirm` ainsi que les domaines effectivement
    utilisés. Pour les previews, autoriser seulement les previews de ce projet.
 4. Dans les réglages Email, conserver la confirmation activée et les codes
-   sur **6 chiffres**. Régler leur durée de validité selon le besoin du service.
+   sur **8 chiffres**, comme le projet hébergé. La longueur du formulaire et de
+   la validation serveur est partagée dans `src/lib/auth-otp.ts` et doit rester
+   identique à ce réglage. Régler leur durée de validité selon le besoin du service.
 5. Tester avec une adresse de première inscription et une adresse déjà inscrite.
 
 Documentation : [OTP](https://supabase.com/docs/guides/auth/auth-email-passwordless),
@@ -67,7 +71,7 @@ L'adresse `onboarding@resend.dev` sert uniquement aux tests autorisés par Resen
 ## Validation du parcours
 
 - Demander un code : l'étape change seulement après un envoi réussi.
-- Copier les six chiffres : la vérification automatique n'est déclenchée qu'une
+- Copier les huit chiffres : la vérification automatique n'est déclenchée qu'une
   fois ; une erreur laisse la saisie disponible.
 - Vérifier : la confirmation apparaît sur la même page, avec un bouton pour
   continuer. Le paramètre `confirme=1` seul ne valide jamais une session.
