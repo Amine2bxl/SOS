@@ -204,3 +204,10 @@ test('le garde garde la confirmation sur connexion et protège toujours l’espa
   const refuse = await garde.proxy(new next.NextRequest('https://soscitizens.vercel.app/adherer'));
   assert.equal(new URL(refuse.headers.get('location')).pathname, '/connexion');
 });
+
+test('un code refusé n\'est pas présenté comme forcément expiré', () => {
+  // La même phrase de Supabase couvre la faute de frappe et le code périmé.
+  const message = traduireErreur('Token has expired or is invalid');
+  assert.match(message, /ne correspond pas ou a expiré/);
+  assert.match(traduireErreur('Email rate limit exceeded'), /limite/);
+});

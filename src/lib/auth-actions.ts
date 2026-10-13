@@ -11,8 +11,9 @@
  * Deux façons d'envoyer le code, selon ce qui est configuré :
  *
  *  - `code` (la voie voulue) : nous fabriquons le code avec la clé de service
- *    Supabase et envoyons NOTRE e-mail par Resend, depuis le domaine de
- *    l'association. Le code se saisit dans le formulaire resté ouvert.
+ *    Supabase et envoyons NOTRE e-mail, par la boîte Gmail de l'association
+ *    (SMTP) ou par Resend (voir `lib/mail/canal.ts`). Le code se saisit dans
+ *    le formulaire resté ouvert.
  *  - `lien` (le repli) : Supabase envoie son propre e-mail. Son gabarit par
  *    défaut ne contient qu'un lien ; si le gabarit a été modifié pour inclure
  *    le code (`{{ .Token }}`), l'écran accepte aussi le code. L'expéditeur par

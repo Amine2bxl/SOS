@@ -60,3 +60,53 @@ test("le lien de secours n'apparaît que s'il est fourni", () => {
   assert.ok(!sans.html.includes("token_hash"));
   assert.ok(!sans.texte.includes("simple clic"));
 });
+
+/* ------------------------------------------------ par où partent les e-mails */
+
+const { canalEnvoi } = require("../.test-build/lib/mail/canal.js");
+
+test("sans configuration, aucun canal : l'appelant retombe sur Supabase", () => {
+  assert.equal(canalEnvoi({}), null);
+  assert.equal(canalEnvoi({ SMTP_USER: "asbl@gmail.com" }), null, "mot de passe manquant");
+  assert.equal(canalEnvoi({ SMTP_USER: "  ", SMTP_PASSWORD: "  " }), null, "valeurs vides");
+});
+
+test("Gmail : un compte et un mot de passe d'application suffisent", () => {
+  const canal = canalEnvoi({ SMTP_USER: "sos.citizens@gmail.com", SMTP_PASSWORD: "abcd efgh ijkl mnop" });
+  assert.deepEqual(canal, {
+    type: "smtp",
+    hote: "smtp.gmail.com",
+    port: 465,
+    securise: true,
+    utilisateur: "sos.citizens@gmail.com",
+    // Les espaces affichés par Google ne font pas partie du mot de passe.
+    motDePasse: "abcdefghijklmnop",
+    expediteur: { name: "SOS Citizens ASBL", address: "sos.citizens@gmail.com" },
+  });
+});
+
+test("un autre serveur SMTP garde son mot de passe tel quel et passe par STARTTLS", () => {
+  const canal = canalEnvoi({
+    SMTP_HOST: "smtp-relay.brevo.com",
+    SMTP_PORT: "587",
+    SMTP_USER: "compte@brevo",
+    SMTP_PASSWORD: "cle avec espace",
+  });
+  assert.equal(canal.type, "smtp");
+  assert.equal(canal.port, 587);
+  assert.equal(canal.securise, false);
+  assert.equal(canal.motDePasse, "cle avec espace");
+});
+
+test("un port invalide retombe sur 465, chiffré d'emblée", () => {
+  const canal = canalEnvoi({ SMTP_USER: "a@gmail.com", SMTP_PASSWORD: "x", SMTP_PORT: "abc" });
+  assert.equal(canal.port, 465);
+  assert.equal(canal.securise, true);
+});
+
+test("Resend, quand il est configuré, passe avant le SMTP", () => {
+  const canal = canalEnvoi({ RESEND_API_KEY: "re_123", SMTP_USER: "a@gmail.com", SMTP_PASSWORD: "x" });
+  assert.equal(canal.type, "resend");
+  assert.equal(canal.expediteur, "SOS Citizens ASBL <onboarding@resend.dev>");
+  assert.equal(canalEnvoi({ RESEND_API_KEY: "re_123", EMAIL_EXPEDITEUR: "SOS <code@sos.be>" }).expediteur, "SOS <code@sos.be>");
+});
