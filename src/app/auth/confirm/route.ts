@@ -10,8 +10,11 @@ import { cheminSur } from "@/lib/chemin-sur";
  *  - `token_hash` + `type` : le lien de NOTRE e-mail. Il fonctionne sur
  *    n'importe quel appareil — on peut lire l'e-mail sur son téléphone et
  *    ouvrir la session sur son ordinateur… ou l'inverse.
- *  - `code` : le retour de Google, ou du lien envoyé par Supabase. La
- *    vérification exige le même navigateur que celui de la demande.
+ *  - `code` : le retour de Google, et des liens Supabase envoyés avant le
+ *    passage au flux implicite. La vérification exige le même navigateur que
+ *    celui de la demande. Les liens Supabase actuels rapportent la session
+ *    dans le fragment de l'adresse, que seul le navigateur lit : voir
+ *    `components/RetourLienEmail.tsx`.
  *  - `error` : lien expiré, connexion Google annulée. On ramène la personne à
  *    l'écran de connexion avec un message clair, jamais sur une page blanche.
  */

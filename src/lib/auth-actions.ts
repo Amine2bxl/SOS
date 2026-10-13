@@ -11,11 +11,14 @@
  * Deux façons d'envoyer le code, selon ce qui est configuré :
  *
  *  - `code` (la voie voulue) : nous fabriquons le code avec la clé de service
- *    Supabase et envoyons NOTRE e-mail par Resend, depuis le domaine de
- *    l'association. Le code se saisit dans le formulaire resté ouvert.
+ *    Supabase et envoyons NOTRE e-mail, par la boîte Gmail de l'association
+ *    (SMTP) ou par Resend (voir `lib/mail/canal.ts`). Le code se saisit dans
+ *    le formulaire resté ouvert.
  *  - `lien` (le repli) : Supabase envoie son propre e-mail. Son gabarit par
  *    défaut ne contient qu'un lien ; si le gabarit a été modifié pour inclure
- *    le code (`{{ .Token }}`), l'écran accepte aussi le code. L'expéditeur par
+ *    le code (`{{ .Token }}`), l'écran accepte aussi le code. Le lien ouvre la
+ *    session dans le navigateur qui le suit, quel qu'il soit (flux implicite :
+ *    voir `lib/supabase/lien.ts` et `RetourLienEmail`). L'expéditeur par
  *    défaut de Supabase est plafonné à quelques envois par heure : c'est la
  *    raison pour laquelle des e-mails « n'arrivaient pas ». Il ne convient pas
  *    à un service ouvert au public.
@@ -27,6 +30,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { creerClientServeur } from "@/lib/supabase/server";
 import { creerClientAdmin } from "@/lib/supabase/admin";
+import { creerClientLien } from "@/lib/supabase/lien";
+import { jetonsPlausibles } from "@/lib/lien-email";
 import { envoyerEmail, mailConfigure, urlDuSite } from "@/lib/mail/envoyer";
 import { emailConfirmation } from "@/lib/mail/gabarits";
 import { traduireErreur } from "@/lib/auth-erreurs";
@@ -165,11 +170,13 @@ async function envoyerCodeInterne(_precedent: EtatAuth, donnees: FormData): Prom
   }
 
   /* ---------------------------------------- repli : l'e-mail de Supabase */
-  const { error } = await supabase.auth.signInWithOtp({
+  const clientLien = creerClientLien();
+  if (!clientLien) return { erreur: "La connexion n'est pas disponible pour le moment." };
+  const { error } = await clientLien.auth.signInWithOtp({
     email,
     options: {
       shouldCreateUser: true,
-      emailRedirectTo: `${urlDuSite()}/auth/confirm?suite=${encodeURIComponent(suite)}`,
+      emailRedirectTo: `${urlDuSite()}/connexion?suite=${encodeURIComponent(suite)}`,
     },
   });
   if (error) return { erreur: traduireErreur(error.message) };
@@ -224,6 +231,28 @@ export async function verifierSession(email: string): Promise<EtatAuth> {
   const { data: { user }, error } = await supabase.auth.getUser();
   if (error || !user?.email_confirmed_at || user.email?.toLowerCase() !== email.trim().toLowerCase()) return {};
   return { verifie: true, email: user.email };
+}
+
+/**
+ * Ouvre la session rapportée par un lien de connexion (voir `lib/lien-email.ts`).
+ *
+ * `setSession` fait vérifier le jeton par Supabase avant d'écrire les cookies :
+ * un jeton inventé ou périmé n'ouvre rien, et un jeton valide n'ouvre que la
+ * session de son titulaire, dans le navigateur qui l'apporte.
+ */
+export async function ouvrirSessionDepuisLien(accessToken: string, refreshToken: string): Promise<{ ok: boolean }> {
+  try {
+    if (!jetonsPlausibles(accessToken, refreshToken)) return { ok: false };
+    if (!(await consommerJeton("verificationCode", `lien:${await ipVisiteur()}`))) return { ok: false };
+    const supabase = await creerClientServeur();
+    if (!supabase) return { ok: false };
+    const { data, error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+    if (error || !data.session) return { ok: false };
+    revalidatePath("/", "layout");
+    return { ok: true };
+  } catch {
+    return { ok: false };
+  }
 }
 
 export async function seDeconnecter() {

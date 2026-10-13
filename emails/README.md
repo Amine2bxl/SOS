@@ -13,15 +13,55 @@ public. Un retour `429 / email rate limit exceeded` signifie qu'aucun nouveau
 code n'a été envoyé. Modifier le formulaire ou redéployer ne lève pas cette
 limite. Il faut configurer un expéditeur de production.
 
-## Option recommandée : SMTP Supabase
+## Option recommandée : la boîte Gmail de l'association (10 minutes)
 
-Cette option utilise `signInWithOtp` et ne nécessite ni clé de service Supabase
-ni clé Resend dans l'application.
+Aucun nom de domaine n'est nécessaire. Le serveur fabrique le code avec
+`auth.admin.generateLink`, puis l'envoie depuis la boîte Gmail avec le modèle
+de `src/lib/mail/gabarits.ts` : le code est dans l'objet, le HTML et la version
+texte, sans aucun lien à ouvrir. Les rappels d'échéance partent par le même
+chemin. Aucun modèle n'est à recopier dans Supabase, et le plafond d'envoi de
+Supabase ne s'applique plus.
+
+1. **Google** — sur le compte Gmail qui enverra les codes (idéalement une
+   adresse dédiée à l'association) : activer la
+   [validation en deux étapes](https://myaccount.google.com/signinoptions/twosv),
+   puis créer un [mot de passe d'application](https://myaccount.google.com/apppasswords)
+   nommé « SOS Citizens ». Google affiche 16 lettres : les copier.
+2. **Supabase** — copier une clé secrète dans
+   [API Keys](https://supabase.com/dashboard/project/vlbmkzuffnbgktqspdvp/settings/api-keys),
+   onglet « Publishable and secret API keys » : la clé `sb_secret_…` (la créer
+   si le bouton « Create new API keys » apparaît). L'ancienne clé `service_role`
+   fonctionne aussi, mais Supabase l'arrête fin 2026. Cette clé ne doit jamais
+   être publiée ni préfixée `NEXT_PUBLIC_`.
+3. **Vercel** — dans
+   [Environment Variables](https://vercel.com/amine-nq/sos/settings/environment-variables),
+   ajouter pour Production et Preview, en « Sensitive » :
+
+   | Variable | Valeur |
+   | --- | --- |
+   | `SUPABASE_SERVICE_ROLE_KEY` | la clé de l'étape 2 |
+   | `SMTP_USER` | l'adresse Gmail complète |
+   | `SMTP_PASSWORD` | le mot de passe d'application de l'étape 1 |
+   | `CRON_SECRET` | une longue chaîne aléatoire (rappels quotidiens) |
+
+4. **Redéployer** (Deployments → ⋯ → Redeploy), ou fusionner une PR.
+
+Gmail accepte quelques centaines d'envois par jour : de quoi démarrer.
+Un autre fournisseur SMTP (Brevo, OVH…) fonctionne aussi avec `SMTP_HOST` et
+`SMTP_PORT`. Avec un nom de domaine vérifié, `RESEND_API_KEY` et
+`EMAIL_EXPEDITEUR` prennent le relais (Resend passe avant le SMTP).
+
+## Autre option : le SMTP de Supabase
+
+Sans clé serveur dans Vercel, l'application demande à Supabase d'envoyer
+lui-même l'e-mail (`signInWithOtp`). Son expéditeur par défaut ne convient pas
+à un site public : quelques envois par heure, réservés à l'équipe du projet, et
+un modèle qui ne contient qu'un lien. Pour l'utiliser quand même :
 
 1. Dans [SMTP Supabase](https://supabase.com/dashboard/project/vlbmkzuffnbgktqspdvp/auth/smtp),
-   activer un fournisseur SMTP avec ses identifiants et une adresse d'envoi
-   sur un domaine vérifié. Le fournisseur peut être Resend ou un autre service.
-   Désactiver le suivi des clics pour les e-mails d'authentification.
+   activer un SMTP personnalisé (Gmail : `smtp.gmail.com`, port 465, l'adresse
+   Gmail et le mot de passe d'application ci-dessus). Désactiver le suivi des
+   clics pour les e-mails d'authentification.
 2. Dans [Email Templates](https://supabase.com/dashboard/project/vlbmkzuffnbgktqspdvp/auth/templates),
    installer **les deux** modèles du dépôt :
 
@@ -32,37 +72,17 @@ ni clé Resend dans l'application.
 
    `signInWithOtp` utilise le modèle **Magic Link** pour les personnes déjà
    inscrites. Modifier seulement Confirm signup laisse ces personnes sans code.
-   Les fichiers du dépôt ne sont pas appliqués automatiquement au projet hébergé.
-3. Dans [URL Configuration](https://supabase.com/dashboard/project/vlbmkzuffnbgktqspdvp/auth/url-configuration),
+3. Dans [Rate Limits](https://supabase.com/dashboard/project/vlbmkzuffnbgktqspdvp/auth/rate-limits),
+   relever le nombre d'e-mails par heure.
+4. Dans [URL Configuration](https://supabase.com/dashboard/project/vlbmkzuffnbgktqspdvp/auth/url-configuration),
    définir Site URL sur `https://soscitizens.vercel.app` et autoriser
-   `https://soscitizens.vercel.app/auth/confirm` ainsi que les domaines effectivement
-   utilisés. Pour les previews, autoriser seulement les previews de ce projet.
-4. Dans les réglages Email, conserver la confirmation activée et les codes
-   sur **6 chiffres**. Régler leur durée de validité selon le besoin du service.
-5. Tester avec une adresse de première inscription et une adresse déjà inscrite.
+   `https://soscitizens.vercel.app/auth/confirm`.
+
+Dans les deux cas, garder les codes sur **6 chiffres** (réglage par défaut).
 
 Documentation : [OTP](https://supabase.com/docs/guides/auth/auth-email-passwordless),
 [modèles](https://supabase.com/docs/guides/auth/auth-email-templates),
 [SMTP](https://supabase.com/docs/guides/auth/auth-smtp).
-
-## Alternative : envoi direct via Resend
-
-Le serveur produit le code avec `auth.admin.generateLink`, puis envoie les
-modèles de `src/lib/mail/gabarits.ts`. Le code est visible dans l'objet, le HTML
-et la version texte. Aucun lien de connexion n'est inclus dans cet envoi.
-
-Configurer dans Vercel, pour chaque environnement concerné :
-
-| Variable | Valeur |
-| --- | --- |
-| `RESEND_API_KEY` | Clé API du compte Resend de l'association |
-| `EMAIL_EXPEDITEUR` | Adresse sur un domaine vérifié dans Resend |
-| `SUPABASE_SERVICE_ROLE_KEY` | Clé serveur Supabase, jamais `NEXT_PUBLIC_*` |
-| `NEXT_PUBLIC_SITE_URL` | `https://soscitizens.vercel.app` en production |
-
-Redéployer ensuite. Sans les deux clés, l'application utilise le mailer
-Supabase : cela fonctionne pour le public seulement si le SMTP est configuré.
-L'adresse `onboarding@resend.dev` sert uniquement aux tests autorisés par Resend.
 
 ## Validation du parcours
 
@@ -79,4 +99,4 @@ L'adresse `onboarding@resend.dev` sert uniquement aux tests autorisés par Resen
   celle d'un autre compte. Un autre navigateur exige une nouvelle vérification.
 
 `npm test`, `npm run typecheck`, `npm run lint` et `npm run build` contrôlent le
-code. Un vrai test de réception demande l'expéditeur SMTP ou Resend configuré.
+code. Un vrai test de réception demande la boîte Gmail (ou Resend) configurée.

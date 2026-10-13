@@ -216,11 +216,21 @@ export function FormulaireAcces({
   };
 
   if (verif.verifie || sessionVerifiee || emailVerifie) {
+    // L'adresse du compte ouvert, en clair : après un lien reçu par e-mail,
+    // c'est ce qui permet de voir qu'on n'est pas dans le compte de quelqu'un d'autre.
+    const compte = (verif.verifie ? verif.email : null) ?? sessionVerifiee ?? emailVerifie;
     return (
       <div role="status" className="flex flex-col items-center gap-4 text-center animate-rise">
         <MarqueSos className="h-16 w-16 animate-pop" />
         <h1 className="font-display text-2xl font-bold text-navy-900">Votre adresse est vérifiée</h1>
-        <p className="text-ink-soft">Vous pouvez maintenant accéder à vos dossiers.</p>
+        <p className="text-ink-soft">
+          {compte && (
+            <>
+              Connecté avec <strong className="break-all text-ink">{compte}</strong>.{" "}
+            </>
+          )}
+          Vous pouvez maintenant accéder à vos dossiers.
+        </p>
         <Btn variant="gold" taille="lg" onClick={() => {
           stockerAttente(null);
           routeur.replace(suite);

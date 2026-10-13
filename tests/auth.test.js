@@ -6,6 +6,7 @@ const vm = require('node:vm');
 const ts = require('typescript');
 const { lireAttenteAuth, secondesAvantRenvoi } = require('../.test-build/lib/auth-attente.js');
 const { traduireErreur } = require('../.test-build/lib/auth-erreurs.js');
+const { lireRetourLien } = require('../.test-build/lib/lien-email.js');
 
 // Exécute les vrais modules serveur. Seules les frontières réseau/Next sont
 // remplacées : aucune demande de code n'est envoyée à une vraie adresse.
@@ -26,11 +27,12 @@ function charger(fichier, dependances, globaux = {}) {
   return charge.exports;
 }
 
-function actions({ verifyOtp, signInWithOtp, getUser, quota = true, admin = null, mail = false, envoi = { ok: true } } = {}) {
+function actions({ verifyOtp, signInWithOtp, getUser, setSession, quota = true, admin = null, mail = false, envoi = { ok: true } } = {}) {
   const supabase = { auth: {
     signInWithOtp: signInWithOtp ?? (async () => ({ error: null })),
     verifyOtp: verifyOtp ?? (async () => ({ error: null, data: { session: {}, user: {} } })),
     getUser: getUser ?? (async () => ({ error: null, data: { user: null } })),
+    setSession: setSession ?? (async () => ({ error: null, data: { session: {} } })),
   } };
   return charger('src/lib/auth-actions.ts', {
     'next/headers': { headers: async () => new Headers() },
@@ -39,6 +41,8 @@ function actions({ verifyOtp, signInWithOtp, getUser, quota = true, admin = null
     '@/lib/chemin-sur': require('../.test-build/lib/chemin-sur.js'),
     '@/lib/supabase/server': { creerClientServeur: async () => supabase },
     '@/lib/supabase/admin': { creerClientAdmin: () => admin },
+    '@/lib/supabase/lien': { creerClientLien: () => supabase },
+    '@/lib/lien-email': require('../.test-build/lib/lien-email.js'),
     '@/lib/mail/envoyer': { mailConfigure: () => mail, urlDuSite: () => 'https://soscitizens.vercel.app', envoyerEmail: async (message) => typeof envoi === 'function' ? envoi(message) : envoi },
     '@/lib/mail/gabarits': require('../.test-build/lib/mail/gabarits.js'),
     '@/lib/auth-erreurs': { traduireErreur },
@@ -203,4 +207,52 @@ test('le garde garde la confirmation sur connexion et protège toujours l’espa
   utilisateur = null;
   const refuse = await garde.proxy(new next.NextRequest('https://soscitizens.vercel.app/adherer'));
   assert.equal(new URL(refuse.headers.get('location')).pathname, '/connexion');
+});
+
+test('un code refusé n\'est pas présenté comme forcément expiré', () => {
+  // La même phrase de Supabase couvre la faute de frappe et le code périmé.
+  const message = traduireErreur('Token has expired or is invalid');
+  assert.match(message, /ne correspond pas ou a expiré/);
+  assert.match(traduireErreur('Email rate limit exceeded'), /limite/);
+});
+
+/* -------------------------------------------- le lien reçu de Supabase */
+
+const JWT_TEST = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0In0.c2lnbmF0dXJl';
+
+test('le lien de Supabase ramène à la connexion avec la destination demandée', async () => {
+  let appel;
+  const a = actions({ signInWithOtp: async (p) => { appel = p; return { error: null }; } });
+  await a.envoyerCode({}, demande());
+  const retour = new URL(appel.options.emailRedirectTo);
+  assert.equal(retour.pathname, '/connexion');
+  assert.equal(retour.searchParams.get('suite'), '/tableau-de-bord/nouveau?reprise=1');
+});
+
+test('le fragment d\'un lien de connexion est lu, et seulement lui', () => {
+  assert.deepEqual(lireRetourLien(`#access_token=${JWT_TEST}&expires_in=3600&refresh_token=r3fr3sh-t0ken&token_type=bearer&type=magiclink`),
+    { type: 'session', accessToken: JWT_TEST, refreshToken: 'r3fr3sh-t0ken' });
+  assert.deepEqual(lireRetourLien('#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired'),
+    { type: 'erreur', raison: 'lien-expire' });
+  assert.equal(lireRetourLien('#analyser'), null, 'une ancre de page');
+  assert.equal(lireRetourLien(''), null);
+  assert.deepEqual(lireRetourLien('#access_token=pas-un-jwt&refresh_token=r3fr3sh-t0ken'), { type: 'erreur', raison: 'lien-expire' });
+});
+
+test('la session d\'un lien n\'est ouverte qu\'après vérification par Supabase', async () => {
+  let recu;
+  const a = actions({ setSession: async (s) => { recu = s; return { error: null, data: { session: { access_token: s.access_token } } }; } });
+  // Le module tourne dans un autre contexte : on compare les champs, pas les objets.
+  assert.equal((await a.ouvrirSessionDepuisLien(JWT_TEST, 'r3fr3sh-t0ken')).ok, true);
+  assert.equal(recu.access_token, JWT_TEST);
+  assert.equal(recu.refresh_token, 'r3fr3sh-t0ken');
+
+  const refuse = actions({ setSession: async () => ({ error: { message: 'invalid JWT' }, data: { session: null } }) });
+  assert.equal((await refuse.ouvrirSessionDepuisLien(JWT_TEST, 'r3fr3sh-t0ken')).ok, false);
+
+  let appels = 0;
+  const b = actions({ setSession: async () => { appels++; return { error: null, data: { session: {} } }; } });
+  assert.equal((await b.ouvrirSessionDepuisLien('pas-un-jwt', 'r3fr3sh-t0ken')).ok, false);
+  assert.equal((await actions({ quota: false }).ouvrirSessionDepuisLien(JWT_TEST, 'r3fr3sh-t0ken')).ok, false);
+  assert.equal(appels, 0);
 });

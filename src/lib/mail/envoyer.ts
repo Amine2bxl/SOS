@@ -1,21 +1,18 @@
 import "server-only";
+import { createTransport } from "nodemailer";
 import { ASSO } from "@/lib/data";
+import { canalEnvoi } from "@/lib/mail/canal";
 
 export type ResultatEnvoi = { ok: true } | { ok: false; raison: "non-configure" | "echec" };
-
-/** Adresse d'expédition, personnalisable sans toucher au code. */
-function expediteur(): string {
-  return process.env.EMAIL_EXPEDITEUR ?? `${ASSO.nom} <onboarding@resend.dev>`;
-}
 
 /** URL publique du site, utilisée dans les e-mails (logo, liens) : voir `lib/url-site.ts`. */
 export { urlDuSite } from "@/lib/url-site";
 
-/** Vrai quand l'envoi d'e-mails est branché. */
-export const mailConfigure = (): boolean => Boolean(process.env.RESEND_API_KEY);
+/** Vrai quand l'envoi d'e-mails est branché (Resend ou SMTP : voir `canal.ts`). */
+export const mailConfigure = (): boolean => canalEnvoi() !== null;
 
 /**
- * Envoi d'un e-mail via l'API HTTP de Resend.
+ * Envoi d'un e-mail, par Resend ou par SMTP selon la configuration.
  *
  * Aucune exception ne remonte : un envoi qui échoue est une information que
  * l'appelant affiche à l'utilisateur (« nous n'avons pas pu envoyer le code »),
@@ -32,19 +29,42 @@ export async function envoyerEmail({
   html: string;
   texte: string;
 }): Promise<ResultatEnvoi> {
-  const cle = process.env.RESEND_API_KEY;
-  if (!cle) return { ok: false, raison: "non-configure" };
+  const canal = canalEnvoi();
+  if (!canal) return { ok: false, raison: "non-configure" };
 
   try {
+    if (canal.type === "smtp") {
+      const transport = createTransport({
+        host: canal.hote,
+        port: canal.port,
+        secure: canal.securise,
+        // Jamais d'identifiants en clair : sans TLS d'emblée, STARTTLS est exigé.
+        requireTLS: !canal.securise,
+        auth: { user: canal.utilisateur, pass: canal.motDePasse },
+        connectionTimeout: 10_000,
+        greetingTimeout: 10_000,
+        socketTimeout: 20_000,
+      });
+      await transport.sendMail({
+        from: canal.expediteur,
+        to: destinataire,
+        replyTo: ASSO.email,
+        subject: sujet,
+        html,
+        text: texte,
+      });
+      return { ok: true };
+    }
+
     const reponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
       signal: AbortSignal.timeout(10_000),
       headers: {
-        Authorization: `Bearer ${cle}`,
+        Authorization: `Bearer ${canal.cle}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: expediteur(),
+        from: canal.expediteur,
         to: [destinataire],
         reply_to: ASSO.email,
         subject: sujet,
@@ -60,7 +80,9 @@ export async function envoyerEmail({
     }
     return { ok: true };
   } catch (erreur) {
-    console.error("Envoi d'e-mail impossible :", erreur);
+    // Le message seul : l'objet d'erreur SMTP peut porter la commande en cours.
+    const e = erreur as { code?: string; responseCode?: number; message?: string };
+    console.error(`Envoi d'e-mail impossible (${canal.type}) :`, e.code ?? "", e.responseCode ?? "", e.message ?? String(erreur));
     return { ok: false, raison: "echec" };
   }
 }

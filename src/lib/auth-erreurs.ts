@@ -17,6 +17,11 @@ export function traduireErreur(message: string): string {
     return "Veuillez patienter au moins une minute avant de redemander un code. Votre dernier code reste utilisable.";
   if (m.includes("email address not authorized") || m.includes("email_address_not_authorized"))
     return "L'envoi vers cette adresse n'est pas encore disponible. Contactez l'association pour débloquer l'accès.";
+  // Supabase répond la même phrase pour un code mal tapé et pour un code
+  // périmé : dire « expiré » pousserait à redemander un code pour une faute
+  // de frappe.
+  if (m.includes("expired or is invalid"))
+    return "Ce code ne correspond pas ou a expiré. Vérifiez les 6 chiffres du dernier e-mail reçu, ou demandez un nouveau code.";
   if (m.includes("otp expired") || m.includes("token has expired") || m.includes("expired"))
     return "Ce code a expiré. Demandez-en un nouveau.";
   if (m.includes("invalid token") || m.includes("invalid otp") || m.includes("token") || m.includes("otp"))
