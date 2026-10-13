@@ -16,6 +16,9 @@ import type { Analyse, Faits, MoyenRetenu, Region, Stade } from "@/cerveau/types
 import { analyserFaits } from "@/lib/cerveau-actions";
 import { creerDossier } from "@/lib/dossiers-actions";
 import { nombreOuNull } from "@/lib/validation";
+import { COMMUNES } from "@/lib/data";
+import { messageHorsPerimetre, regionOuverte } from "@/lib/perimetre";
+import { BoutonContact } from "@/components/Contact";
 import { TYPES_DOCUMENT, formatDate, formatMontant } from "@/lib/dossiers-format";
 import { Btn, LinkBtn, Pastille } from "@/components/ui";
 import { CompteARebours, JaugeSolidite, FriseProcedure } from "@/components/dossier-ui";
@@ -49,10 +52,11 @@ const ETAPES_VISIBLES: { id: Etape; libelle: string }[] = [
   { id: "verdict", libelle: "Résultat" },
 ];
 
+// Dans l'ordre du plan : Bruxelles est ouverte, la Flandre puis la Wallonie suivront.
 const REGIONS: { id: Region; nom: string }[] = [
   { id: "bruxelles", nom: "Bruxelles" },
-  { id: "wallonie", nom: "Wallonie" },
   { id: "flandre", nom: "Flandre" },
+  { id: "wallonie", nom: "Wallonie" },
 ];
 
 /**
@@ -670,6 +674,7 @@ function EtapeVerification({
       ).length
     : 0;
   const sansDate = !form.dateEnvoi && !form.dateEcheance;
+  const horsPerimetre = form.region !== "" && !regionOuverte(form.region);
 
   return (
     <div className="animate-rise">
@@ -726,18 +731,35 @@ function EtapeVerification({
                   type="button"
                   aria-pressed={form.region === r.id}
                   onClick={() => setForm((f) => ({ ...f, region: r.id, langue: r.id === "flandre" ? "nl" : f.langue }))}
-                  className={`h-12 rounded-xl border text-sm font-bold transition ${
+                  className={`flex h-12 flex-col items-center justify-center rounded-xl border text-sm font-bold leading-tight transition ${
                     form.region === r.id
                       ? "border-navy-900 bg-navy-900 text-white"
                       : "border-line bg-white text-navy-900 hover:border-navy-200 hover:bg-navy-50"
                   }`}
                 >
                   {r.nom}
+                  {!regionOuverte(r.id) && (
+                    <span className={`text-[10px] font-semibold ${form.region === r.id ? "text-gold-300" : "text-ink-faint"}`}>
+                      bientôt
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
-            <p className="mt-1.5 text-xs text-ink-soft">La région décide du délai et de la langue de la lettre.</p>
+            <p className="mt-1.5 text-xs text-ink-soft">
+              SOS Citizens couvre aujourd&apos;hui les 19 communes de Bruxelles-Capitale. La Flandre, puis la Wallonie,
+              suivront.
+            </p>
           </fieldset>
+
+          {horsPerimetre && (
+            <div role="status" className="rounded-2xl border-l-4 border-azur-600 bg-azur-50 p-4">
+              <p className="text-sm leading-relaxed text-ink">{messageHorsPerimetre(form.region)}</p>
+              <div className="mt-3">
+                <BoutonContact variante="secondaire">Écrire à l&apos;association</BoutonContact>
+              </div>
+            </div>
+          )}
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Champ label="Référence" confiance={c("reference")} aide="En haut du courrier.">
@@ -758,7 +780,19 @@ function EtapeVerification({
               </div>
             </Champ>
             <Champ label="Commune" confiance={c("commune")}>
-              <input value={form.commune} onChange={maj("commune")} className={champCls} placeholder="Ex. Ixelles, Liège, Gent" />
+              <input
+                value={form.commune}
+                onChange={maj("commune")}
+                className={champCls}
+                list="communes-bruxelloises"
+                autoComplete="off"
+                placeholder="Ex. Ixelles, Schaerbeek"
+              />
+              <datalist id="communes-bruxelloises">
+                {COMMUNES.map((commune) => (
+                  <option key={commune.slug} value={commune.nom} />
+                ))}
+              </datalist>
             </Champ>
             <Champ label="Plaque" confiance={c("plaque")}>
               <input
@@ -825,7 +859,7 @@ function EtapeVerification({
           <IconeFlecheGauche className="h-5 w-5" />
           Changer de document
         </Btn>
-        <Btn variant="gold" taille="lg" onClick={suite}>
+        <Btn variant="gold" taille="lg" onClick={suite} disabled={horsPerimetre}>
           C&apos;est bon, continuer
           <IconeFleche className="h-5 w-5" />
         </Btn>
@@ -1067,7 +1101,7 @@ function EtapeVerdict({
       )}
 
       <div
-        className={`sticky z-20 rounded-[1.5rem] border border-line bg-card/95 p-4 shadow-flotte backdrop-blur lg:bottom-4 ${
+        className={`sticky z-20 rounded-[1.5rem] border border-line bg-card p-4 shadow-flotte lg:bottom-4 ${
           mode === "membre" ? "bottom-24" : "bottom-4"
         }`}
       >

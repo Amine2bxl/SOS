@@ -90,7 +90,7 @@ export function CoquilleApp({ membre, children }: { membre: InfosMembre; childre
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/* ---------------------------------------- barre du haut (téléphone) */}
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-line bg-card/95 px-4 py-2.5 backdrop-blur lg:hidden">
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-line bg-card px-4 py-2.5 lg:hidden">
           <Link href="/tableau-de-bord" aria-label="Accueil de mon espace" className="flex items-center gap-2">
             <MarqueSos className="h-8 w-8" />
             <span className="font-display text-base font-bold text-navy-900">
@@ -113,7 +113,7 @@ export function CoquilleApp({ membre, children }: { membre: InfosMembre; childre
         {/* ------------------------------------- barre d'onglets (téléphone) */}
         <nav
           aria-label="Navigation de l'espace membre"
-          className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-card pb-[env(safe-area-inset-bottom)] lg:hidden"
         >
           <ul className="mx-auto grid max-w-lg grid-cols-5 items-end px-2">
             {MODULES.map((m) => (

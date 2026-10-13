@@ -1,7 +1,10 @@
 /**
- * Données statiques du site. Aucune base de données n'est nécessaire :
- * le site est entièrement rendu statiquement, ce qui garantit un
- * déploiement Vercel sans variable d'environnement.
+ * Données de référence du site, disponibles sans base de données.
+ *
+ * Les règles des communes vivent aussi en base (`communes`, `communes_regles`),
+ * où l'association les tient à jour : la page « Communes » les y lit à chaque
+ * visite. Les repères ci-dessous restent le filet quand la base ne répond pas,
+ * et la référence du moteur d'analyse, qui doit tourner sans réseau.
  */
 
 /** Informations officielles de l'association (sources publiques : BCE, presse). */
@@ -158,6 +161,12 @@ export const DEMANDES_STANDARD = [
 export type Commune = {
   slug: string;
   nom: string;
+  /** Nom néerlandais : les courriers, les panneaux et les plaques le portent aussi. */
+  nl: string;
+  /** Code INS (Statbel) : l'identifiant officiel de la commune, stable. */
+  ins: string;
+  /** Codes postaux principaux (bpost). */
+  codesPostaux: string[];
   /** Nature des zones : rouge, verte, bleue. Repère stable, à confirmer. */
   zones: string;
   /** Plages horaires de paiement, par commune (à vérifier dans le règlement). */
@@ -187,6 +196,9 @@ export const COMMUNES: Commune[] = [
   {
     slug: "anderlecht",
     nom: "Anderlecht",
+    nl: "Anderlecht",
+    ins: "21001",
+    codesPostaux: ["1070"],
     zones: "Zones vertes et rouges, avec des poches de stationnement mixte autour des marchés et des commerces.",
     heures: "Payant selon la zone, généralement en journée en semaine et le samedi ; grille exacte dans le règlement communal.",
     gratuit: "Souvent libre la nuit et le dimanche et les jours fériés, selon la zone.",
@@ -199,6 +211,9 @@ export const COMMUNES: Commune[] = [
   {
     slug: "auderghem",
     nom: "Auderghem",
+    nl: "Oudergem",
+    ins: "21002",
+    codesPostaux: ["1160"],
     zones: "Zones vertes, et zones rouges à proximité des gares et des métros (Herrmann-Debroux notamment).",
     heures: "Payant en journée en semaine ; le samedi peut être soumis à paiement près des pôles de transport.",
     gratuit: "Couramment libre la nuit, le dimanche et les jours fériés en zone verte.",
@@ -211,6 +226,9 @@ export const COMMUNES: Commune[] = [
   {
     slug: "berchem-sainte-agathe",
     nom: "Berchem-Sainte-Agathe",
+    nl: "Sint-Agatha-Berchem",
+    ins: "21003",
+    codesPostaux: ["1082"],
     zones: "Zones vertes majoritaires, avec des poches rouges le long des axes commerciaux.",
     heures: "Paiement en journée en semaine dans les zones concernées ; détail dans le règlement communal.",
     gratuit: "Souvent gratuit la nuit, le dimanche et les jours fériés hors zones rouges.",
@@ -223,6 +241,9 @@ export const COMMUNES: Commune[] = [
   {
     slug: "bruxelles-ville",
     nom: "Bruxelles-Ville",
+    nl: "Brussel",
+    ins: "21004",
+    codesPostaux: ["1000", "1020", "1120", "1130"],
     zones: "Zones rouges, vertes et bleues ; le Pentagone est en zone rouge stricte et dense.",
     heures: "Stationnement payant sur de larges plages : en journée et souvent le samedi ; certaines zones en soirée.",
     gratuit: "La gratuité (nuit, dimanche, jours fériés) varie fort selon la zone — à vérifier impérativement.",
@@ -235,6 +256,9 @@ export const COMMUNES: Commune[] = [
   {
     slug: "etterbeek",
     nom: "Etterbeek",
+    nl: "Etterbeek",
+    ins: "21005",
+    codesPostaux: ["1040"],
     zones: "Zones vertes et rouges, avec un régime particulier autour du quartier des institutions européennes.",
     heures: "Payant en journée en semaine et souvent le samedi dans les zones rouges.",
     gratuit: "Nuit, dimanche et jours fériés généralement libres en zones vertes.",
@@ -247,6 +271,9 @@ export const COMMUNES: Commune[] = [
   {
     slug: "evere",
     nom: "Evere",
+    nl: "Evere",
+    ins: "21006",
+    codesPostaux: ["1140"],
     zones: "Zones vertes et rouges, concentrées autour des pôles commerciaux et des nœuds de transport.",
     heures: "Paiement en journée en semaine ; le samedi selon les zones.",
     gratuit: "Libre la nuit et le dimanche en général.",
@@ -259,6 +286,9 @@ export const COMMUNES: Commune[] = [
   {
     slug: "forest",
     nom: "Forest",
+    nl: "Vorst",
+    ins: "21007",
+    codesPostaux: ["1190"],
     zones: "Zones vertes et rouges, renforcées autour de la gare de Forest-Midi.",
     heures: "Payant en journée en semaine et près de la gare.",
     gratuit: "Nuit, dimanche et jours fériés généralement libres.",
@@ -271,6 +301,9 @@ export const COMMUNES: Commune[] = [
   {
     slug: "ganshoren",
     nom: "Ganshoren",
+    nl: "Ganshoren",
+    ins: "21008",
+    codesPostaux: ["1083"],
     zones: "Zones vertes, avec des poches rouges près de l'hôpital et du Basilix.",
     heures: "Paiement en journée en semaine dans les zones concernées.",
     gratuit: "Libre la nuit et le dimanche en général.",
@@ -283,6 +316,9 @@ export const COMMUNES: Commune[] = [
   {
     slug: "ixelles",
     nom: "Ixelles",
+    nl: "Elsene",
+    ins: "21009",
+    codesPostaux: ["1050"],
     zones: "Zones rouges et vertes denses, zones bleues résiduelles.",
     heures: "Payant sur de larges plages, en semaine et souvent le samedi ; proximité des campus et commerces.",
     gratuit: "Nuit, dimanche et jours fériés généralement libres, selon zone.",
@@ -295,6 +331,9 @@ export const COMMUNES: Commune[] = [
   {
     slug: "jette",
     nom: "Jette",
+    nl: "Jette",
+    ins: "21010",
+    codesPostaux: ["1090"],
     zones: "Zones vertes et rouges, avec un régime propre autour de l'hôpital universitaire.",
     heures: "Payant en journée en semaine ; le samedi selon les zones.",
     gratuit: "Libre la nuit, le dimanche et les jours fériés hors zones rouges.",
@@ -307,6 +346,9 @@ export const COMMUNES: Commune[] = [
   {
     slug: "koekelberg",
     nom: "Koekelberg",
+    nl: "Koekelberg",
+    ins: "21011",
+    codesPostaux: ["1081"],
     zones: "Zones vertes, avec une poche rouge autour de la Basilique et du pôle touristique.",
     heures: "Payant en journée en semaine dans les zones concernées.",
     gratuit: "Libre la nuit et le dimanche en général.",
@@ -319,6 +361,9 @@ export const COMMUNES: Commune[] = [
   {
     slug: "molenbeek-saint-jean",
     nom: "Molenbeek-Saint-Jean",
+    nl: "Sint-Jans-Molenbeek",
+    ins: "21012",
+    codesPostaux: ["1080"],
     zones: "Zones vertes et rouges, avec des zones denses autour des métros et axes commerçants.",
     heures: "Payant en journée en semaine et souvent le samedi dans les zones rouges.",
     gratuit: "Nuit, dimanche et jours fériés généralement libres.",
@@ -331,6 +376,9 @@ export const COMMUNES: Commune[] = [
   {
     slug: "saint-gilles",
     nom: "Saint-Gilles",
+    nl: "Sint-Gillis",
+    ins: "21013",
+    codesPostaux: ["1060"],
     zones: "Zones rouges et vertes denses ; le Quartier Louise est en zone rouge.",
     heures: "Payant sur de larges plages en semaine et le samedi.",
     gratuit: "Nuit, dimanche et jours fériés généralement libres, selon zone.",
@@ -343,6 +391,9 @@ export const COMMUNES: Commune[] = [
   {
     slug: "saint-josse-ten-noode",
     nom: "Saint-Josse-ten-Noode",
+    nl: "Sint-Joost-ten-Node",
+    ins: "21014",
+    codesPostaux: ["1210"],
     zones: "Zone rouge quasi généralisée, très dense.",
     heures: "Paiement quasi permanent en journée, y compris souvent le samedi.",
     gratuit: "Plages de gratuité limitées : vérifiez impérativement le règlement.",
@@ -355,6 +406,9 @@ export const COMMUNES: Commune[] = [
   {
     slug: "schaerbeek",
     nom: "Schaerbeek",
+    nl: "Schaarbeek",
+    ins: "21015",
+    codesPostaux: ["1030"],
     zones: "Zones vertes, rouges et bleues sur un territoire étendu et hétérogène.",
     heures: "Payant en journée en semaine, selon la zone ; grand axe commerçant sous paiement élargi.",
     gratuit: "Nuit, dimanche et jours fériés généralement libres hors zones rouges.",
@@ -367,6 +421,9 @@ export const COMMUNES: Commune[] = [
   {
     slug: "uccle",
     nom: "Uccle",
+    nl: "Ukkel",
+    ins: "21016",
+    codesPostaux: ["1180"],
     zones: "Zones vertes majoritaires, poches rouges commerciales (Chaussée d'Alsemberg, place Saint-Job).",
     heures: "Payant en journée en semaine dans les zones concernées.",
     gratuit: "Libre la nuit et le dimanche en général.",
@@ -379,6 +436,9 @@ export const COMMUNES: Commune[] = [
   {
     slug: "watermael-boitsfort",
     nom: "Watermael-Boitsfort",
+    nl: "Watermaal-Bosvoorde",
+    ins: "21017",
+    codesPostaux: ["1170"],
     zones: "Zones vertes, et un régime particulier autour des étangs et des bois.",
     heures: "Payant en journée en semaine dans les zones concernées.",
     gratuit: "Régime spécifique le week-end près des étangs et des bois : à vérifier.",
@@ -391,6 +451,9 @@ export const COMMUNES: Commune[] = [
   {
     slug: "woluwe-saint-lambert",
     nom: "Woluwe-Saint-Lambert",
+    nl: "Sint-Lambrechts-Woluwe",
+    ins: "21018",
+    codesPostaux: ["1200"],
     zones: "Zones vertes, poches rouges sur les pôles shopping et métro (Tomberg, Roodebeek).",
     heures: "Payant en journée en semaine et souvent le samedi dans les zones rouges.",
     gratuit: "Nuit, dimanche et jours fériés généralement libres.",
@@ -403,6 +466,9 @@ export const COMMUNES: Commune[] = [
   {
     slug: "woluwe-saint-pierre",
     nom: "Woluwe-Saint-Pierre",
+    nl: "Sint-Pieters-Woluwe",
+    ins: "21019",
+    codesPostaux: ["1150"],
     zones: "Zones vertes, poches rouges sur les avenues commerçantes.",
     heures: "Payant en journée en semaine dans les zones concernées.",
     gratuit: "Libre la nuit, le dimanche et les jours fériés en général.",

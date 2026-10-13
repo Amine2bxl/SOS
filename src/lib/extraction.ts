@@ -337,20 +337,45 @@ function extraireIban(texte: string): Champ<string> {
   return repli ?? champVide<string>();
 }
 
-function extraireCommune(texte: string): Champ<string> {
-  const enMajuscules = texte.toUpperCase();
-  // Correspondance la plus longue, pour qu'un nom court ne masque pas un nom
-  // composé (« Woluwe-Saint-Pierre » vs « Woluwe »).
-  const trouvees = COMMUNES.filter((c) => enMajuscules.includes(c.nom.toUpperCase())).sort(
-    (a, b) => b.nom.length - a.nom.length,
-  );
+/**
+ * Les noms sous lesquels une commune bruxelloise apparaît sur un courrier : son
+ * nom français, son nom néerlandais, et pour la Ville, ses formules usuelles.
+ * « Brussel » seul est écarté : c'est aussi la localité postale de toutes les
+ * communes dans une adresse en néerlandais (« 1050 Brussel »).
+ */
+const NOMS_COMMUNES = COMMUNES.flatMap((c) => {
+  const noms = new Set([c.nom, c.nl]);
+  if (c.slug === "bruxelles-ville") {
+    noms.delete("Brussel");
+    noms.add("Ville de Bruxelles");
+    noms.add("Stad Brussel");
+  }
+  return [...noms].map((nom) => ({ commune: c.nom, nom }));
+});
 
+const majusculesSansAccents = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+
+function extraireCommune(texte: string): Champ<string> {
+  const normalise = majusculesSansAccents(texte);
+  // En mots entiers : « Evere » ne doit pas surgir de « sévère », ni « Jette »
+  // de « projette ». Les tirets et les espaces s'équivalent.
+  const trouvees = NOMS_COMMUNES.flatMap(({ commune, nom }) => {
+    const motif = majusculesSansAccents(nom)
+      .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+      .replace(/[\s-]+/g, "[\\s-]+");
+    const m = new RegExp(`(^|[^A-Z])(${motif})(?![A-Z])`).exec(normalise);
+    return m ? [{ commune, nom, index: m.index + m[1].length }] : [];
+  });
   if (trouvees.length === 0) return champVide<string>();
-  const index = enMajuscules.indexOf(trouvees[0].nom.toUpperCase());
+
+  // Le nom le plus long d'abord, pour qu'un nom court ne masque pas un nom
+  // composé (« Woluwe-Saint-Pierre » vs « Woluwe »).
+  trouvees.sort((a, b) => b.nom.length - a.nom.length);
+  const distinctes = new Set(trouvees.map((t) => t.commune));
   return {
-    valeur: trouvees[0].nom,
-    confiance: trouvees.length === 1 ? "haute" : "moyenne",
-    contexte: contexteAutour(texte, index),
+    valeur: trouvees[0].commune,
+    confiance: distinctes.size === 1 ? "haute" : "moyenne",
+    contexte: contexteAutour(texte, trouvees[0].index),
   };
 }
 

@@ -22,22 +22,8 @@
 import { COMMUNES } from "../../lib/data";
 import type { Langue, Region } from "../types";
 
-/** Les 19 communes bruxelloises en néerlandais (les noms français viennent de `COMMUNES`). */
-const BRUXELLES_NL = [
-  "Oudergem",
-  "Sint-Agatha-Berchem",
-  "Brussel",
-  "Vorst",
-  "Elsene",
-  "Sint-Jans-Molenbeek",
-  "Sint-Gillis",
-  "Sint-Joost-ten-Node",
-  "Schaarbeek",
-  "Ukkel",
-  "Watermaal-Bosvoorde",
-  "Sint-Lambrechts-Woluwe",
-  "Sint-Pieters-Woluwe",
-];
+/** Les 19 communes bruxelloises en néerlandais, quand leur nom diffère du français. */
+const BRUXELLES_NL = COMMUNES.filter((c) => c.nl !== c.nom).map((c) => c.nl);
 
 /** Principales villes wallonnes : assez pour reconnaître la plupart des courriers. */
 const VILLES_WALLONIE = [
@@ -147,7 +133,8 @@ export function detecterLieu(texte: string, communeLue?: string | null): Lieu {
   // Une commune déjà lue par l'extraction (et confirmée par l'utilisateur)
   // pèse plus que tout le reste.
   if (communeLue) {
-    const bxl = COMMUNES.find((c) => sansAccents(c.nom).toLowerCase() === sansAccents(communeLue).toLowerCase());
+    const lue = sansAccents(communeLue).toLowerCase();
+    const bxl = COMMUNES.find((c) => [c.nom, c.nl].some((nom) => sansAccents(nom).toLowerCase() === lue));
     if (bxl) {
       votes.bruxelles += 8;
       trouve.commune = bxl.nom;

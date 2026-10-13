@@ -15,6 +15,7 @@ import {
 } from "@/lib/validation";
 import { analyser, type Faits } from "@/cerveau";
 import { faitsDepuisDossier, nettoyerFaits, nettoyerReponses, REGIONS_VALIDES } from "@/lib/faits";
+import { messageHorsPerimetre, regionOuverte } from "@/lib/perimetre";
 import type { Dossier } from "@/lib/dossiers-format";
 
 export type EtatDossier = { erreur?: string; quotaAtteint?: boolean };
@@ -101,6 +102,9 @@ export async function creerDossier(saisie: NouveauDossier): Promise<EtatDossier 
   // le ramène à la valeur neutre plutôt que de montrer une erreur technique à
   // quelqu'un qui vient de scanner son courrier.
   const faits = faitsDeLaSaisie(saisie);
+  // Une région pas encore ouverte (voir `lib/perimetre.ts`) : pas de dossier,
+  // une orientation vers l'association.
+  if (faits.region && !regionOuverte(faits.region)) return { erreur: messageHorsPerimetre(faits.region) };
   const analyse = analyser(faits);
   const stade = (TYPES_DOCUMENT as readonly string[]).includes(faits.stade ?? "")
     ? (faits.stade as string)

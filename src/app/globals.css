@@ -107,6 +107,12 @@ body {
   border-radius: 6px;
 }
 
+/* Carte des communes : la commune qui a le focus est redessinée par la carte
+   elle-même ; le cadre rectangulaire du navigateur ne suivrait pas sa forme. */
+.carte-commune:focus-visible {
+  outline: none;
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Motifs signature                                                          */
 /* -------------------------------------------------------------------------- */

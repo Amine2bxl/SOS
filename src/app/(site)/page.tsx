@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { MOYENS, REGIONS } from "@/cerveau";
+import { MOYENS } from "@/cerveau";
 import { PLANS } from "@/lib/plans";
 import { ASSO } from "@/lib/data";
 import { LinkBtn } from "@/components/ui";
@@ -9,14 +9,16 @@ import { BoutonContact } from "@/components/Contact";
 import { AssistantScan } from "@/components/scan/AssistantScan";
 import { EscalierProcedure } from "@/components/guide";
 import { ApercuAnalyse } from "@/components/site/ApercuAnalyse";
+import { CarteBruxellesLiens } from "@/components/CarteBruxellesLiens";
+import { REGIONS_A_VENIR } from "@/lib/perimetre";
 import {
   IconeAgenda,
   IconeBalance,
-  IconeBelgique,
   IconeCadenas,
   IconeChevron,
   IconeDelai,
   IconeFleche,
+  IconeHotelDeVille,
   IconeLettre,
   IconeLibre,
   IconeScanDoc,
@@ -26,7 +28,7 @@ import {
 /** Ce que fait le moteur, dans l'ordre où il le fait. */
 const MOTEUR = [
   { Icone: IconeScanDoc, titre: "Il lit votre courrier", texte: "Référence, montant, dates, plaque, lieu : rien à retaper. Photo, capture ou PDF." },
-  { Icone: IconeDelai, titre: "Il calcule votre délai", texte: "Le délai de contestation de votre région, souvent plus court que la date imprimée." },
+  { Icone: IconeDelai, titre: "Il calcule votre délai", texte: "Le délai de contestation qui s'applique, souvent plus court que la date imprimée." },
   { Icone: IconeBalance, titre: "Il trouve vos arguments", texte: "Trois à cinq questions, une réponse d'un geste : il retient ce qui tient vraiment." },
   { Icone: IconeLettre, titre: "Il rédige votre lettre", texte: "Pour votre cas, en français ou en néerlandais, avec les pièces à joindre." },
   { Icone: IconeAgenda, titre: "Il suit votre dossier", texte: "Échéances, relance si l'administration se tait, réponse à l'huissier si besoin." },
@@ -42,8 +44,8 @@ const FAQ = [
     r: "Non. Votre photo ou votre PDF est lu dans votre navigateur, sur votre appareil. Seules les informations que vous confirmez rejoignent votre dossier.",
   },
   {
-    q: "Ça marche en Wallonie et en Flandre ?",
-    r: "Oui. Le moteur reconnaît la région du constat et adapte le délai, la procédure et la langue de la lettre — en néerlandais pour la Flandre. Bruxelles est couverte en détail ; ailleurs, chaque commune fixe son règlement et le moteur s'appuie sur ce qu'indique votre courrier.",
+    q: "Et si mon courrier vient de Flandre ou de Wallonie ?",
+    r: "SOS Citizens couvre pour l'instant les 19 communes de la Région de Bruxelles-Capitale, chacune avec ses règles vérifiées. La Flandre arrive ensuite, puis la Wallonie. D'ici là, écrivez-nous : l'association vous orientera.",
   },
   {
     q: "Vous garantissez l'annulation ?",
@@ -78,8 +80,8 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
         <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 pb-14 pt-10 sm:px-6 lg:grid-cols-[1.08fr_0.92fr] lg:pb-20 lg:pt-16">
           <div className="animate-rise">
             <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-navy-100">
-              <IconeBelgique className="h-4 w-4 text-white [--icone-accent:var(--color-gold-400)]" />
-              Bruxelles · Wallonie · Flandre
+              <IconeHotelDeVille className="h-4 w-4 text-white [--icone-accent:var(--color-gold-400)]" />
+              Bruxelles-Capitale · 19 communes
             </p>
             <h1 className="mt-5 font-display text-[2.6rem] font-extrabold leading-[1.02] sm:text-6xl">
               Une redevance de stationnement&nbsp;?{" "}
@@ -120,7 +122,7 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
             { Icone: IconeTampon, texte: "Association sans but lucratif", detail: `BCE ${ASSO.bce}` },
             { Icone: IconeCadenas, texte: "Lu sur votre appareil", detail: "Le document n'est envoyé nulle part" },
             { Icone: IconeLettre, texte: "Lettre en FR ou NL", detail: "Dans la langue de l'administration" },
-            { Icone: IconeBelgique, texte: "Toute la Belgique", detail: "Les trois régions" },
+            { Icone: IconeHotelDeVille, texte: "Les 19 communes", detail: "De la Région de Bruxelles-Capitale" },
           ].map(({ Icone, texte, detail }) => (
             <li key={texte} className="flex items-center gap-3">
               <Icone className="h-9 w-9 shrink-0 text-navy-900" />
@@ -226,42 +228,57 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
             <EscalierProcedure />
           </div>
           <p className="mt-5 text-xs text-ink-faint">
-            Procédure publiée par parking.brussels. Ailleurs, chaque commune fixe la sienne : c&apos;est votre courrier qui
-            fait foi.
+            Procédure publiée par parking.brussels. Une commune peut avoir ses propres étapes : c&apos;est votre courrier
+            qui fait foi.
           </p>
         </div>
       </section>
 
-      {/* ========================================================= LA BELGIQUE */}
+      {/* ======================================================= LES COMMUNES */}
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-20">
-        <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+        <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
           <div>
-            <IconeBelgique className="h-24 w-24 text-navy-900" />
-            <h2 className="mt-4 font-display text-3xl font-extrabold text-navy-900 sm:text-4xl">
-              Une seule plateforme, trois régions.
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-gold-700">Bruxelles d&apos;abord</p>
+            <h2 className="mt-2 font-display text-3xl font-extrabold text-navy-900 sm:text-4xl">
+              Les 19 communes bruxelloises, une par une.
             </h2>
-            <p className="mt-3 text-[1.05rem] text-ink-soft">
-              Le moteur reconnaît où a eu lieu le constat, et adapte tout : le délai, la procédure, la langue.
+            <p className="mt-3 text-[1.05rem] leading-relaxed text-ink-soft">
+              Chaque commune a ses zones, ses horaires et ses règles. Touchez la vôtre sur la carte : sa fiche
+              s&apos;ouvre, tenue à jour par l&apos;association. Quand une règle change, la carte le montre aussitôt.
+            </p>
+            <ul className="mt-5 space-y-2 text-sm text-navy-900">
+              {["Zones et horaires de paiement", "Gratuité et cartes de riverain", "Les derniers changements de règles"].map(
+                (point) => (
+                  <li key={point} className="flex items-center gap-2.5">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gold-100 text-gold-700">
+                      <IconeFleche className="h-3.5 w-3.5" />
+                    </span>
+                    {point}
+                  </li>
+                ),
+              )}
+            </ul>
+            <div className="mt-7">
+              <LinkBtn href="/communes" variant="primary">
+                Voir la carte des communes
+                <IconeFleche className="h-5 w-5" />
+              </LinkBtn>
+            </div>
+            <p className="mt-6 flex flex-wrap items-center gap-2 text-sm text-ink-soft">
+              Prochaines régions :
+              {REGIONS_A_VENIR.map((r, i) => (
+                <span key={r.id} className="inline-flex items-center gap-2">
+                  {i > 0 && <span aria-hidden="true">puis</span>}
+                  <span className="rounded-full border border-line bg-card px-2.5 py-1 text-xs font-bold text-navy-900">
+                    {r.nom}
+                  </span>
+                </span>
+              ))}
             </p>
           </div>
-          <ul className="grid gap-3 sm:grid-cols-3">
-            {(["bruxelles", "wallonie", "flandre"] as const).map((id) => {
-              const r = REGIONS[id];
-              return (
-                <li key={id} className="rounded-[var(--radius-carte)] border border-line/80 bg-card p-5 shadow-carte">
-                  <p className="font-display text-xl font-extrabold text-navy-900">{r.court}</p>
-                  <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-ink-faint">
-                    {r.langues.map((l) => (l === "fr" ? "Français" : "Néerlandais")).join(" · ")}
-                  </p>
-                  <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-                    {r.delaiContestationJours
-                      ? `Délai de contestation : ${r.delaiContestationJours} jours. Procédure détaillée, étape par étape.`
-                      : "Délai fixé par chaque commune : le moteur le lit sur votre courrier."}
-                  </p>
-                </li>
-              );
-            })}
-          </ul>
+          <div className="rounded-[var(--radius-carte)] border border-line/80 bg-card p-4 shadow-carte sm:p-6">
+            <CarteBruxellesLiens />
+          </div>
         </div>
       </section>
 
