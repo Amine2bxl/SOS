@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "@/components/useSession";
+import { RetourLienEmail } from "@/components/RetourLienEmail";
 import { LanguageProvider } from "@/lib/i18n";
 import { ASSO } from "@/lib/data";
 import { urlDuSite } from "@/lib/url-site";
@@ -100,6 +101,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               écrans d'accès, espace membre — apporte le sien. C'est ce qui rend
               la frontière nette entre le site et l'application. */}
           <LanguageProvider>{children}</LanguageProvider>
+          <RetourLienEmail />
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
