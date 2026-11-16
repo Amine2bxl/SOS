@@ -14,6 +14,7 @@ import { detecterLieu } from "@/cerveau/moteur/region";
 import { questionsAPoser } from "@/cerveau/base/questions";
 import type { Analyse, Faits, MoyenRetenu, Region, Stade } from "@/cerveau/types";
 import { analyserFaits } from "@/lib/cerveau-actions";
+import { ControleCourrier } from "@/components/controle-ui";
 import { creerDossier } from "@/lib/dossiers-actions";
 import { nombreOuNull } from "@/lib/validation";
 import { COMMUNES } from "@/lib/data";
@@ -1018,6 +1019,8 @@ function EtapeVerdict({
           ))}
         </ul>
       )}
+
+      {analyse.controles?.length > 0 && <ControleCourrier points={analyse.controles} />}
 
       <section className="rounded-[var(--radius-carte)] border border-line/80 bg-card p-5 shadow-carte sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">

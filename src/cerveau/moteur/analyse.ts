@@ -17,9 +17,12 @@
 import { MOYENS, RANG_FORCE } from "../base/moyens";
 import { QUESTIONS, questionsAPoser } from "../base/questions";
 import { GRAVITE_STADE, LIBELLES_STADE, REGIONS } from "../base/regions";
+import { dateLongue, estJourOuvrable, jourFerie, jourOuvrablePrecedent, nomDuJour } from "./calendrier";
+import { verifierCourrier } from "./controle";
 import type {
   Analyse,
   Delai,
+  EtapeCalcul,
   Faits,
   Langue,
   MoyenRetenu,
@@ -65,17 +68,32 @@ export function calculerDelai(faits: Faits, stade: Stade): Delai {
   const echeance = faits.dateEcheance ? jourUTC(faits.dateEcheance) : null;
   const envoi = faits.dateEnvoi ? jourUTC(faits.dateEnvoi) : null;
   const jours = (t: number) => Math.round((t - auj) / JOUR);
+  const restants = (t: number): EtapeCalcul => {
+    const n = jours(t);
+    return {
+      libelle: "Aujourd'hui",
+      valeur: n < 0 ? `Dépassé de ${-n} jour${-n > 1 ? "s" : ""}` : n === 0 ? "C'est le dernier jour" : `${n} jour${n > 1 ? "s" : ""} restant${n > 1 ? "s" : ""}`,
+    };
+  };
 
   if (stade === "notification") {
     const delai = region?.delaiContestationJours ?? null;
     if (envoi !== null && delai !== null) {
       const limite = envoi + delai * JOUR;
+      const trace: EtapeCalcul[] = [
+        { libelle: "Courrier envoyé le", valeur: dateLongue(versISO(envoi)) },
+        { libelle: "Délai de contestation", valeur: `${delai} jours calendrier, à compter de la réception` },
+        { libelle: "Date limite retenue", valeur: dateLongue(versISO(limite)) },
+        ...noteCalendrier(versISO(limite)),
+        restants(limite),
+      ];
       return {
         nature: "contestation",
         limite: versISO(limite),
         joursRestants: jours(limite),
         origine: "calcule",
         explication: `${delai} jours à compter de la réception du courrier. Calculé depuis sa date d'envoi, pour ne jamais vous faire agir trop tard. Si votre courrier indique un autre délai, c'est lui qui compte.`,
+        trace,
       };
     }
     if (echeance !== null) {
@@ -86,6 +104,15 @@ export function calculerDelai(faits: Faits, stade: Stade): Delai {
         origine: "document",
         explication:
           "Date limite imprimée sur votre courrier. Le délai pour contester peut être plus court : agissez sans attendre cette date.",
+        trace: [
+          { libelle: "Date imprimée sur le courrier", valeur: dateLongue(versISO(echeance)) },
+          ...noteCalendrier(versISO(echeance)),
+          {
+            libelle: "Ce qui manque",
+            valeur: "La date d'envoi du courrier : sans elle, le délai de contestation ne peut pas être calculé.",
+          },
+          restants(echeance),
+        ],
       };
     }
     return {
@@ -96,8 +123,18 @@ export function calculerDelai(faits: Faits, stade: Stade): Delai {
       explication: delai
         ? `Le délai habituel est de ${delai} jours après réception. Sans date sur le courrier, considérez qu'il court déjà.`
         : "Le délai est fixé par le règlement de la commune et figure sur votre courrier. Sans date lisible, agissez cette semaine.",
+      trace: [],
     };
   }
+
+  const traceDocument = (): EtapeCalcul[] =>
+    echeance !== null
+      ? [
+          { libelle: "Date imprimée sur le courrier", valeur: dateLongue(versISO(echeance)) },
+          ...noteCalendrier(versISO(echeance)),
+          restants(echeance),
+        ]
+      : [];
 
   if (stade === "contrainte" || stade === "courrier_huissier") {
     return {
@@ -109,6 +146,7 @@ export function calculerDelai(faits: Faits, stade: Stade): Delai {
         stade === "contrainte"
           ? "Le recours contre une contrainte est enfermé dans un délai court, souvent d'un mois après sa signification. N'attendez pas."
           : "Un huissier n'attend pas : répondez par écrit le jour même, même sans date limite affichée.",
+      trace: traceDocument(),
     };
   }
 
@@ -121,7 +159,29 @@ export function calculerDelai(faits: Faits, stade: Stade): Delai {
       echeance !== null
         ? "Date limite imprimée sur votre courrier. Répondre par écrit avant cette date arrête la montée des frais."
         : "Aucune date lisible sur le courrier : répondez cette semaine, par écrit.",
+    trace: traceDocument(),
   };
+}
+
+/**
+ * Ce que le calendrier dit du dernier jour.
+ *
+ * Quand il tombe un samedi, un dimanche ou un jour férié, la règle du report au
+ * jour ouvrable suivant (art. 53 du Code judiciaire) vaut pour les délais de
+ * procédure ; rien ne garantit qu'une administration l'applique à une
+ * redevance. Le moteur ne déplace donc pas la date : il le signale, et
+ * conseille d'envoyer avant.
+ */
+function noteCalendrier(iso: string): EtapeCalcul[] {
+  if (estJourOuvrable(iso)) return [];
+  const ferie = jourFerie(iso);
+  const avant = jourOuvrablePrecedent(iso);
+  return [
+    {
+      libelle: "Calendrier",
+      valeur: `${ferie ? `Jour férié (${ferie})` : `C'est un ${nomDuJour(iso)}`}. Ne comptez pas sur un report : par la poste, envoyez au plus tard le ${avant ? dateLongue(avant) : "jour ouvrable précédent"}.`,
+    },
+  ];
 }
 
 export function niveauUrgence(delai: Delai, stade: Stade): Urgence {
@@ -279,6 +339,7 @@ export function analyser(faitsBruts: Faits): Analyse {
   const moyens = evaluerMoyens(faits);
   const strategie = choisirStrategie(faits, stade, moyens);
   const region = faits.region ?? null;
+  const controles = verifierCourrier(faits);
 
   const pieces = Array.from(
     new Set([
@@ -346,7 +407,9 @@ export function analyser(faitsBruts: Faits): Analyse {
     })),
     langueLettre: langueProposee(faits),
     // Le compte est réel : chaque moyen examiné, chaque question évaluée, et
-    // les quatre contrôles fixes (stade, délai, urgence, coût de l'inaction).
-    verifications: MOYENS.length + QUESTIONS.length + 4,
+    // les quatre contrôles fixes (stade, délai, urgence, coût de l'inaction),
+    // et chaque point du courrier passé au contrôle.
+    verifications: MOYENS.length + QUESTIONS.length + 4 + controles.length,
+    controles,
   };
 }
