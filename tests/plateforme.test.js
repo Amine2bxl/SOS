@@ -94,19 +94,21 @@ test("consentements : seule la version en vigueur compte", () => {
 
 /* -------------------------------------------------------- revue de presse */
 
-test("presse : des slugs uniques, des sources complètes", () => {
+test("presse : de vrais articles, avec lien, photo et crédit", () => {
   const slugs = new Set(ARTICLES.map((a) => a.slug));
   assert.equal(slugs.size, ARTICLES.length);
   for (const a of ARTICLES) {
     assert.match(a.date, /^\d{4}-\d{2}-\d{2}$/);
-    assert.ok(a.source.titre && a.source.journal, a.slug);
-    assert.ok(a.resume.length >= 1, a.slug);
+    assert.match(a.url, /^https:\/\//, a.slug);
+    assert.match(a.image, /^https:\/\//, a.slug);
+    assert.ok(a.credit.startsWith("©"), a.slug);
+    assert.ok(a.faits.length >= 1 && a.faits.length <= 3, a.slug);
   }
 });
 
 test("presse : du plus récent au plus ancien, référence lisible", () => {
   assert.ok(ARTICLES_TRIES[0].date >= ARTICLES_TRIES[ARTICLES_TRIES.length - 1].date);
   const a = articleParSlug("2026-10-anderlecht-33-redevances-annulees");
-  assert.match(referenceSource(a), /La DH Les Sports\+.*7 octobre 2026, p\. 6, annoncé en une/);
+  assert.equal(referenceSource(a), "La DH · Gilbert Dupont · 7 octobre 2026");
   assert.equal(articleParSlug("inconnu"), null);
 });

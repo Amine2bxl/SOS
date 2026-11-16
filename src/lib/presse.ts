@@ -1,190 +1,193 @@
 /**
- * La revue de presse de l'association.
+ * La revue de presse : uniquement de vrais articles, vérifiés.
  *
- * Ce que les journaux ont écrit sur l'action de SOS Citizens et de son
- * président. Chaque entrée est un résumé rédigé par l'association, avec la
- * référence complète de l'article d'origine — titre, journal, date, page,
- * journaliste — pour qu'on puisse le retrouver. Les articles eux-mêmes, leurs
- * photos et leurs unes appartiennent à leurs éditeurs : ils ne sont pas
- * reproduits ici.
+ * Chaque entrée renvoie à l'article publié en ligne, qui cite nommément
+ * Mohamed Azouzi ou SOS Citizens. La photo est celle que le journal publie
+ * lui-même pour l'aperçu de son article ; elle reste chez lui (elle n'est pas
+ * copiée sur nos serveurs) et le crédit l'accompagne. Le résumé est le nôtre,
+ * court, et s'en tient aux faits de l'article.
  *
- * Un résultat obtenu dans un dossier ne garantit pas l'issue d'un autre : la
- * page le dit, et les résumés s'en tiennent aux faits rapportés.
+ * Vérifié le 16 novembre 2026. Un article qu'on ne retrouve plus en ligne, ou
+ * qui ne cite pas l'association, n'a pas sa place ici.
  */
 
-export type Rubrique = "Stationnement" | "Scan-cars" | "Voirie" | "Horodateurs";
+export type Rubrique = "Redevances" | "Scan-cars" | "Horodateurs" | "L'association";
 
 export type ArticlePresse = {
   slug: string;
-  /** Date de parution (ISO). */
+  /** Date de parution en ligne (ISO). */
   date: string;
   rubrique: Rubrique;
-  /** Notre titre, factuel. */
+  /** Le titre du journal, tel quel. */
   titre: string;
-  /** Une phrase : ce qu'il faut retenir. */
-  chapo: string;
-  /** Le résumé, paragraphe par paragraphe. */
-  resume: string[];
-  /** Ce que le dossier enseigne à quelqu'un dans la même situation. */
-  aRetenir?: string;
-  /** En chiffres, quand l'article en donne. */
+  /** Une phrase : ce qui s'est passé. */
+  resume: string;
+  /** Trois faits au plus, vérifiables dans l'article. */
+  faits: string[];
+  /** Le chiffre qui frappe, quand l'article en donne un. */
   chiffre?: { valeur: string; libelle: string };
-  source: {
-    titre: string;
-    journal: string;
-    edition?: string;
-    page?: number;
-    uneLe?: boolean;
-    journaliste?: string;
-  };
+  journal: string;
+  journaliste?: string;
+  /** L'article d'origine. */
+  url: string;
+  /** La photo publiée par le journal pour son article. */
+  image: string;
+  credit: string;
 };
 
 export const ARTICLES: ArticlePresse[] = [
   {
     slug: "2026-10-anderlecht-33-redevances-annulees",
     date: "2026-10-07",
-    rubrique: "Stationnement",
-    titre: "Anderlecht : les 33 redevances d'un fils qui conduisait sa mère sont annulées",
-    chapo:
-      "Plus de 2.450 € réclamés par huissier pour des stationnements avec une carte pour personne handicapée. Après l'intervention de l'association, l'agence a tout annulé.",
-    resume: [
-      "Un habitant d'Anderlecht conduit régulièrement sa mère, titulaire d'une carte de stationnement pour personne handicapée. En un an, il reçoit 33 redevances. Avec les rappels et les frais, l'étude d'huissiers chargée du recouvrement lui réclame 2.454,22 €.",
-      "SOS Citizens demande à l'agence du stationnement, pour chaque constat, les données d'horodatage et de géolocalisation, les photos et l'identité de l'agent. L'agence reconnaît d'abord des erreurs de prise de vue et annule 7 redevances, puis, en septembre, les 33.",
-      "Le porte-parole de l'agence rappelle dans l'article qu'il faut enregistrer le véhicule dans l'application prévue pour les cartes de stationnement pour personne handicapée, et réagir avant que les redevances ne s'accumulent.",
+    rubrique: "Redevances",
+    titre: "« Merci à parking.brussels d'avoir effacé mes 33 amendes » : à Anderlecht, Malik devait 2.450 euros",
+    resume: "33 redevances, 2.454,22 € réclamés par huissier. SOS Citizens demande les preuves. Résultat : tout est annulé.",
+    faits: [
+      "Après la demande de justificatifs, l'agence reconnaît des « erreurs de prise de vue » et annule 7 redevances.",
+      "SOS Citizens réclame les photos, l'heure, la position et l'agent pour les 26 autres.",
+      "Les preuves ne sont jamais fournies. En septembre, l'agence renonce aux 33.",
     ],
-    aRetenir:
-      "Demander les preuves de chaque constat (photos, heure, position, agent) est un droit. C'est souvent là que les erreurs apparaissent.",
     chiffre: { valeur: "33", libelle: "redevances annulées" },
-    source: {
-      titre: "« Merci à parking.brussels d'avoir effacé 33 amendes »",
-      journal: "La DH Les Sports+",
-      edition: "Bruxelles-Brabant",
-      page: 6,
-      uneLe: true,
-      journaliste: "Gilbert Dupont",
-    },
+    journal: "La DH",
+    journaliste: "Gilbert Dupont",
+    url: "https://www.dhnet.be/regions/bruxelles/2026/10/07/merci-a-parkingbrussels-davoir-efface-mes-33-amendes-a-anderlecht-malik-devait-2450-euros-apres-une-incroyable-serie-de-redevances-V4O746XELZHN7MHB3SXSROSMO4/",
+    image:
+      "https://www.dhnet.be/resizer/v2/RPQKLL6NHZFSRM2SELT3VKOHT4.jpg?auth=39987f86a7a4abf43a84ef202981b7ed48347d7005f5428ca4ccef92b64bc3b3&width=1200&height=630&quality=85&focal=1500%2C1000",
+    credit: "© La DH",
+  },
+  {
+    slug: "2026-05-bladi-horodateurs-sans-pieces",
+    date: "2026-05-07",
+    rubrique: "Horodateurs",
+    titre: "Belgique : Mohamed part en guerre contre les horodateurs sans pièces",
+    resume: "Le site Bladi.net reprend l'enquête de Mohamed Azouzi sur la fin du paiement en pièces à Woluwe-Saint-Lambert.",
+    faits: [
+      "109 horodateurs adaptés pour plus de 204.000 €, plus 186.000 € de maintenance sur trois ans.",
+      "La police locale n'a enregistré aucun vol dans un parcmètre depuis 2016.",
+    ],
+    journal: "Bladi.net",
+    url: "https://www.bladi.net/belgique-mohamed-part-guerre-horodateurs-pieces,121113.html",
+    image: "https://cdn.bladi.net/img/logo/mohamed-horodateurs-belgique.webp",
+    credit: "© Bladi.net",
+  },
+  {
+    slug: "2026-05-enquete-horodateurs-4590-euros",
+    date: "2026-05-05",
+    rubrique: "Horodateurs",
+    titre: "En guerre contre les horodateurs, Mohamed mène son enquête : « chaque parcmètre a coûté 4 590 euros »",
+    resume: "Mohamed Azouzi demande les documents à sa commune et découvre le prix de la fin du paiement en pièces.",
+    faits: [
+      "Le règlement de Woluwe-Saint-Lambert autorisait les pièces en 2020 ; une modification d'octobre 2021 les a supprimées.",
+      "Par le droit d'accès aux documents administratifs (art. 32 de la Constitution), il obtient la facture : 204.153,81 €.",
+    ],
+    chiffre: { valeur: "4.590 €", libelle: "par parcmètre" },
+    journal: "La DH",
+    journaliste: "Gilbert Dupont",
+    url: "https://www.dhnet.be/actu/faits/2026/05/05/en-guerre-contre-les-horodateurs-mohamed-mene-son-enquete-on-a-supprime-le-paiement-en-monnaie-et-chaque-parcmetre-a-coute-4-590-euros-HV7FDEZF2ZCHREXMCSD2DJ7G7U/",
+    image:
+      "https://www.dhnet.be/resizer/v2/UORDIKS7EBCEZKFYA2TU65HWGM.png?auth=22d8034e28d94f74f91ea82853aeff077f9467c3846c6d710a4b89d409ace350&width=1200&height=630&quality=85&focal=135%2C187",
+    credit: "© La DH",
+  },
+  {
+    slug: "2026-03-contestations-par-email",
+    date: "2026-03-14",
+    rubrique: "L'association",
+    titre: "« Parking.brussels ne traitera plus les contestations par e-mail » : SOS Citizens évoque un problème d'accessibilité",
+    resume: "Dans une lettre ouverte, SOS Citizens conteste la fin des contestations par e-mail chez parking.brussels.",
+    faits: [
+      "Depuis le 15 mars 2026, un e-mail de contestation reçoit une réponse automatique de refus.",
+      "Pour l'association, l'ordonnance du 6 juillet 2022 n'oblige pas à passer par un formulaire en ligne.",
+    ],
+    journal: "Bruxelles Today",
+    url: "https://www.bruxellestoday.be/actualite/parking-brussels-ignore-contestations-mail.html",
+    image: "https://www.bruxellestoday.be/~media/horizontal-hi/38618491028190/parking-brussels-site.jpg",
+    credit: "© Bruxelles Today / Facebook parking.brussels",
+  },
+  {
+    slug: "2026-03-association-aide-redevances",
+    date: "2026-03-08",
+    rubrique: "L'association",
+    titre: "« Les gens sont encore très mal informés » : une association vient en aide face aux redevances de parking.brussels",
+    resume: "Portrait de SOS Citizens et des erreurs qui font annuler des redevances.",
+    faits: [
+      "Une redevance n'est pas une amende : un juge peut tout annuler.",
+      "Les notifications arrivent par lettre simple, pas recommandée : rien ne prouve qu'elles ont été reçues.",
+      "Les adresses des constats sont souvent incomplètes, sans numéro de rue.",
+    ],
+    journal: "Bruxelles Today",
+    url: "https://www.bruxellestoday.be/actualite/sos-citizens-assication-aide-contestations-sanctions-redevances.html",
+    image: "https://www.bruxellestoday.be/~media/horizontal-hi/36010858471172/parking-brussels-horodateur.jpg",
+    credit: "© Bruxelles Today / Facebook parking.brussels",
   },
   {
     slug: "2026-03-evere-35-redevances-annulees",
     date: "2026-03-03",
-    rubrique: "Stationnement",
-    titre: "Evere : 35 redevances annulées pour un riverain dont la carte avait expiré",
-    chapo:
-      "Parfois deux redevances par jour, pour plus de 2.500 € au total. Cinq mois après l'intervention de l'association, toutes sont annulées et le recouvrement est clôturé.",
-    resume: [
-      "Entre septembre et octobre 2025, un habitant d'Evere reçoit 35 redevances de stationnement. Sa carte de riverain était arrivée à échéance sans qu'il s'en aperçoive. Avec les rappels, la note dépasse 2.000 €.",
-      "SOS Citizens relève des erreurs dans les références de plusieurs redevances, fait valoir la bonne foi du riverain — aucun rappel de renouvellement ne lui avait été adressé — et conteste les redevances envoyées après sa première contestation. L'association demande aussi la preuve du bon fonctionnement de la scan-car et un réexamen individualisé de chaque redevance.",
-      "Le 10 février 2026, l'agence du stationnement confirme l'annulation des 35 redevances et la fin du recouvrement, sans dire quel argument l'a emporté.",
+    rubrique: "Redevances",
+    titre: "« J'ai fait sauter 35 redevances de parking.brussels » : l'histoire de Hicham qui croulait sous les amendes",
+    resume: "À Evere, la carte de riverain de Hicham avait expiré. 35 redevances en quelques semaines. SOS Citizens prend le dossier : tout est annulé.",
+    faits: [
+      "Une redevance presque chaque matin, 37 € chacune, plus les frais de rappel.",
+      "SOS Citizens s'appuie sur l'ordonnance bruxelloise du 6 juillet 2022.",
     ],
-    aRetenir:
-      "Une carte de riverain expirée ne fait pas tout perdre : la bonne foi, les erreurs de référence et les redevances envoyées après une contestation se discutent.",
-    chiffre: { valeur: "2.532,23 €", libelle: "qui ne seront pas payés" },
-    source: {
-      titre: "« J'ai fait sauter 35 redevances de parking.brussels »",
-      journal: "La DH Les Sports+",
-      page: 10,
-      uneLe: true,
-      journaliste: "Gilbert Dupont",
-    },
+    chiffre: { valeur: "35", libelle: "redevances annulées" },
+    journal: "L'Avenir",
+    journaliste: "Gilbert Dupont",
+    url: "https://www.lavenir.net/regions/bruxelles/2026/03/03/jai-fait-sauter-35-redevances-de-parkingbrussels-lincroyable-histoire-de-hicham-qui-croulait-sous-les-amendes-YR2YPMJYFZCGZEUEECM3YVURP4/",
+    image:
+      "https://www.lavenir.net/resizer/v2/7PF5VPPQ5NG3BHD3SKTJUH2DVM.jpg?auth=4d4927fa7699ec8d230e45ca8997843526ef1eea712f5adfe2c046c400546c93&width=1200&height=630&quality=85&focal=1024%2C460",
+    credit: "© L'Avenir",
   },
   {
     slug: "2024-11-woluwe-scan-car-sens-interdit",
     date: "2024-11-29",
     rubrique: "Scan-cars",
-    titre: "Woluwe-Saint-Lambert : une scan-car filmée en sens interdit",
-    chapo:
-      "Le président de l'association a filmé à plusieurs reprises une scan-car communale qui empruntait un sens interdit. La commune annonce une enquête.",
-    resume: [
-      "Près des cliniques universitaires Saint-Luc, Mohamed Azouzi constate qu'une scan-car communale prend régulièrement une branche en sens interdit pour rejoindre directement un petit parking. Il la photographie et la filme à plusieurs dates en septembre 2024.",
-      "Interrogé par le journal, le bourgmestre annonce une enquête et des rappels à l'ordre, et précise qu'une éventuelle amende serait à charge de l'agent. Les redevances établies lors de ces passages restent toutefois dues, selon lui.",
+    titre: "Une scan-car filmée en train de prendre un sens interdit : « Elles ne sont pas au-dessus du code de la route »",
+    resume: "Mohamed Azouzi filme une scan-car communale qui prend un sens interdit pour atteindre un parking payant.",
+    faits: [
+      "Les faits se passent près des Cliniques universitaires Saint-Luc, à Woluwe-Saint-Lambert.",
+      "Il l'a filmée et photographiée à plusieurs reprises.",
     ],
-    aRetenir: "Les véhicules de contrôle sont soumis au code de la route comme tout le monde.",
-    source: {
-      titre: "« Les scan-cars ne sont pas au-dessus du code de la route »",
-      journal: "La DH Les Sports+",
-      edition: "Bruxelles",
-      page: 7,
-      uneLe: true,
-      journaliste: "Gilbert Dupont",
-    },
-  },
-  {
-    slug: "2024-11-saint-gilles-places-trop-etroites",
-    date: "2024-11-26",
-    rubrique: "Voirie",
-    titre: "Saint-Gilles : des places de 1,59 m pour des voitures de 1,80 m",
-    chapo:
-      "Avenue du Roi, les emplacements sont trop étroits pour les véhicules actuels. Les voitures garées y sont régulièrement accrochées.",
-    resume: [
-      "Un riverain de l'avenue du Roi, à Saint-Gilles, voit ses véhicules régulièrement abîmés. Les emplacements mesurent 1,59 m de large, alors que la plupart des voitures récentes dépassent 1,80 m. Le journal a vérifié la mesure sur place.",
-      "Bruxelles Mobilité, gestionnaire de cette voirie régionale, juge la situation regrettable, mais n'envisage à ce stade ni de modifier l'aménagement ni d'indemniser les riverains.",
-    ],
-    chiffre: { valeur: "1,59 m", libelle: "de large, mesurés sur place" },
-    source: {
-      titre: "« Qui va payer la facture ? »",
-      journal: "La DH Les Sports+",
-      page: 7,
-      journaliste: "Gilbert Dupont",
-    },
+    journal: "La DH",
+    journaliste: "Gilbert Dupont",
+    url: "https://www.dhnet.be/actu/belgique/2024/11/29/une-scan-car-filmee-occupee-de-prendre-un-sens-interdit-elles-ne-sont-pas-au-dessus-du-code-de-la-route-MR5QY7ZPLBBS7LERO6CUNCI57A/",
+    image:
+      "https://www.dhnet.be/resizer/v2/COATR655HZBVJBRUN3LWHWD2LY.jpg?auth=1ef483bc91ecd01737a8b0662e8ecfcdd254b1051da2b4a3d36ecb2a7e1053b8&width=1200&height=630&quality=85&focal=2152%2C1421",
+    credit: "© La DH",
   },
   {
     slug: "2023-02-horodateurs-sans-monnayeur-justice-de-paix",
     date: "2023-02-08",
     rubrique: "Horodateurs",
-    titre: "Horodateurs sans pièces : la justice de paix donne tort au président de l'association",
-    chapo:
-      "Après quatre ans de bras de fer pour défendre le paiement en espèces, la justice de paix de Woluwe-Saint-Pierre tranche contre lui. Il envisage de faire appel.",
-    resume: [
-      "Mohamed Azouzi refusait de payer son stationnement là où l'horodateur n'acceptait pas les pièces. L'agence du stationnement l'a cité en justice de paix pour deux redevances, à Ixelles et à Schaerbeek.",
-      "Selon le journal, la juge a estimé que l'acceptation des espèces n'est pas une obligation absolue, en s'appuyant notamment sur un arrêt de la Cour de justice de l'Union européenne du 26 janvier 2021, et que les conditions de paiement étaient affichées. Elle n'a pas retenu de discrimination. Frais compris, la condamnation s'élève à 545,39 €.",
+    titre: "Mohamed, en guerre contre les parcmètres qui refusent le cash : le tribunal a tranché",
+    resume: "Quatre ans de refus de payer sans monnayeur. La justice de paix donne tort à Mohamed Azouzi.",
+    faits: [
+      "Deux redevances en cause, à Ixelles et à Schaerbeek.",
+      "La juge estime qu'il pouvait payer autrement. Condamnation : 545,39 €.",
     ],
-    aRetenir:
-      "Toutes les batailles ne se gagnent pas : l'association publie aussi ses défaites. Un moyen écarté par un juge n'est plus présenté comme solide.",
-    source: {
-      titre: "« Illégaux, les horodateurs sans monnayeur ? »",
-      journal: "La DH Les Sports+",
-      edition: "Bruxelles",
-      page: 7,
-      uneLe: true,
-      journaliste: "Gilbert Dupont",
-    },
-  },
-  {
-    slug: "2022-07-horodateurs-plainte-spf-economie",
-    date: "2022-07-20",
-    rubrique: "Horodateurs",
-    titre: "Fin des espèces aux horodateurs : une plainte au SPF Économie",
-    chapo:
-      "Le journal relaie la plainte du président de l'association contre les horodateurs qui n'acceptent plus que le paiement électronique.",
-    resume: [
-      "Mohamed Azouzi porte plainte auprès du SPF Économie, en invoquant une recommandation européenne selon laquelle billets et pièces devraient être acceptés pour les paiements. Le SPF répond que la redevance de stationnement rémunère l'usage de l'espace public, qu'elle ne relève pas du Code de droit économique, et que les communes en fixent les modalités.",
-      "L'article évoque aussi la disparition progressive des horodateurs à pièces et les pistes d'un contrôle encore plus automatisé, avec les questions de vie privée qu'elles soulèvent.",
-    ],
-    source: {
-      titre: "« Horodateurs : le pire est à venir ! »",
-      journal: "Vlan",
-      page: 6,
-      journaliste: "Julien Semninckx",
-    },
+    chiffre: { valeur: "545,39 €", libelle: "de condamnation" },
+    journal: "La DH",
+    journaliste: "Gilbert Dupont",
+    url: "https://www.dhnet.be/actu/faits/2023/02/08/mohamed-en-guerre-contre-les-parcmetres-qui-refusent-le-cash-a-accumule-les-amendes-le-tribunal-a-tranche-sur-son-sort-7GC3ZUHMMBBTJIYDQP7C5MQVAY/",
+    image:
+      "https://www.dhnet.be/resizer/v2/YF7XPY733BGY5JMOPWX5Y3CWGE.jpeg?auth=45d8efe24ba788edc65d5c2e356e642eca454f74b552c1c9be33e8d6c983fc95&width=1200&height=630&quality=85&focal=621%2C435",
+    credit: "© La DH",
   },
   {
     slug: "2021-09-woluwe-pas-de-cash-horodateur",
     date: "2021-09-22",
     rubrique: "Horodateurs",
-    titre: "Woluwe-Saint-Lambert : le règlement prévoyait les pièces, les horodateurs les refusaient",
-    chapo:
-      "En relisant le règlement communal après un procès-verbal, le président de l'association découvre un décalage entre le texte et les appareils. Le bourgmestre promet une mise à jour.",
-    resume: [
-      "Le règlement de stationnement de Woluwe-Saint-Lambert, en vigueur jusqu'au 31 décembre 2021, prévoyait le paiement à l'horodateur en pièces ou par carte bancaire. Les appareils, eux, n'acceptaient plus les pièces. Mohamed Azouzi dénonce la situation, en pensant notamment aux personnes âgées.",
-      "Interrogé par le journal, le bourgmestre reconnaît le décalage — les horodateurs ont été modifiés plus vite que prévu — et annonce l'adaptation du règlement.",
+    titre: "Pas de cash à l'horodateur alors que le règlement le prévoit : « la commune est dans l'illégalité »",
+    resume: "Mohamed lit le règlement de sa commune : il prévoit le paiement en pièces, mais les horodateurs le refusent.",
+    faits: [
+      "Le règlement de Woluwe-Saint-Lambert de décembre 2020 autorisait les pièces.",
+      "Le bourgmestre reconnaît un décalage et promet de modifier le règlement.",
     ],
-    aRetenir: "Le règlement communal fait foi. Le lire, c'est parfois trouver l'argument.",
-    source: {
-      titre: "« Pas de cash à l'horodateur alors que le règlement le prévoit »",
-      journal: "La DH Les Sports+",
-      page: 15,
-      journaliste: "Romain Masquelier",
-    },
+    journal: "La DH",
+    journaliste: "Romain Masquelier",
+    url: "https://dhnet.be/regions/bruxelles/pas-de-cash-a-l-horodateur-alors-que-le-reglement-le-prevoit-la-commune-est-dans-l-illegalite-614a2a617b50a62340012543",
+    image:
+      "https://www.dhnet.be/resizer/v2/YLTR7VEGEBFONFVRRIKDB3MIHE.jpg?auth=20c84bf2301d9e07eb6401c4c7640f298a640dc9ff731cfa70f63fddfdda3f2a&width=1200&height=630&quality=85&focal=954%2C1404",
+    credit: "© La DH",
   },
 ];
 
@@ -193,21 +196,17 @@ export const ARTICLES_TRIES = [...ARTICLES].sort((a, b) => b.date.localeCompare(
 
 export const articleParSlug = (slug: string) => ARTICLES.find((a) => a.slug === slug) ?? null;
 
-export const RUBRIQUES: Rubrique[] = ["Stationnement", "Scan-cars", "Voirie", "Horodateurs"];
+export const RUBRIQUES: Rubrique[] = ["Redevances", "Scan-cars", "Horodateurs", "L'association"];
 
 export const dateParution = (iso: string) =>
   new Intl.DateTimeFormat("fr-BE", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(
     new Date(`${iso}T00:00:00Z`),
   );
 
-/** La ligne de référence d'un article : « La DH Les Sports+, 7 octobre 2026, p. 6 ». */
+/** « La DH · Gilbert Dupont · 7 octobre 2026 ». */
 export function referenceSource(a: ArticlePresse): string {
-  const s = a.source;
-  return [
-    s.journal + (s.edition ? ` (édition ${s.edition})` : ""),
-    dateParution(a.date),
-    s.page ? `p. ${s.page}${s.uneLe ? ", annoncé en une" : ""}` : null,
-  ]
-    .filter(Boolean)
-    .join(", ");
+  return [a.journal, a.journaliste, dateParution(a.date)].filter(Boolean).join(" · ");
 }
+
+/** Le domaine du journal, pour le lien : « dhnet.be ». */
+export const domaineSource = (a: ArticlePresse) => new URL(a.url).hostname.replace(/^www\./, "");
