@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { lireUtilisateur } from "@/lib/supabase/server";
 import { lireAdhesionEnAttente, lireProfil, listerDossiers } from "@/lib/dossiers";
 import { contestationsRestantes, planById } from "@/lib/plans";
 import { LinkBtn } from "@/components/ui";
 import { BoutonContact } from "@/components/Contact";
-import { IconeCadenas, IconePersonne, IconeSceau } from "@/components/icones";
+import { IconeCadenas, IconePersonne, IconeSceau, IconeTelecharger } from "@/components/icones";
+import { creerClientServeur, lireUtilisateur } from "@/lib/supabase/server";
 import { FormulaireProfil } from "./FormulaireProfil";
 import { SupprimerCompte } from "./SupprimerCompte";
 import { BoutonDeconnexion } from "./BoutonDeconnexion";
@@ -13,11 +13,12 @@ export const metadata: Metadata = { title: "Mon compte" };
 export const dynamic = "force-dynamic";
 
 export default async function MonCompte() {
-  const [utilisateur, profil, dossiers, enAttente] = await Promise.all([
+  const [utilisateur, profil, dossiers, enAttente, consentements] = await Promise.all([
     lireUtilisateur(),
     lireProfil(),
     listerDossiers(),
     lireAdhesionEnAttente(),
+    lireConsentements(),
   ]);
 
   const plan = planById(profil?.plan);
@@ -85,6 +86,9 @@ export default async function MonCompte() {
           adresse={profil?.adresse ?? ""}
           codePostal={profil?.code_postal ?? ""}
           commune={profil?.commune ?? ""}
+          typeCompte={profil?.type_compte === "organisation" ? "organisation" : "particulier"}
+          organisation={profil?.organisation ?? ""}
+          langueInterface={profil?.langue_interface ?? "fr"}
         />
       </section>
 
@@ -100,7 +104,36 @@ export default async function MonCompte() {
           <li>Vos courriers sont lus sur votre appareil : l&apos;image ou le PDF n&apos;est envoyé nulle part.</li>
           <li>Le texte lu sur un courrier est effacé automatiquement au bout de six mois.</li>
           <li>Vos données ne servent qu&apos;à vos dossiers. Elles ne sont ni vendues, ni partagées.</li>
+          <li>Un bénévole de l&apos;association ne voit un dossier que si vous lui donnez mandat, depuis la fiche du dossier.</li>
         </ul>
+
+        <div className="mt-5 rounded-2xl bg-paper p-4">
+          <h3 className="font-semibold text-navy-900">Vos droits</h3>
+          <p className="mt-1 text-sm leading-relaxed text-ink-soft">
+            Accès, rectification, effacement, portabilité : tout se fait d&apos;ici. Pour le reste — opposition,
+            limitation, question — écrivez-nous ; nous répondons dans le mois. Vous pouvez aussi saisir
+            l&apos;Autorité de protection des données.
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <a
+              href="/api/mes-donnees"
+              download
+              className="inline-flex h-10 items-center gap-2 rounded-full border border-line bg-white px-4 text-sm font-semibold text-navy-900 transition hover:border-navy-200 hover:bg-navy-50"
+            >
+              <IconeTelecharger className="h-4 w-4" />
+              Télécharger mes données
+            </a>
+            <span className="text-xs text-ink-faint">Un fichier JSON : profil, dossiers, lettres, historique, mandats.</span>
+          </div>
+          {consentements.length > 0 && (
+            <p className="mt-3 text-xs text-ink-faint">
+              Accepté :{" "}
+              {consentements
+                .map((c) => `${c.document === "cgu" ? "conditions" : "confidentialité"} ${c.version} le ${new Date(c.accepte_le).toLocaleDateString("fr-BE")}`)
+                .join(" · ")}
+            </p>
+          )}
+        </div>
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
           <BoutonDeconnexion />
           <SupprimerCompte dossiers={dossiers.length} />
@@ -112,4 +145,16 @@ export default async function MonCompte() {
       </p>
     </div>
   );
+}
+
+/** Les acceptations enregistrées, les plus récentes d'abord ; vide si la table manque. */
+async function lireConsentements(): Promise<{ document: string; version: string; accepte_le: string }[]> {
+  const supabase = await creerClientServeur();
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("consentements")
+    .select("document, version, accepte_le")
+    .order("accepte_le", { ascending: false })
+    .limit(4);
+  return error ? [] : (data ?? []);
 }

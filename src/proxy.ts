@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { cheminSur } from "@/lib/chemin-sur";
 
 /** Pages qui exigent d'être connecté : tout l'espace membre. */
-const PAGES_PROTEGEES = ["/tableau-de-bord", "/adherer"];
+const PAGES_PROTEGEES = ["/tableau-de-bord", "/adherer", "/operateur"];
 
 /**
  * Next 16 a renommé `middleware` en `proxy` : même rôle, nom plus juste. Ce
@@ -86,5 +86,6 @@ export const config = {
     "/inscription",
     "/tableau-de-bord/:path*",
     "/adherer/:path*",
+    "/operateur/:path*",
   ],
 };

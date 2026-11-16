@@ -6,7 +6,7 @@ import { redigerLettreDossier } from "@/lib/cerveau-actions";
 import { enregistrerLettreDossier, marquerContestationEnvoyee } from "@/lib/dossiers-actions";
 import { enregistrerProfil } from "@/lib/profile-actions";
 import type { TypeLettre } from "@/cerveau/types";
-import type { Lettre } from "@/lib/dossiers-format";
+import { MODES_ENVOI, type Lettre } from "@/lib/dossiers-format";
 import { Btn, Pastille } from "@/components/ui";
 import {
   IconeAttention,
@@ -498,6 +498,8 @@ function EnvoiFait({ dossierId, dejaEnvoyee, libelle }: { dossierId: string; dej
   const router = useRouter();
   const [ouvert, setOuvert] = useState(false);
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [mode, setMode] = useState("");
+  const [reference, setReference] = useState("");
   const [erreur, setErreur] = useState<string | null>(null);
   const [fait, setFait] = useState(false);
   const [enCours, demarrer] = useTransition();
@@ -518,8 +520,8 @@ function EnvoiFait({ dossierId, dejaEnvoyee, libelle }: { dossierId: string; dej
           J&apos;ai envoyé {libelle}
         </Btn>
       ) : (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-          <label className="block flex-1">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="block">
             <span className="mb-1.5 block text-sm font-semibold text-navy-900">Date d&apos;envoi</span>
             <input
               type="date"
@@ -529,12 +531,43 @@ function EnvoiFait({ dossierId, dejaEnvoyee, libelle }: { dossierId: string; dej
               className="w-full rounded-xl border border-line bg-white px-3.5 py-3 text-[0.95rem] outline-none focus:border-navy-600 focus:ring-4 focus:ring-gold-300/40"
             />
           </label>
+          <label className="block">
+            <span className="mb-1.5 block text-sm font-semibold text-navy-900">Envoyée par</span>
+            <select
+              value={mode}
+              onChange={(e) => setMode(e.target.value)}
+              className="w-full rounded-xl border border-line bg-white px-3.5 py-3 text-[0.95rem] outline-none focus:border-navy-600 focus:ring-4 focus:ring-gold-300/40"
+            >
+              <option value="">Je préfère ne pas préciser</option>
+              {Object.entries(MODES_ENVOI).map(([id, m]) => (
+                <option key={id} value={id}>
+                  {m.libelle}
+                </option>
+              ))}
+            </select>
+          </label>
+          {mode && mode !== "courrier" && (
+            <label className="block sm:col-span-2">
+              <span className="mb-1.5 block text-sm font-semibold text-navy-900">Preuve de l&apos;envoi (facultatif)</span>
+              <input
+                value={reference}
+                maxLength={80}
+                onChange={(e) => setReference(e.target.value)}
+                placeholder={MODES_ENVOI[mode].preuve}
+                className="w-full rounded-xl border border-line bg-white px-3.5 py-3 text-[0.95rem] outline-none focus:border-navy-600 focus:ring-4 focus:ring-gold-300/40"
+              />
+            </label>
+          )}
+          {mode === "courrier" && (
+            <p className="text-xs leading-relaxed text-warn-700 sm:col-span-2">{MODES_ENVOI.courrier.preuve}.</p>
+          )}
+          <div className="sm:col-span-2">
           <Btn
             variant="gold"
             disabled={enCours}
             onClick={() =>
               demarrer(async () => {
-                const r = await marquerContestationEnvoyee(dossierId, date);
+                const r = await marquerContestationEnvoyee(dossierId, date, { mode, reference });
                 if (r.erreur) {
                   setErreur(r.erreur);
                   return;
@@ -546,6 +579,7 @@ function EnvoiFait({ dossierId, dejaEnvoyee, libelle }: { dossierId: string; dej
           >
             {enCours ? "Enregistrement…" : "Confirmer l'envoi"}
           </Btn>
+          </div>
         </div>
       )}
       {erreur && <p className="mt-2 text-sm font-medium text-danger-700">{erreur}</p>}

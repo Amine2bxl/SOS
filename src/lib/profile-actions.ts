@@ -26,10 +26,27 @@ export async function enregistrerProfil(_precedent: EtatProfil, donnees: FormDat
 
   if (!prenom || !nom) return { erreur: "Renseignez votre prénom et votre nom." };
 
-  const { error } = await supabase
-    .from("profiles")
-    .update({ prenom, nom, telephone, adresse, code_postal: codePostal, commune })
-    .eq("id", user.id);
+  // Le type de compte, l'organisation et la langue : écrits seulement quand le
+  // formulaire les porte (le formulaire des lettres ne les a pas).
+  const extras: Record<string, string | null> = {};
+  if (donnees.has("typeCompte")) {
+    const type = donnees.get("typeCompte") === "organisation" ? "organisation" : "particulier";
+    const organisation = String(donnees.get("organisation") ?? "").trim().slice(0, 120);
+    if (type === "organisation" && !organisation) return { erreur: "Indiquez le nom de votre organisation." };
+    extras.type_compte = type;
+    extras.organisation = type === "organisation" ? organisation : null;
+  }
+  if (donnees.has("langueInterface")) {
+    const langue = String(donnees.get("langueInterface"));
+    extras.langue_interface = ["fr", "nl", "en", "de"].includes(langue) ? langue : "fr";
+  }
+
+  const base = { prenom, nom, telephone, adresse, code_postal: codePostal, commune };
+  let { error } = await supabase.from("profiles").update({ ...base, ...extras }).eq("id", user.id);
+  // Base pas encore migrée : les coordonnées passent, les préférences attendront.
+  if (error && Object.keys(extras).length > 0 && /column|schema cache/i.test(error.message)) {
+    ({ error } = await supabase.from("profiles").update(base).eq("id", user.id));
+  }
   if (error) return { erreur: "L'enregistrement a échoué. Réessayez." };
 
   // Le prénom et le nom sont aussi dans la session, pour l'en-tête du site.

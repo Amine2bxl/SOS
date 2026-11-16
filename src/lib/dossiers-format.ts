@@ -45,6 +45,16 @@ export type Dossier = {
   date_envoi_contestation: string | null;
   /** Pièces déjà rassemblées par l'utilisateur. */
   pieces_reunies: string[];
+  /** Montant du tout premier courrier, quand ce dossier est un rappel. */
+  montant_initial?: number | null;
+  /** Somme déjà versée pour cette redevance. */
+  deja_paye?: number | null;
+  /** Comment la contestation est partie : recommandé, formulaire en ligne… */
+  mode_envoi?: string | null;
+  /** Numéro de recommandé, ou référence de l'accusé du formulaire. */
+  preuve_envoi?: string | null;
+  /** Date de l'accusé de réception, quand il est arrivé. */
+  accuse_reception_le?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -78,6 +88,9 @@ export type Profil = {
   commune: string | null;
   plan: string;
   plan_demande: string | null;
+  type_compte?: "particulier" | "organisation";
+  organisation?: string | null;
+  langue_interface?: string;
 };
 
 export type Alerte = {
@@ -109,6 +122,15 @@ export const TYPES_DOCUMENT: Record<string, string> = {
   mise_en_demeure: "Mise en demeure",
   contrainte: "Contrainte",
   courrier_huissier: "Courrier d'huissier",
+};
+
+/** Comment la contestation est partie : chaque canal laisse une preuve différente. */
+export const MODES_ENVOI: Record<string, { libelle: string; preuve: string }> = {
+  formulaire: { libelle: "Formulaire en ligne", preuve: "Numéro ou capture de la confirmation" },
+  recommande: { libelle: "Recommandé", preuve: "Numéro du recommandé" },
+  email: { libelle: "E-mail", preuve: "Date et objet de l'e-mail envoyé" },
+  depot: { libelle: "Déposé en main propre", preuve: "Récépissé daté et signé" },
+  courrier: { libelle: "Courrier simple", preuve: "Aucune preuve d'envoi : préférez le recommandé" },
 };
 
 /** Jours restants avant l'échéance ; négatif si la date est passée. */
