@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: "Main"; src: url("node_modules/@fontsource/patrick-hand/files/patrick-hand-latin-400-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Main"; src: url("node_modules/@fontsource/patrick-hand/files/patrick-hand-latin-ext-400-normal.woff2") format("woff2"); unicode-range: U+0100-024F; }
+  html, body { margin: 0; background: #fbf8f1; }
+  #cadre { width: 1280px; height: 720px; position: relative; overflow: hidden;
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(255,255,255,.9), transparent 60%),
+      repeating-linear-gradient(0deg, rgba(27,42,74,.035) 0 1px, transparent 1px 34px),
+      #fbf8f1; }
+  svg { position: absolute; inset: 0; }
+  text { font-family: "Main", cursive; }
+</style>
+</head>
+<body>
+<div id="cadre"><svg id="toile" width="1280" height="720" viewBox="0 0 1280 720"></svg></div>
+<script src="node_modules/roughjs/bundled/rough.js"></script>
+<script>
+const NS = "http://www.w3.org/2000/svg";
+const svg = document.getElementById("toile");
+const rc = rough.svg(svg);
+const ENCRE = "#1b2a4a", OR = "#f2ab00", ROUGE = "#c2261e", VERT = "#12895a", BLEU = "#1f5bd6", GRIS = "#8a93a8";
+let graine = 3;
+const o = (x = {}) => Object.assign({ roughness: 1.3, bowing: 1.1, stroke: ENCRE, strokeWidth: 3.4, seed: graine++, hachureGap: 9, fillWeight: 2.2 }, x);
+
+/* ------------------------------------------------------------------ formes */
+let items = null;
+const ajout = (node, poids = 1) => { items.push({ node, kind: "trait", poids }); return node; };
+const R = (x, y, w, h, x2) => ajout(rc.rectangle(x, y, w, h, o(x2)));
+const C = (cx, cy, d, x2) => ajout(rc.circle(cx, cy, d, o(x2)));
+const E = (cx, cy, w, h, x2) => ajout(rc.ellipse(cx, cy, w, h, o(x2)));
+const L = (a, b, c, d, x2) => ajout(rc.line(a, b, c, d, o(x2)), 0.5);
+const P = (pts, x2) => ajout(rc.linearPath(pts, o(x2)));
+const Poly = (pts, x2) => ajout(rc.polygon(pts, o(x2)));
+const D = (d, x2) => ajout(rc.path(d, o(x2)));
+function Fleche(x1, y1, x2, y2, x3 = {}) {
+  const g = document.createElementNS(NS, "g");
+  const a = Math.atan2(y2 - y1, x2 - x1), t = 22;
+  g.appendChild(rc.line(x1, y1, x2, y2, o(x3)));
+  g.appendChild(rc.linearPath([[x2 - t * Math.cos(a - 0.45), y2 - t * Math.sin(a - 0.45)], [x2, y2], [x2 - t * Math.cos(a + 0.45), y2 - t * Math.sin(a + 0.45)]], o(x3)));
+  return ajout(g);
+}
+function Coche(x, y, s = 1, couleur = VERT) {
+  return P([[x, y], [x + 14 * s, y + 16 * s], [x + 42 * s, y - 20 * s]], { stroke: couleur, strokeWidth: 5, roughness: 0.9 });
+}
+function Croix(x, y, s, couleur = ROUGE) {
+  const g = document.createElementNS(NS, "g");
+  g.appendChild(rc.line(x - s, y - s, x + s, y + s, o({ stroke: couleur, strokeWidth: 6 })));
+  g.appendChild(rc.line(x + s, y - s, x - s, y + s, o({ stroke: couleur, strokeWidth: 6 })));
+  return ajout(g, 0.7);
+}
+/** Texte écrit à la main : il se révèle de gauche à droite. */
+function T(texte, x, y, taille = 44, couleur = ENCRE, ancre = "middle") {
+  const g = document.createElementNS(NS, "g");
+  const clip = document.createElementNS(NS, "clipPath");
+  const id = "c" + Math.random().toString(36).slice(2);
+  clip.setAttribute("id", id);
+  const rect = document.createElementNS(NS, "rect");
+  clip.appendChild(rect);
+  const t = document.createElementNS(NS, "text");
+  t.setAttribute("x", x); t.setAttribute("y", y); t.setAttribute("font-size", taille);
+  t.setAttribute("fill", couleur); t.setAttribute("text-anchor", ancre);
+  t.textContent = texte;
+  g.appendChild(clip); g.appendChild(t); t.setAttribute("clip-path", `url(#${id})`);
+  items.push({ node: g, kind: "texte", t, rect, poids: Math.max(0.6, texte.length / 14) });
+  return g;
+}
+/** Un bonhomme simple, façon carnet. */
+function Bonhomme(x, y, s = 1, x2 = {}) {
+  C(x, y, 70 * s, x2);
+  C(x - 12 * s, y - 4 * s, 6 * s, { fill: ENCRE, fillStyle: "solid", strokeWidth: 2 });
+  C(x + 12 * s, y - 4 * s, 6 * s, { fill: ENCRE, fillStyle: "solid", strokeWidth: 2 });
+  D(`M ${x - 14 * s} ${y + 16 * s} Q ${x} ${y + 8 * s} ${x + 14 * s} ${y + 16 * s}`, { strokeWidth: 3 });
+  L(x, y + 35 * s, x, y + 130 * s);
+  L(x, y + 60 * s, x - 45 * s, y + 100 * s);
+  L(x, y + 60 * s, x + 45 * s, y + 95 * s);
+  L(x, y + 130 * s, x - 35 * s, y + 200 * s);
+  L(x, y + 130 * s, x + 35 * s, y + 200 * s);
+}
+function Enveloppe(x, y, w, h, x2 = {}) {
+  R(x, y, w, h, Object.assign({ fill: "#fff", fillStyle: "solid" }, x2));
+  P([[x, y], [x + w / 2, y + h * 0.55], [x + w, y]]);
+}
+function Telephone(x, y, w, h) {
+  R(x, y, w, h, { strokeWidth: 4 });
+  R(x + 10, y + 26, w - 20, h - 64, { fill: "#e3e9f4", fillStyle: "solid", strokeWidth: 2 });
+  C(x + w / 2, y + h - 20, 18, { strokeWidth: 2 });
+}
+
+/* ----------------------------------------------------------------- scènes */
+const SCENES = [
+  { duree: 7.08, construire() {
+    T("Une lettre ?", 640, 110, 76);
+    Enveloppe(250, 260, 300, 190);
+    C(480, 300, 60, { stroke: ROUGE, strokeWidth: 3 });
+    T("P", 480, 316, 44, ROUGE);
+    Bonhomme(860, 280, 1.1);
+    T("?", 960, 260, 120, OR);
+    T("Pas de panique.", 640, 640, 56, BLEU);
+  } },
+  { duree: 7.87, construire() {
+    T("Ce n'est pas une amende de police", 640, 90, 52);
+    E(320, 330, 230, 150);
+    R(235, 360, 170, 30, { fill: ENCRE, fillStyle: "hachure" });
+    T("Amende", 320, 490, 46, GRIS);
+    Croix(320, 340, 110);
+    R(760, 210, 260, 330, { fill: "#fff", fillStyle: "solid" });
+    L(790, 280, 990, 280); L(790, 320, 960, 320); L(790, 360, 980, 360);
+    T("Redevance", 890, 255, 40, BLEU);
+    T("37 €", 890, 470, 64, ENCRE);
+    T("= une facture pour la place", 890, 610, 42, BLEU);
+  } },
+  { duree: 8.27, construire() {
+    T("La scan-car lit les plaques", 640, 90, 56);
+    R(130, 330, 380, 110, { fill: "#cfe0ff", fillStyle: "hachure" });
+    P([[190, 330], [240, 260], [420, 260], [470, 330]]);
+    C(210, 450, 70, { fill: ENCRE, fillStyle: "solid" });
+    C(430, 450, 70, { fill: ENCRE, fillStyle: "solid" });
+    R(300, 215, 60, 45, { fill: OR, fillStyle: "solid" });
+    C(330, 238, 22, { fill: ENCRE, fillStyle: "solid", strokeWidth: 2 });
+    L(360, 230, 560, 180, { stroke: OR }); L(360, 245, 560, 260, { stroke: OR });
+    R(560, 520, 170, 50, { fill: "#fff", fillStyle: "solid", stroke: ROUGE });
+    T("1-ABC-123", 645, 556, 34, ROUGE);
+    Fleche(760, 360, 880, 360, { strokeWidth: 4 });
+    Poly([[920, 330], [1040, 240], [1160, 330]]);
+    R(940, 330, 200, 170);
+    R(1015, 420, 50, 80, { fill: OR, fillStyle: "hachure" });
+    Enveloppe(1080, 520, 110, 70);
+    T("Une lettre arrive", 1040, 650, 40, BLEU);
+  } },
+  { duree: 4.54, construire() {
+    T("10 jours pour contester", 640, 100, 64);
+    R(330, 170, 420, 380, { fill: "#fff", fillStyle: "solid" });
+    R(330, 170, 420, 70, { fill: ROUGE, fillStyle: "hachure", stroke: ROUGE });
+    for (let r = 0; r < 4; r++) for (let c = 0; c < 5; c++) L(360 + c * 80, 285 + r * 70, 400 + c * 80, 285 + r * 70, { strokeWidth: 2, stroke: GRIS });
+    T("10", 540, 430, 120, ROUGE);
+    C(540, 395, 190, { stroke: ROUGE, strokeWidth: 5 });
+    D("M 860 470 l 160 -160 l 30 30 l -160 160 z", { fill: OR, fillStyle: "solid" });
+    T("par écrit", 960, 600, 54, BLEU);
+  } },
+  { duree: 7.66, construire() {
+    T("Sans réponse, la note grimpe", 640, 90, 56);
+    P([[120, 620], [330, 620], [330, 520], [540, 520], [540, 420], [750, 420], [750, 320], [960, 320], [960, 220], [1160, 220]], { strokeWidth: 4.5 });
+    T("Lettre", 225, 600, 38); T("37 €", 225, 560, 34, BLEU);
+    T("Rappel", 435, 500, 38); T("+ frais", 435, 460, 34, ROUGE);
+    T("Mise en demeure", 645, 400, 34); T("+ frais", 645, 360, 34, ROUGE);
+    T("Huissier", 855, 300, 38, ROUGE); T("€€€", 855, 260, 40, ROUGE);
+    Fleche(1050, 640, 1150, 300, { stroke: ROUGE, strokeWidth: 5 });
+  } },
+  { duree: 8.43, construire() {
+    T("Souvent, il y a une erreur", 640, 90, 58);
+    Telephone(160, 190, 150, 250);
+    T("J'avais payé", 235, 520, 40);
+    Coche(195, 300, 1.6);
+    R(520, 250, 240, 150, { fill: "#e2ebfc", fillStyle: "hachure" });
+    T("Riverain", 640, 335, 36, BLEU);
+    T("J'avais ma carte", 640, 520, 40);
+    Coche(600, 440, 1.2);
+    R(940, 210, 220, 180, { fill: "#fff", fillStyle: "solid" });
+    C(1050, 300, 90, { stroke: GRIS });
+    T("?", 1050, 318, 60, GRIS);
+    T("La photo ne prouve rien", 1050, 520, 38);
+    Coche(1010, 440, 1.2);
+  } },
+  { duree: 6.13, construire() {
+    T("SOS Citizens vérifie tout", 640, 90, 58);
+    Telephone(130, 180, 170, 290);
+    Enveloppe(165, 250, 100, 70);
+    Fleche(340, 330, 450, 330, { strokeWidth: 4 });
+    R(480, 190, 300, 280, { fill: "#fff", fillStyle: "solid" });
+    Coche(510, 250, 0.9); L(570, 262, 740, 262, { strokeWidth: 2 });
+    Coche(510, 320, 0.9); L(570, 332, 740, 332, { strokeWidth: 2 });
+    Coche(510, 390, 0.9); L(570, 402, 740, 402, { strokeWidth: 2 });
+    Fleche(810, 330, 920, 330, { strokeWidth: 4 });
+    R(950, 190, 220, 280, { fill: "#fff", fillStyle: "solid" });
+    L(980, 250, 1140, 250, { strokeWidth: 2 }); L(980, 290, 1120, 290, { strokeWidth: 2 }); L(980, 330, 1140, 330, { strokeWidth: 2 });
+    T("Prête !", 1060, 420, 46, VERT);
+    T("Gratuit", 640, 620, 80, OR);
+  } },
+  { duree: 6.0, construire() {
+    D("M 640 150 L 760 195 L 760 300 C 760 380 705 430 640 455 C 575 430 520 380 520 300 L 520 195 Z", { fill: ENCRE, fillStyle: "solid", strokeWidth: 4 });
+    T("P", 640, 345, 120, OR);
+    T("SOS Citizens", 640, 545, 92);
+    T("Prenez votre lettre en photo.", 640, 620, 46, BLEU);
+    T("On s'occupe du reste.", 640, 680, 46, BLEU);
+  } },
+];
+
+/* ------------------------------------------------------------- animation */
+let debuts = [], total = 0;
+const PAUSE = 0.7, FONDU = 0.35, CRAYON = document.createElementNS(NS, "g");
+
+function preparer() {
+  for (const s of SCENES) {
+    items = [];
+    const g = document.createElementNS(NS, "g");
+    svg.appendChild(g);
+    const avant = svg.childNodes.length;
+    s.construire();
+    // Les formes ont été ajoutées à la racine : on les range dans la scène.
+    for (const it of items) g.appendChild(it.node);
+    s.groupe = g; s.items = items; s.duree += PAUSE;
+    for (const it of items) {
+      if (it.kind === "trait") {
+        it.chemins = [...it.node.querySelectorAll("path")].map((p) => ({ p, l: p.getTotalLength() || 1 }));
+        it.longueur = it.chemins.reduce((a, c) => a + c.l, 0);
+        it.chemins.forEach(({ p, l }) => { p.style.strokeDasharray = `${l} ${l}`; p.style.strokeDashoffset = l; });
+        it.node.querySelectorAll("path").forEach((p) => { if (p.getAttribute("fill") && p.getAttribute("fill") !== "none") p.dataset.remplissage = p.getAttribute("fill"); });
+      } else {
+        const b = it.t.getBBox();
+        it.box = b;
+        it.rect.setAttribute("x", b.x - 4); it.rect.setAttribute("y", b.y - 10); it.rect.setAttribute("height", b.height + 20);
+        it.rect.setAttribute("width", 0);
+      }
+    }
+    // Calendrier du tracé : tout est dessiné à 82 % de la voix.
+    const somme = items.reduce((a, it) => a + it.poids, 0);
+    let t0 = 0.15; const fenetre = (s.duree - PAUSE) * 0.82;
+    for (const it of items) { it.debut = t0; it.duree = (it.poids / somme) * fenetre; t0 += it.duree; }
+    debuts.push(total); total += s.duree;
+    g.style.display = "none";
+  }
+  CRAYON.innerHTML = `<g transform="rotate(35)"><rect x="-7" y="-92" width="14" height="76" rx="3" fill="#ffc629" stroke="${ENCRE}" stroke-width="2.5"/><rect x="-7" y="-104" width="14" height="13" rx="3" fill="#f6a5b4" stroke="${ENCRE}" stroke-width="2.5"/><path d="M -7 -16 L 0 0 L 7 -16 Z" fill="#f3d9a4" stroke="${ENCRE}" stroke-width="2.5"/><path d="M -2.4 -5.5 L 0 0 L 2.4 -5.5 Z" fill="${ENCRE}"/></g>`;
+  svg.appendChild(CRAYON);
+}
+
+function rendre(t) {
+  let i = SCENES.length - 1;
+  for (let k = 0; k < SCENES.length; k++) if (t < debuts[k] + SCENES[k].duree) { i = k; break; }
+  SCENES.forEach((s, k) => (s.groupe.style.display = k === i ? "" : "none"));
+  const s = SCENES[i], u = t - debuts[i];
+  let pointe = null;
+  for (const it of s.items) {
+    const p = Math.max(0, Math.min(1, (u - it.debut) / it.duree));
+    if (it.kind === "trait") {
+      let reste = p * it.longueur;
+      for (const { p: chemin, l } of it.chemins) {
+        const fait = Math.max(0, Math.min(l, reste)); reste -= l;
+        chemin.style.strokeDashoffset = l - fait;
+        if (chemin.dataset.remplissage) chemin.style.fillOpacity = p >= 1 ? 1 : 0;
+        if (p > 0 && p < 1 && fait > 0 && fait < l) { const pt = chemin.getPointAtLength(fait); pointe = pt; }
+      }
+    } else {
+      it.rect.setAttribute("width", (it.box.width + 8) * p);
+      if (p > 0 && p < 1) pointe = { x: it.box.x + it.box.width * p, y: it.box.y + it.box.height * 0.75 };
+    }
+  }
+  CRAYON.style.display = pointe ? "" : "none";
+  if (pointe) CRAYON.setAttribute("transform", `translate(${pointe.x} ${pointe.y})`);
+  const finale = i === SCENES.length - 1;
+  s.groupe.style.opacity = !finale && u > s.duree - FONDU ? Math.max(0, (s.duree - u) / FONDU) : 1;
+}
+
+window.pret = document.fonts.ready.then(() => { preparer(); window.TOTAL = total; window.DEBUTS = debuts; window.DUREES = SCENES.map((s) => s.duree); rendre(0); return total; });
+window.rendre = rendre;
+</script>
+</body>
+</html>
