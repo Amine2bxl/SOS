@@ -30,7 +30,7 @@ const DOMAINES = [
     Icone: IconePanneauP,
     titre: "Stationnement et redevances",
     texte:
-      "Redevances, rappels, mises en demeure, recouvrement par huissier. Le moteur lit votre courrier, vérifie chaque élément et prépare la réponse.",
+      "Redevances, rappels, huissier. On vérifie votre lettre et on prépare la réponse.",
     outille: true,
     sujet: "redevance",
   },
@@ -38,35 +38,35 @@ const DOMAINES = [
     Icone: IconePvPolice,
     titre: "Amendes routières",
     texte:
-      "Procès-verbaux, perceptions immédiates, propositions de transaction : la régularité du constat, les délais et les droits de la défense.",
+      "PV, perception immédiate : on vérifie le constat et les délais.",
     sujet: "amende",
   },
   {
     Icone: IconeTampon,
     titre: "Sanctions administratives communales",
     texte:
-      "Les SAC décidées par la commune : la motivation de la décision, le droit d'être entendu, la proportionnalité et les délais de recours.",
+      "Une sanction de la commune (SAC) : on vérifie la décision et vos droits de recours.",
     sujet: "sac",
   },
   {
     Icone: IconeHotelDeVille,
     titre: "Relations avec les administrations",
     texte:
-      "Une décision sans motivation, un courrier resté sans réponse, un retard injustifié : obtenir une réponse écrite et motivée.",
+      "Pas de réponse, une décision sans explication : on vous aide à obtenir une réponse écrite.",
     sujet: "administration",
   },
   {
     Icone: IconeBalance,
     titre: "Médiation et litiges",
     texte:
-      "Chercher d'abord une issue amiable, par écrit et documentée, avant toute procédure. Et savoir quand il faut un avocat.",
+      "D'abord une solution à l'amiable. Et on vous dit quand il faut un avocat.",
     sujet: "mediation",
   },
   {
     Icone: IconeMainTendue,
     titre: "Accompagnement citoyen",
     texte:
-      "Comprendre un document, savoir à qui s'adresser, rassembler ses preuves. L'association répond par écrit, pour qu'une trace reste.",
+      "Comprendre un courrier, savoir à qui écrire, rassembler vos preuves.",
     sujet: "autre",
   },
 ];
@@ -75,22 +75,22 @@ const PRINCIPES = [
   {
     titre: "Vérifier avant de conclure",
     texte:
-      "Chaque dossier est examiné sur pièces : le constat, le montant, les délais, la procédure suivie. Une conclusion s'explique et se vérifie, ou elle n'est pas donnée.",
+      "On regarde les pièces : le constat, le montant, les délais. Chaque conclusion s'explique.",
   },
   {
     titre: "Ne rien promettre",
     texte:
-      "Personne ne peut garantir une annulation. L'association dit quand un dossier tient, et aussi quand il vaut mieux payer.",
+      "Personne ne peut garantir une annulation. On vous dit aussi quand il vaut mieux payer.",
   },
   {
     titre: "Agir avec votre accord",
     texte:
-      "L'association n'ouvre un dossier qu'avec votre mandat, limité au dossier choisi, et que vous pouvez retirer à tout moment. Rien n'est envoyé en votre nom sans votre feu vert.",
+      "On ne voit votre dossier qu'avec votre accord, et vous pouvez le retirer. Rien n'est envoyé sans vous.",
   },
   {
     titre: "Rester à sa place",
     texte:
-      "SOS Citizens n'est ni une administration, ni un tribunal, ni un cabinet d'avocats. Quand un dossier exige un professionnel, l'association vous oriente vers lui.",
+      "Nous ne sommes ni une administration, ni des avocats. Si votre dossier en demande un, on vous oriente.",
   },
 ];
 
@@ -107,9 +107,8 @@ export default function AssociationPage() {
             Vos droits méritent une réponse écrite et motivée.
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-navy-100">
-            {ASSO.nom} est une association sans but lucratif bruxelloise. Elle informe les citoyens, les accompagne dans
-            leurs démarches et porte leur voix auprès des institutions — à commencer par les redevances de
-            stationnement dans les 19 communes de Bruxelles-Capitale.
+            {ASSO.nom} est une association bruxelloise, sans but lucratif. On aide les citoyens face aux
+            administrations — d&apos;abord pour les redevances de stationnement.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <LinkBtn href="/#analyser" variant="gold" taille="lg">
@@ -129,8 +128,7 @@ export default function AssociationPage() {
         <div className="max-w-2xl">
           <h2 className="font-display text-3xl font-extrabold text-navy-900 sm:text-4xl">Nos domaines d&apos;intervention</h2>
           <p className="mt-3 text-[1.05rem] leading-relaxed text-ink-soft">
-            Le stationnement est outillé de bout en bout. Pour le reste, c&apos;est l&apos;association qui vous répond,
-            par écrit.
+            Pour le stationnement, l&apos;outil fait tout. Pour le reste, un bénévole vous répond.
           </p>
         </div>
 
@@ -147,7 +145,7 @@ export default function AssociationPage() {
                   href={outille ? "/#analyser" : `/contact?sujet=${sujet}`}
                   className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-navy-700 underline decoration-navy-200 underline-offset-4 hover:decoration-navy-700"
                 >
-                  {outille ? "Analyser mon courrier" : "Exposer ma situation"}
+                  {outille ? "Vérifier ma lettre" : "Exposer ma situation"}
                   <IconeFleche className="h-3.5 w-3.5" />
                 </Link>
               </div>
@@ -161,9 +159,7 @@ export default function AssociationPage() {
         <div className="mx-auto grid max-w-5xl gap-10 px-4 sm:px-6 lg:grid-cols-[0.8fr_1.2fr]">
           <div className="lg:sticky lg:top-24 lg:self-start">
             <h2 className="font-display text-3xl font-extrabold text-navy-900 sm:text-4xl">Notre façon de faire</h2>
-            <p className="mt-3 text-[1.05rem] leading-relaxed text-ink-soft">
-              Quatre règles, qui valent pour les bénévoles comme pour le moteur d&apos;analyse.
-            </p>
+            <p className="mt-3 text-[1.05rem] leading-relaxed text-ink-soft">Quatre règles, toujours.</p>
           </div>
           <dl className="space-y-7">
             {PRINCIPES.map((p) => (
@@ -190,7 +186,7 @@ export default function AssociationPage() {
             <li key={a.slug}>
               <Link href={`/presse/${a.slug}`} className="group grid gap-1 py-5 sm:grid-cols-[10rem_1fr] sm:gap-6">
                 <span className="text-sm text-ink-faint">
-                  {dateParution(a.date)} · {a.source.journal}
+                  {dateParution(a.date)} · {a.journal}
                 </span>
                 <span className="font-display text-lg font-bold leading-snug text-navy-900 group-hover:underline group-hover:decoration-gold-400 group-hover:decoration-2 group-hover:underline-offset-4">
                   {a.titre}
@@ -236,8 +232,7 @@ export default function AssociationPage() {
             <div>
               <h2 className="font-display text-2xl font-extrabold">Soutenir l&apos;association</h2>
               <p className="mt-3 leading-relaxed text-navy-100">
-                L&apos;association vit des adhésions de ses membres et des dons. Chaque contribution finance l&apos;outil,
-                l&apos;accompagnement des dossiers et le travail d&apos;information — quel qu&apos;en soit le montant.
+                L&apos;association vit des adhésions et des dons. Chaque euro garde l&apos;outil gratuit pour tous.
               </p>
             </div>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">

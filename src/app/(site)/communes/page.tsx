@@ -28,9 +28,8 @@ export default async function CommunesPage({
   return (
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:py-16">
       <PageHead
-        kicker="Bruxelles-Capitale"
         title="Les 19 communes bruxelloises"
-        intro="Chaque commune a ses zones, ses horaires et ses règles, fixés par son règlement communal en vigueur à la date des faits. Touchez la vôtre sur la carte : sa fiche s'ouvre, avec ce qui a changé récemment."
+        intro="Chaque commune a ses propres règles : zones, horaires, gratuité. Touchez la vôtre sur la carte."
       />
 
       <ExplorateurCommunes direct={direct} slugInitial={slugInitial} />
@@ -38,22 +37,18 @@ export default async function CommunesPage({
       <div className="mx-auto mt-10 grid max-w-4xl gap-3 md:grid-cols-2">
         <CadreReglementaire />
         <KeyBox title="Bruxelles d'abord" ton="info">
-          SOS Citizens couvre aujourd&apos;hui les 19 communes de la Région de Bruxelles-Capitale. La
-          Flandre, puis la Wallonie, suivront : chaque région ouvrira avec ses propres règles,
-          vérifiées commune par commune.
+          Les 19 communes de Bruxelles, aujourd&apos;hui. La Flandre puis la Wallonie, ensuite.
         </KeyBox>
       </div>
 
       <p className="mx-auto mt-8 max-w-3xl text-center text-xs leading-relaxed text-ink-soft">
-        Ces pages sont un accompagnement d&apos;information : elles ne remplacent ni le règlement
-        communal ni un avis juridique. En cas de doute sur le texte applicable,{" "}
-        <BoutonContact variante="lien">écrivez-nous</BoutonContact> — nous vous aiderons à
-        retrouver la bonne version.
+        C&apos;est de l&apos;information : le règlement de la commune fait foi. Un doute ?{" "}
+        <BoutonContact variante="lien">Écrivez-nous</BoutonContact>.
       </p>
 
       <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
         <LinkBtn href="/#analyser" variant="gold">
-          Analyser mon courrier
+          Vérifier ma lettre
         </LinkBtn>
         <BoutonContact variante="secondaire">Demander de l&apos;aide</BoutonContact>
       </div>

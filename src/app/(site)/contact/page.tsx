@@ -32,9 +32,8 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
       <PageHead
-        kicker="Contact"
-        title="Parlons de votre dossier"
-        intro="Un message suffit. Nous sommes une petite association : ce sont nos bénévoles qui vous répondent, par écrit — c'est le plus sûr pour garder une trace de votre dossier."
+        title="Écrivez-nous"
+        intro="Un bénévole vous répond par écrit. WhatsApp est le plus rapide."
       />
 
       {/* CONTACT DIRECT — WhatsApp et e-mail, jamais d'appel direct. */}
@@ -91,48 +90,6 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
         </Card>
       </div>
 
-      {/* L'ASSOCIATION */}
-      <Card title="L'association" className="mt-6">
-        <p className="text-sm leading-relaxed text-ink-soft">
-          {ASSO.nom} est une association sans but lucratif, créée le {ASSO.constitution} à Bruxelles,
-          qui aide les automobilistes à se défendre face à une redevance de stationnement — aujourd&apos;hui
-          dans les 19 communes de la Région de Bruxelles-Capitale. Identité ci-dessous ; notre rôle exact est décrit dans les mentions légales.
-        </p>
-
-        <dl className="mt-5 grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
-          <div>
-            <dt className="font-semibold text-navy-900">Dénomination</dt>
-            <dd className="text-ink-soft">{ASSO.nom}</dd>
-          </div>
-          <div>
-            <dt className="font-semibold text-navy-900">Forme juridique</dt>
-            <dd className="text-ink-soft">{ASSO.formeJuridique}</dd>
-          </div>
-          <div>
-            <dt className="font-semibold text-navy-900">Numéro d&apos;entreprise</dt>
-            <dd className="text-ink-soft">{ASSO.bce}</dd>
-          </div>
-          <div>
-            <dt className="font-semibold text-navy-900">Date de constitution</dt>
-            <dd className="text-ink-soft">{ASSO.constitution}</dd>
-          </div>
-          <div>
-            <dt className="font-semibold text-navy-900">Président</dt>
-            <dd className="text-ink-soft">{ASSO.president}</dd>
-          </div>
-          <div>
-            <dt className="font-semibold text-navy-900">Administrateurs</dt>
-            <dd className="text-ink-soft">{ASSO.administrateurs.join(", ")}</dd>
-          </div>
-          <div className="sm:col-span-2">
-            <dt className="font-semibold text-navy-900">Siège social</dt>
-            <dd className="text-ink-soft">
-              {ASSO.rue}, {ASSO.codePostal} {ASSO.ville}, {ASSO.pays}
-            </dd>
-          </div>
-        </dl>
-      </Card>
-
       {/* DONNÉES PERSONNELLES */}
       <Card title="Vos données personnelles" className="mt-6">
         <p className="text-sm leading-relaxed text-ink-soft">
@@ -158,7 +115,7 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
 
       <div className="mt-8 text-center">
         <LinkBtn href="/#analyser" variant="gold">
-          Analyser mon courrier
+          Vérifier ma lettre
         </LinkBtn>
       </div>
     </div>

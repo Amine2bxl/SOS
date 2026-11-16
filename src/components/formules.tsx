@@ -29,7 +29,9 @@ export function CarteFormule({
   href?: string;
 }) {
   const avantages = courte ? plan.avantages.slice(0, 4) : plan.avantages;
-  const lien = href ?? (plan.id === "gratuit" ? "/connexion" : `/adherer?formule=${plan.id}`);
+  // Le tunnel : créer son compte, puis la formule s'applique. Un visiteur passe
+  // par la connexion, qui le ramène ici ensuite (voir `proxy.ts`).
+  const lien = href ?? (plan.id === "gratuit" ? "/connexion?suite=/bienvenue" : `/adherer?formule=${plan.id}`);
   const libelle =
     libelleAction ?? (plan.id === "gratuit" ? "Commencer gratuitement" : `Adhérer — ${plan.nom}`);
   const fonce = !!plan.miseEnAvant;

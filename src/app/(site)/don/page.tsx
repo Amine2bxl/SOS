@@ -18,15 +18,15 @@ const COMMUNICATION_DON = "Don SOS Citizens";
 const USAGES = [
   {
     titre: "L'outil, gratuit pour tous",
-    texte: "L'analyse sans compte, la lecture du courrier, les lettres en français et en néerlandais.",
+    texte: "La vérification sans compte et les lettres en français et en néerlandais.",
   },
   {
     titre: "L'accompagnement des dossiers",
-    texte: "Les réponses écrites, la relecture des cas difficiles, les demandes de preuves aux administrations.",
+    texte: "Les réponses des bénévoles et les demandes de preuves aux administrations.",
   },
   {
     titre: "L'information",
-    texte: "Les fiches des 19 communes, tenues à jour, et l'alerte quand une règle change.",
+    texte: "Les règles des 19 communes, tenues à jour.",
   },
 ];
 
@@ -41,9 +41,7 @@ export default function DonPage() {
             Chaque don aide quelqu&apos;un à répondre à son courrier.
           </h1>
           <p className="mt-5 max-w-xl text-[1.05rem] leading-relaxed text-ink-soft">
-            Chaque jour, des citoyens reçoivent des courriers qu&apos;ils ne comprennent pas, des frais qui
-            s&apos;empilent, des décisions sans explication. {ASSO.nom} se tient à leurs côtés, sans but lucratif. Elle
-            vit des adhésions de ses membres et de vos dons.
+            {ASSO.nom} vit des adhésions et des dons. Votre don garde la vérification gratuite pour tous.
           </p>
 
           <ul className="mt-10 space-y-6">
@@ -58,9 +56,8 @@ export default function DonPage() {
           <section className="mt-12 max-w-xl">
             <h2 className="font-display text-xl font-bold text-navy-900">Don, adhésion : la différence</h2>
             <p className="mt-2 leading-relaxed text-ink-soft">
-              Un don soutient l&apos;association, sans contrepartie : il ne fait pas de vous un membre et ne donne pas
-              accès à un service. L&apos;adhésion, elle, ouvre les dossiers illimités et la relecture par
-              l&apos;association. Aucune attestation fiscale n&apos;est délivrée à ce jour.
+              Le don : un soutien, sans contrepartie. L&apos;adhésion : 70 € par an, dossiers illimités et relecture.
+              Pas d&apos;attestation fiscale pour l&apos;instant.
             </p>
             <div className="mt-5">
               <LinkBtn href="/tarifs" variant="secondary">

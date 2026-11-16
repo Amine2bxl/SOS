@@ -55,7 +55,7 @@ export default async function Accueil() {
   const urgentes = enCours.filter((s) => s.action.ton === "urgent").length;
   const resume =
     dossiers.length === 0
-      ? "Un courrier à contester ? Commencez par le photographier."
+      ? "Une lettre reçue ? Prenez-la en photo."
       : urgentes > 0
         ? `${urgentes} dossier${urgentes > 1 ? "s demandent" : " demande"} votre attention aujourd'hui.`
         : enCours.length > 0
@@ -89,7 +89,7 @@ export default async function Accueil() {
           ) : (
             <div className="mt-6 rounded-[var(--radius-carte)] border border-ok-600/30 bg-ok-50 p-6">
               <p className="font-display text-lg font-bold text-ok-700">Aucun dossier en cours</p>
-              <p className="mt-1 text-sm text-ink-soft">Un nouveau courrier ? Scannez-le : l&apos;analyse prend une minute.</p>
+              <p className="mt-1 text-sm text-ink-soft">Une nouvelle lettre ? Prenez-la en photo. Une minute suffit.</p>
             </div>
           )}
 
@@ -128,7 +128,7 @@ export default async function Accueil() {
             </span>
             <div>
               <h2 className="font-display text-lg font-bold text-navy-900">Une question ?</h2>
-              <p className="text-sm text-ink-soft">La réponse vient de notre base de savoir.</p>
+              <p className="text-sm text-ink-soft">Posez votre question en quelques mots.</p>
             </div>
           </div>
           <RechercheRapide />
@@ -247,17 +247,17 @@ function PremierPas() {
     {
       Icone: IconeScanDoc,
       titre: "Photographiez votre courrier",
-      texte: "Ou déposez le PDF. Le moteur lit les dates, le montant, la plaque.",
+      texte: "Ou ajoutez le PDF. Rien à recopier.",
     },
     {
       Icone: IconeBalance,
       titre: "Répondez à trois questions",
-      texte: "Ce que le courrier ne dit pas : aviez-vous payé ? la voiture était-elle à vous ?",
+      texte: "2 ou 3 questions simples : aviez-vous payé ? C'était votre voiture ?",
     },
     {
       Icone: IconeLettre,
       titre: "Envoyez votre lettre",
-      texte: "Rédigée pour votre cas, avec le délai à tenir et la marche à suivre.",
+      texte: "Prête à envoyer, avec la date limite.",
     },
   ];
   return (

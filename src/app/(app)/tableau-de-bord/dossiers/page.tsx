@@ -33,7 +33,7 @@ export default async function MesDossiers({ searchParams }: { searchParams: Prom
           <h1 className="font-display text-[2rem] font-extrabold leading-tight text-navy-900">Mes dossiers</h1>
           <p className="mt-1 text-ink-soft">
             {dossiers.length === 0
-              ? "Chaque courrier reçu devient un dossier, avec sa lettre et son suivi."
+              ? "Une lettre reçue = un dossier, avec sa réponse et son suivi."
               : "Les plus urgents en premier."}
           </p>
         </div>
@@ -50,7 +50,7 @@ export default async function MesDossiers({ searchParams }: { searchParams: Prom
           <EtatVide
             icone={<IconeDossiers className="h-12 w-12" />}
             titre="Aucun dossier pour l'instant"
-            texte="Photographiez votre courrier : le moteur le lit, l'analyse, et prépare votre lettre."
+            texte="Prenez votre lettre en photo : on la vérifie et on prépare votre réponse."
           >
             <LinkBtn href="/tableau-de-bord/nouveau" variant="gold">
               Scanner mon courrier

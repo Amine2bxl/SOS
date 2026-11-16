@@ -18,7 +18,7 @@ export type Langue = (typeof LANGUES)[number]["code"];
 
 const FR = {
   "nav.commentCaMarche": "Comment ça marche",
-  "commun.analyser": "Analyser mon courrier",
+  "commun.analyser": "Vérifier ma lettre",
   "nav.comprendre": "Comprendre",
   "nav.communes": "Communes",
   "nav.tarifs": "Tarifs",
@@ -56,7 +56,7 @@ const FR = {
 
 const EN: Record<string, string> = {
   "nav.commentCaMarche": "How it works",
-  "commun.analyser": "Analyse my letter",
+  "commun.analyser": "Check my letter",
   "nav.comprendre": "Understand",
   "nav.communes": "Municipalities",
   "nav.tarifs": "Pricing",
@@ -95,7 +95,7 @@ const EN: Record<string, string> = {
 
 const NL: Record<string, string> = {
   "nav.commentCaMarche": "Hoe het werkt",
-  "commun.analyser": "Mijn brief analyseren",
+  "commun.analyser": "Mijn brief controleren",
   "nav.comprendre": "Begrijpen",
   "nav.communes": "Gemeenten",
   "nav.tarifs": "Tarieven",
@@ -134,7 +134,7 @@ const NL: Record<string, string> = {
 
 const DE: Record<string, string> = {
   "nav.commentCaMarche": "So funktioniert's",
-  "commun.analyser": "Meinen Brief analysieren",
+  "commun.analyser": "Meinen Brief prüfen",
   "nav.comprendre": "Verstehen",
   "nav.communes": "Gemeinden",
   "nav.tarifs": "Preise",
