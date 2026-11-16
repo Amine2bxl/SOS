@@ -20,6 +20,7 @@ près, signalée plus bas.
 | `…_adhesions_et_reconciliation.sql` | Adhésions, communication structurée, application et expiration des formules |
 | `…_droit_a_l_effacement.sql` | Politiques permettant à chacun de supprimer ses propres données |
 | `…_registre_des_communes.sql` | Registre des communes couvertes (Bruxelles-Capitale), fiches de règles complètes, suivi en direct par la page « Communes » |
+| `…_appareils_reconnus.sql` | Appareils reconnus : après un premier code, on rentre d'une touche (jeton en cookie httpOnly, empreinte seule en base, révocable) |
 | `…_mandats_preuves_consentements.sql` | Mandats (accès d'un bénévole à UN dossier, limité et révocable), opérateurs, preuves d'envoi et accusé de réception, montants du solde reconstruit, type de compte, consentements versionnés, messages du formulaire de contact (effacés à 12 mois) |
 
 Les appels `cron.schedule(...)` échouent si la tâche existe déjà. Pour rejouer
@@ -60,6 +61,7 @@ courrier.
 | --- | --- | --- |
 | `purge-quotidienne` | 03:15 UTC | Efface le texte OCR périmé, les compteurs de débit, les accusés de lecture orphelins |
 | `expiration-formules` | 03:35 UTC | Ramène à la formule gratuite les adhésions arrivées à échéance |
+| `purge-appareils` | 04:05 UTC | Efface les appareils expirés ou retirés depuis plus d'un mois |
 | `purge-messages-contact` | 03:55 UTC | Efface les messages du formulaire de contact reçus il y a plus de douze mois |
 
 Les deux sont séparées à dessein : l'échec de l'une ne doit pas emporter
@@ -145,3 +147,17 @@ select id from auth.users where email = 'benevole@exemple.be';
 
 Les messages du formulaire de contact arrivent dans `messages_contact`
 (console uniquement) et par e-mail à l'adresse de l'association.
+
+## Connexion par SMS, gratuite des deux côtés
+
+Recevoir un SMS est gratuit en Belgique. Pour que l'envoi le soit aussi, les
+codes partent d'un téléphone Android de l'association, par l'application libre
+textbee (forfait à SMS illimités). Mise en route :
+
+1. Installer textbee sur le téléphone, récupérer la clé d'API et l'identifiant
+   de l'appareil (textbee.dev) : `TEXTBEE_API_KEY`, `TEXTBEE_DEVICE_ID`.
+2. Supabase → Authentication → Providers → **Phone** : activer.
+3. Supabase → Authentication → Hooks → **Send SMS** : type HTTPS, adresse
+   `https://<site>/api/auth/sms`, générer le secret et le copier dans
+   `SUPABASE_SMS_HOOK_SECRET`.
+4. `NEXT_PUBLIC_AUTH_TELEPHONE=1` pour afficher l'onglet « Par SMS ».

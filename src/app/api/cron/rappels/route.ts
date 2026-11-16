@@ -1,6 +1,7 @@
 import { creerClientAdmin } from "@/lib/supabase/admin";
 import { envoyerEmail, mailConfigure, urlDuSite } from "@/lib/mail/envoyer";
 import { emailRappel } from "@/lib/mail/gabarits";
+import { estEmailTechnique } from "@/lib/telephone";
 import { analyser } from "@/cerveau";
 import { faitsDepuisDossier } from "@/lib/faits";
 import { rappelDu, TITRES_RAPPEL } from "@/lib/rappels";
@@ -67,7 +68,8 @@ export async function GET(requete: Request) {
 
   for (const d of liste) {
     const profil = profilParId.get(d.user_id);
-    if (!profil?.email) continue;
+    // Les comptes ouverts par téléphone n'ont qu'une adresse technique : pas d'e-mail.
+    if (!profil?.email || estEmailTechnique(profil.email)) continue;
 
     const analyse = analyser(faitsDepuisDossier(d));
     const rappel = rappelDu(d, analyse.delai.joursRestants, partisParDossier.get(d.id) ?? new Set());

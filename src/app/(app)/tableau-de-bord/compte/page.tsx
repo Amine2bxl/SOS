@@ -8,23 +8,30 @@ import { creerClientServeur, lireUtilisateur } from "@/lib/supabase/server";
 import { FormulaireProfil } from "./FormulaireProfil";
 import { SupprimerCompte } from "./SupprimerCompte";
 import { BoutonDeconnexion } from "./BoutonDeconnexion";
+import { AppareilsReconnus, type Appareil } from "./AppareilsReconnus";
+import { emailAffichable } from "@/lib/telephone";
+import { cookies } from "next/headers";
+import { COOKIE_APPAREIL } from "@/lib/appareils";
 
 export const metadata: Metadata = { title: "Mon compte" };
 export const dynamic = "force-dynamic";
 
 export default async function MonCompte() {
-  const [utilisateur, profil, dossiers, enAttente, consentements] = await Promise.all([
+  const [utilisateur, profil, dossiers, enAttente, consentements, appareils] = await Promise.all([
     lireUtilisateur(),
     lireProfil(),
     listerDossiers(),
     lireAdhesionEnAttente(),
     lireConsentements(),
+    lireAppareils(),
   ]);
 
   const plan = planById(profil?.plan);
   const restantes = contestationsRestantes(profil?.plan, dossiers.length);
   const nomComplet = [profil?.prenom, profil?.nom].filter(Boolean).join(" ");
-  const initiale = (profil?.prenom?.charAt(0) || utilisateur?.email?.charAt(0) || "?").toUpperCase();
+  const contact =
+    emailAffichable(utilisateur?.email) ?? (utilisateur?.phone ? `+${utilisateur.phone.replace(/^\+/, "")}` : null);
+  const initiale = (profil?.prenom?.charAt(0) || contact?.charAt(0) || "?").toUpperCase();
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 lg:py-10">
@@ -36,7 +43,7 @@ export default async function MonCompte() {
           <h1 className="truncate font-display text-[1.8rem] font-extrabold leading-tight text-navy-900">
             {nomComplet || "Mon compte"}
           </h1>
-          <p className="truncate text-ink-soft">{utilisateur?.email}</p>
+          <p className="truncate text-ink-soft">{contact}</p>
         </div>
       </header>
 
@@ -134,6 +141,13 @@ export default async function MonCompte() {
             </p>
           )}
         </div>
+        <div className="mt-5">
+          <h3 className="font-semibold text-navy-900">Appareils où vous entrez sans code</h3>
+          <div className="mt-2">
+            <AppareilsReconnus appareils={appareils} />
+          </div>
+        </div>
+
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
           <BoutonDeconnexion />
           <SupprimerCompte dossiers={dossiers.length} />
@@ -157,4 +171,19 @@ async function lireConsentements(): Promise<{ document: string; version: string;
     .order("accepte_le", { ascending: false })
     .limit(4);
   return error ? [] : (data ?? []);
+}
+
+/** Les appareils reconnus du compte ; vide si la table n'existe pas encore. */
+async function lireAppareils(): Promise<Appareil[]> {
+  const supabase = await creerClientServeur();
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("appareils_reconnus")
+    .select("id, libelle, utilise_le, expire_le, revoque_le")
+    .is("revoque_le", null)
+    .gt("expire_le", new Date().toISOString())
+    .order("utilise_le", { ascending: false });
+  if (error) return [];
+  const actuel = (await cookies()).get(COOKIE_APPAREIL)?.value?.split(".")[0];
+  return (data ?? []).map((a) => ({ id: a.id, libelle: a.libelle, utilise_le: a.utilise_le, actuel: a.id === actuel }));
 }

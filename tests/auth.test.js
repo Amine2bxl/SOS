@@ -199,6 +199,9 @@ test('le garde garde la confirmation sur connexion et protège toujours l’espa
     '@supabase/ssr': { createServerClient: () => ({ auth: {
       getUser: async () => ({ data: { user: utilisateur } }),
     } }) },
+    // Sans clé de service, l'appareil n'est pas retenu : le garde reste inchangé.
+    '@/lib/supabase/admin': { creerClientAdmin: () => null },
+    '@/lib/appareils': { COOKIE_APPAREIL: 'sos_appareil', COOKIE_NE_PAS_RETENIR: 'sos_appareil_non', optionsCookie: () => ({}), retenirAppareil: async () => null },
   }, { process: { env: { NEXT_PUBLIC_SUPABASE_URL: 'https://example.supabase.co', NEXT_PUBLIC_SUPABASE_ANON_KEY: 'test-key' } } });
   for (const method of ['GET', 'POST']) {
     const r = await garde.proxy(new next.NextRequest('https://soscitizens.vercel.app/connexion?suite=%2Fadherer', { method }));

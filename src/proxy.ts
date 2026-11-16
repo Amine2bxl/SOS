@@ -1,6 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { cheminSur } from "@/lib/chemin-sur";
+import { creerClientAdmin } from "@/lib/supabase/admin";
+import { COOKIE_APPAREIL, COOKIE_NE_PAS_RETENIR, optionsCookie, retenirAppareil } from "@/lib/appareils";
 
 /** Pages qui exigent d'être connecté : tout l'espace membre. */
 const PAGES_PROTEGEES = ["/tableau-de-bord", "/adherer", "/operateur"];
@@ -53,10 +55,28 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Vérifié une fois, reconnu ensuite : la première page vue avec une session
+  // valable retient l'appareil (sauf refus explicite). La prochaine connexion
+  // se fera d'une touche, sans nouveau code.
+  if (
+    user &&
+    request.method === "GET" &&
+    !request.cookies.has(COOKIE_APPAREIL) &&
+    !request.cookies.has(COOKIE_NE_PAS_RETENIR)
+  ) {
+    const admin = creerClientAdmin();
+    if (admin) {
+      const valeur = await retenirAppareil(admin, user.id, request.headers.get("user-agent")).catch(() => null);
+      if (valeur) response.cookies.set(COOKIE_APPAREIL, valeur, optionsCookie());
+    }
+  }
+
   if (!user && PAGES_PROTEGEES.some((p) => chemin.startsWith(p))) {
     const connexion = request.nextUrl.clone();
     connexion.pathname = "/connexion";
-    connexion.searchParams.set("suite", chemin);
+    connexion.search = "";
+    // La requête suit : « /adherer?formule=membre » revient avec sa formule.
+    connexion.searchParams.set("suite", chemin + request.nextUrl.search);
     return NextResponse.redirect(connexion);
   }
 
