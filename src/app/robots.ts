@@ -5,7 +5,7 @@ import { urlDuSite } from "@/lib/url-site";
 export default function robots(): MetadataRoute.Robots {
   const site = urlDuSite();
   return {
-    rules: [{ userAgent: "*", allow: "/", disallow: ["/tableau-de-bord", "/adherer", "/api/", "/auth/"] }],
+    rules: [{ userAgent: "*", allow: "/", disallow: ["/tableau-de-bord", "/adherer", "/operateur", "/api/", "/auth/"] }],
     sitemap: `${site}/sitemap.xml`,
   };
 }

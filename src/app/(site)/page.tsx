@@ -11,6 +11,7 @@ import { EscalierProcedure } from "@/components/guide";
 import { ApercuAnalyse } from "@/components/site/ApercuAnalyse";
 import { CarteBruxellesLiens } from "@/components/CarteBruxellesLiens";
 import { REGIONS_A_VENIR } from "@/lib/perimetre";
+import { ARTICLES_TRIES, dateParution } from "@/lib/presse";
 import {
   IconeAgenda,
   IconeBalance,
@@ -279,6 +280,50 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
           <div className="rounded-[var(--radius-carte)] border border-line/80 bg-card p-4 shadow-carte sm:p-6">
             <CarteBruxellesLiens />
           </div>
+        </div>
+      </section>
+
+      {/* ============================================================ PRESSE */}
+      <section className="border-t border-line bg-card py-16 lg:py-20">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="max-w-2xl">
+              <h2 className="font-display text-3xl font-extrabold text-navy-900 sm:text-4xl">
+                Des dossiers qui ont fait la une.
+              </h2>
+              <p className="mt-3 text-[1.05rem] text-ink-soft">
+                Quand l&apos;association demande les preuves, les erreurs apparaissent. La presse l&apos;a raconté.
+              </p>
+            </div>
+            <Link href="/presse" className="inline-flex items-center gap-1.5 font-semibold text-navy-700 hover:text-navy-900">
+              Toute la revue de presse
+              <IconeFleche className="h-4 w-4" />
+            </Link>
+          </div>
+          <ul className="mt-10 grid gap-5 md:grid-cols-2">
+            {ARTICLES_TRIES.filter((a) => a.chiffre && a.rubrique === "Stationnement")
+              .slice(0, 2)
+              .map((a) => (
+                <li key={a.slug}>
+                  <Link
+                    href={`/presse/${a.slug}`}
+                    className="group flex h-full flex-col rounded-[var(--radius-carte)] border border-line/80 bg-paper p-6 transition-colors hover:border-navy-200 sm:p-7"
+                  >
+                    <p className="font-display text-5xl font-extrabold leading-none text-navy-900 tabular-nums">
+                      {a.chiffre?.valeur}
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-ink-soft">{a.chiffre?.libelle}</p>
+                    <h3 className="mt-5 font-display text-lg font-bold leading-snug text-navy-900 text-balance">{a.titre}</h3>
+                    <p className="mt-auto pt-4 text-sm text-ink-faint">
+                      {a.source.journal} · {dateParution(a.date)}
+                    </p>
+                  </Link>
+                </li>
+              ))}
+          </ul>
+          <p className="mt-4 text-xs text-ink-faint">
+            Chaque dossier est différent : un résultat obtenu dans l&apos;un ne garantit pas l&apos;issue d&apos;un autre.
+          </p>
         </div>
       </section>
 

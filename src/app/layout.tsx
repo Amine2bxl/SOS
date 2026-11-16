@@ -3,6 +3,7 @@ import { Bricolage_Grotesque, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "@/components/useSession";
 import { RetourLienEmail } from "@/components/RetourLienEmail";
+import { AvisCookies } from "@/components/AvisCookies";
 import { LanguageProvider } from "@/lib/i18n";
 import { ASSO } from "@/lib/data";
 import { urlDuSite } from "@/lib/url-site";
@@ -44,6 +45,8 @@ export const metadata: Metadata = {
     "lettre de contestation stationnement",
     "SOS Citizens",
   ],
+  icons: { apple: "/apple-touch-icon.png" },
+  appleWebApp: { capable: true, title: "SOS Citizens", statusBarStyle: "default" },
   openGraph: {
     title: "SOS Citizens — Contestez votre redevance de stationnement",
     description:
@@ -77,6 +80,7 @@ const jsonLd = {
     addressCountry: "BE",
   },
   areaServed: "BE",
+  sameAs: [`https://www.tiktok.com/@${ASSO.tiktok}`],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -102,6 +106,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               la frontière nette entre le site et l'application. */}
           <LanguageProvider>{children}</LanguageProvider>
           <RetourLienEmail />
+          <AvisCookies />
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

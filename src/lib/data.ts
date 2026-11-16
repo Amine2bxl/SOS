@@ -23,6 +23,8 @@ export const ASSO = {
   /** Numéro WhatsApp international, sans « + » ni espaces (pour wa.me). */
   whatsapp: "32470533514",
   email: "azmo007@protonmail.com",
+  /** Compte TikTok de l'association. */
+  tiktok: "soscitizens",
   president: "Mohamed Azouzi",
   administrateurs: ["Mohamed Azouzi", "Mohamed Boutrika"],
 } as const;

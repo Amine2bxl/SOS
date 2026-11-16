@@ -12,6 +12,9 @@ const COLONNES: { titreCle: string; liens: { href: string; cle: string }[] }[] =
       { href: "/comprendre", cle: "nav.comprendre" },
       { href: "/communes", cle: "nav.communes" },
       { href: "/tarifs", cle: "nav.tarifs" },
+      { href: "/association", cle: "nav.association" },
+      { href: "/presse", cle: "nav.presse" },
+      { href: "/don", cle: "nav.don" },
       { href: "/contact", cle: "nav.contact" },
     ],
   },
@@ -63,6 +66,16 @@ export function Footer({ langue }: { langue: Langue }) {
                 <MailIcon className="h-4 w-4" />
                 E-mail
               </a>
+              <a
+                href={`https://www.tiktok.com/@${ASSO.tiktok}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`${t(langue, "footer.suivre")} : TikTok @${ASSO.tiktok}`}
+                className="inline-flex h-10 items-center gap-2 rounded-full border border-white/20 px-4 text-sm font-semibold text-white transition hover:bg-white/10"
+              >
+                <IconeTikTok className="h-4 w-4" />
+                @{ASSO.tiktok}
+              </a>
             </div>
           </div>
 
@@ -93,5 +106,14 @@ export function Footer({ langue }: { langue: Langue }) {
         </div>
       </div>
     </footer>
+  );
+}
+
+/** Le logo TikTok, simplifié, à une couleur. */
+function IconeTikTok({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
+      <path d="M16.6 3c.3 2.2 1.6 3.9 3.9 4.2v3.1c-1.4 0-2.7-.4-3.9-1.1v6.3c0 3.4-2.6 5.5-5.6 5.5A5.4 5.4 0 0 1 5.6 15.6c0-3.4 2.9-5.8 6.3-5.3v3.2c-1.5-.4-3 .5-3 2.1 0 1.2 1 2.2 2.2 2.2 1.4 0 2.3-.9 2.3-2.6V3h3.2Z" />
+    </svg>
   );
 }

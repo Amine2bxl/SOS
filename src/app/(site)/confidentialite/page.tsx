@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import { PageHead, Card } from "@/components/ui";
 import { ASSO } from "@/lib/data";
+import { DOCUMENTS_LEGAUX } from "@/lib/versions-legales";
+
+const DOC = DOCUMENTS_LEGAUX.confidentialite;
+const dateLongue = (iso: string) =>
+  new Intl.DateTimeFormat("fr-BE", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(
+    new Date(`${iso}T00:00:00Z`),
+  );
 
 export const metadata: Metadata = {
   title: "Politique de confidentialité",
@@ -16,6 +23,9 @@ export default function ConfidentialitePage() {
         title="Politique de confidentialité"
         intro="Cette page explique, dans un langage clair, quelles données nous traitons, pourquoi, et les droits que vous avez sur elles (RGPD)."
       />
+      <p className="mt-4 text-center text-xs text-ink-faint">
+        Version {DOC.version} · en vigueur depuis le {dateLongue(DOC.date)}
+      </p>
 
       <Card title="Qui est responsable de vos données ?" className="mt-8">
         <p className="text-sm leading-relaxed text-ink-soft">
@@ -52,7 +62,23 @@ export default function ConfidentialitePage() {
             <span className="mt-2 h-1 w-3.5 shrink-0 rounded-full bg-gold-400" aria-hidden="true" />
             <span>
               <strong className="text-navy-900">Messages :</strong> les e-mails et messages que vous nous
-              envoyez.
+              envoyez ; par le formulaire de contact, votre nom, votre e-mail, le sujet et le message.
+            </span>
+          </li>
+          <li className="flex gap-2.5">
+            <span className="mt-2 h-1 w-3.5 shrink-0 rounded-full bg-gold-400" aria-hidden="true" />
+            <span>
+              <strong className="text-navy-900">Préférences et acceptations :</strong> le type de compte
+              (particulier ou organisation), le nom de l&apos;organisation, la langue de l&apos;interface, et la
+              version des documents juridiques que vous avez acceptée, avec sa date.
+            </span>
+          </li>
+          <li className="flex gap-2.5">
+            <span className="mt-2 h-1 w-3.5 shrink-0 rounded-full bg-gold-400" aria-hidden="true" />
+            <span>
+              <strong className="text-navy-900">Mandats :</strong> si vous confiez un dossier à
+              l&apos;association, ce que le mandat autorise, sa durée, sa date, son éventuel retrait et votre
+              message.
             </span>
           </li>
           <li className="flex gap-2.5">
@@ -87,7 +113,30 @@ export default function ConfidentialitePage() {
             <strong className="text-navy-900">Gérer votre adhésion</strong> (formule, demande, éventuelle
             facturation) : exécution du contrat ou obligations légales.
           </li>
+          <li>
+            <strong className="text-navy-900">Accompagner un dossier que vous nous confiez</strong>, dans
+            les limites du mandat : exécution de votre demande (article 6.1.b RGPD).
+          </li>
+          <li>
+            <strong className="text-navy-900">Garder la preuve de vos acceptations</strong> : obligation de
+            pouvoir démontrer votre accord (article 7.1 RGPD).
+          </li>
         </ul>
+      </Card>
+
+      <Card title="L'analyse automatisée de vos courriers" className="mt-6">
+        <p className="text-sm leading-relaxed text-ink-soft">
+          Le moteur SOS applique des règles écrites et vérifiables : il ne devine rien, ne génère pas de texte
+          librement et ne fait appel à aucun service d&apos;intelligence artificielle extérieur. Chaque élément
+          contrôlé reçoit l&apos;un de trois verdicts — <strong className="text-navy-900">établi</strong>,{" "}
+          <strong className="text-navy-900">anomalie potentielle</strong> ou{" "}
+          <strong className="text-navy-900">non déterminable</strong> — et chaque conclusion s&apos;explique.
+        </p>
+        <p className="mt-3 text-sm leading-relaxed text-ink-soft">
+          Le moteur ne prend aucune décision à votre place (article 22 RGPD) : il propose, vous décidez. Rien
+          n&apos;est envoyé à une administration sans votre action, et une information lue automatiquement
+          doit être confirmée par vous avant de compter.
+        </p>
       </Card>
 
       <Card title="Combien de temps conservons-nous vos données ?" className="mt-6">
@@ -109,6 +158,14 @@ export default function ConfidentialitePage() {
             vous accompagner, puis supprimés sur demande.
           </li>
           <li>
+            <strong className="text-navy-900">Les messages du formulaire de contact</strong> : effacés
+            automatiquement douze mois après leur réception.
+          </li>
+          <li>
+            <strong className="text-navy-900">Les mandats et vos acceptations</strong> : avec le dossier ou
+            le compte auquel ils se rattachent, et effacés avec lui.
+          </li>
+          <li>
             <strong className="text-navy-900">La trace d&apos;une adhésion payée</strong> : conservée
             le temps requis par les obligations comptables. Elle ne contient ni votre nom, ni votre
             adresse, ni votre plaque — seulement la formule, le montant et la référence du paiement.
@@ -124,7 +181,8 @@ export default function ConfidentialitePage() {
           sont stockées dans la base de données de notre prestataire technique (Supabase), qui agit
           en sous-traitant et auquel l&apos;accès est
           limité par des règles de sécurité (« politiques de sécurité au niveau des lignes ») : chaque
-          utilisateur ne voit que ses propres données. Le site est hébergé par Vercel. Nous ne vendons,
+          utilisateur ne voit que ses propres données. Les bénévoles de l&apos;association ne voient un
+          dossier que lorsque vous leur donnez mandat, et seulement celui-là, le temps du mandat. Nous ne vendons,
           ne louons et ne transmettons aucune donnée à des tiers à des fins commerciales ou publicitaires.
         </p>
       </Card>
@@ -135,13 +193,22 @@ export default function ConfidentialitePage() {
           de session d&apos;authentification est posé lorsque vous êtes connecté, uniquement pour vous
           garder connecté de manière sécurisée. La connexion est chiffrée (HTTPS).
         </p>
+        <p className="mt-3 text-sm leading-relaxed text-ink-soft">
+          Votre navigateur garde aussi quelques préférences, qui ne nous sont jamais envoyées : la langue
+          choisie (<code className="font-mono text-xs">sos.langue</code>), le brouillon d&apos;une analyse
+          le temps de créer votre compte, six heures au plus (<code className="font-mono text-xs">sos:brouillon</code>),
+          et le fait que vous avez lu l&apos;avis sur les cookies (<code className="font-mono text-xs">sos.avis-cookies</code>).
+          Tout cela est strictement nécessaire au service : aucun consentement n&apos;est requis, mais vous
+          pouvez l&apos;effacer à tout moment depuis votre navigateur.
+        </p>
       </Card>
 
       <Card title="Vos droits" className="mt-6">
         <p className="text-sm leading-relaxed text-ink-soft">
           Vous disposez des droits d&apos;accès, de rectification, d&apos;effacement, de limitation,
-          de portabilité et d&apos;opposition sur vos données. Vous pouvez les exercer en nous écrivant
-          à{" "}
+          de portabilité et d&apos;opposition sur vos données. Depuis « Mon compte », vous téléchargez
+          toutes vos données en un fichier, vous les corrigez et vous supprimez votre compte vous-même.
+          Pour le reste, écrivez-nous à{" "}
           <a href={`mailto:${ASSO.email}`} className="font-semibold text-navy-700 underline">
             {ASSO.email}
           </a>
@@ -149,13 +216,17 @@ export default function ConfidentialitePage() {
         </p>
         <p className="mt-3 text-sm leading-relaxed text-ink-soft">
           Vous pouvez également introduire une réclamation auprès de l&apos;Autorité de protection des
-          données (www.autoriteprotectiondonnees.be).
+          données : rue de la Presse 35, 1000 Bruxelles —{" "}
+          <a href="https://www.autoriteprotectiondonnees.be" className="font-semibold text-navy-700 underline" rel="noopener noreferrer" target="_blank">
+            autoriteprotectiondonnees.be
+          </a>
+          .
         </p>
       </Card>
 
       <p className="mt-8 text-center text-xs text-ink-soft">
-        Dernière mise à jour : août 2026. Cette politique peut être adaptée ; la version en ligne fait
-        toujours foi.
+        Version {DOC.version}. Quand cette politique change, sa version change aussi : les membres sont
+        invités à relire la nouvelle à leur prochaine visite, et l&apos;ancienne acceptation reste enregistrée.
       </p>
     </div>
   );

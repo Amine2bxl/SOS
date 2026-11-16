@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Logo } from "@/components/Logo";
 import { useSession } from "@/components/useSession";
 import { useLangue, t, ChoixLangue } from "@/lib/i18n";
-import { IconeFermer, IconeFleche, IconeMenu } from "@/components/icones";
+import { IconeFermer, IconeFleche, IconeMainTendue, IconeMenu } from "@/components/icones";
 
 /**
  * Navigation du site public. Elle ne parle que du site ; les outils vivent
@@ -14,10 +14,11 @@ import { IconeFermer, IconeFleche, IconeMenu } from "@/components/icones";
  * c'est elle qu'on vient faire.
  */
 const NAV = [
-  { href: "/#comment", cle: "nav.commentCaMarche" },
   { href: "/comprendre", cle: "nav.comprendre" },
   { href: "/communes", cle: "nav.communes" },
   { href: "/tarifs", cle: "nav.tarifs" },
+  { href: "/association", cle: "nav.association" },
+  { href: "/presse", cle: "nav.presse" },
   { href: "/contact", cle: "nav.contact" },
 ];
 
@@ -45,14 +46,22 @@ function AccesCompte() {
   return (
     <div className="flex items-center gap-1.5">
       <Link
+        href="/don"
+        aria-label={t(langue, "nav.don")}
+        className="hidden h-10 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-sm font-semibold text-gold-300 transition hover:bg-white/10 hover:text-gold-400 xl:inline-flex"
+      >
+        <IconeMainTendue className="h-5 w-5 [--icone-accent:currentColor]" />
+        {t(langue, "nav.donCourt")}
+      </Link>
+      <Link
         href="/connexion"
-        className="inline-flex h-10 items-center rounded-full px-3.5 text-sm font-semibold text-navy-100 transition hover:bg-white/10 hover:text-white"
+        className="inline-flex h-10 items-center whitespace-nowrap rounded-full px-3.5 text-sm font-semibold text-navy-100 transition hover:bg-white/10 hover:text-white"
       >
         {t(langue, "commun.seConnecter")}
       </Link>
       <Link
         href="/#analyser"
-        className="hidden h-10 items-center rounded-full bg-gold-400 px-4 text-sm font-bold text-navy-950 shadow-bouton transition hover:bg-gold-300 sm:inline-flex"
+        className="hidden h-10 items-center whitespace-nowrap rounded-full bg-gold-400 px-4 text-sm font-bold text-navy-950 shadow-bouton transition hover:bg-gold-300 sm:inline-flex"
       >
         {t(langue, "commun.analyser")}
       </Link>
@@ -74,13 +83,13 @@ export function HeaderSite() {
           <Logo />
         </Link>
 
-        <nav className="hidden items-center gap-1 lg:flex" aria-label="Navigation principale">
+        <nav className="hidden items-center gap-0.5 xl:flex 2xl:gap-1" aria-label="Navigation principale">
           {NAV.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               aria-current={estActif(item.href) ? "page" : undefined}
-              className={`rounded-full px-3 py-2 text-sm font-medium transition ${
+              className={`whitespace-nowrap rounded-full px-2.5 py-2 text-sm font-medium transition 2xl:px-3 ${
                 estActif(item.href) ? "bg-white/10 text-white" : "text-navy-100 hover:bg-white/5 hover:text-white"
               }`}
             >
@@ -95,7 +104,7 @@ export function HeaderSite() {
           <button
             type="button"
             onClick={() => setOuvert(!ouvert)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 text-navy-100 lg:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 text-navy-100 xl:hidden"
             aria-label={ouvert ? "Fermer le menu" : "Ouvrir le menu"}
             aria-expanded={ouvert}
           >
@@ -105,7 +114,7 @@ export function HeaderSite() {
       </div>
 
       {ouvert && (
-        <nav className="border-t border-white/10 px-4 pb-5 lg:hidden" aria-label="Navigation mobile">
+        <nav className="border-t border-white/10 px-4 pb-5 xl:hidden" aria-label="Navigation mobile">
           <div className="grid gap-1 pt-3">
             {NAV.map((item) => (
               <Link
@@ -126,6 +135,14 @@ export function HeaderSite() {
               className="mt-3 flex h-12 items-center justify-center rounded-full bg-gold-400 text-base font-bold text-navy-950"
             >
               {t(langue, "commun.analyser")}
+            </Link>
+            <Link
+              href="/don"
+              onClick={() => setOuvert(false)}
+              className="flex h-12 items-center justify-center gap-2 rounded-full border border-white/15 text-base font-semibold text-gold-300"
+            >
+              <IconeMainTendue className="h-5 w-5 [--icone-accent:currentColor]" />
+              {t(langue, "nav.don")}
             </Link>
           </div>
         </nav>
