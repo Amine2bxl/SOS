@@ -71,13 +71,30 @@ export default async function Adherer({ searchParams }: { searchParams: Promise<
               </li>
             ))}
           </ul>
-          {!enAttente && formuleAffichee.id === "membre" && (
-            <p className="mt-4 text-sm text-ink-soft">
-              Indépendant ou entreprise ?{" "}
-              <Link href="/tarifs" className="font-semibold text-navy-700 underline underline-offset-4">
-                Voir les formules pro
-              </Link>
-            </p>
+          {!enAttente && (
+            // Le choix de formule reste ici, dans l'espace membre : on ne
+            // renvoie personne vers la page publique des tarifs pour s'abonner.
+            <nav aria-label="Choisir une autre formule" className="mt-4">
+              <p className="text-sm font-semibold text-navy-900">Particulier, indépendant ou société :</p>
+              <ul className="mt-2 flex flex-wrap gap-2">
+                {PLANS.filter((p) => p.id !== "gratuit").map((p) => (
+                  <li key={p.id}>
+                    <Link
+                      href={`/adherer?formule=${p.id}`}
+                      aria-current={p.id === formuleAffichee.id ? "page" : undefined}
+                      className={`inline-flex h-10 items-center gap-1.5 rounded-full border px-4 text-sm font-semibold transition ${
+                        p.id === formuleAffichee.id
+                          ? "border-navy-900 bg-navy-900 text-white"
+                          : "border-line bg-card text-navy-900 hover:bg-navy-50"
+                      }`}
+                    >
+                      {p.nom}
+                      <span className={p.id === formuleAffichee.id ? "text-gold-300" : "text-ink-soft"}>{p.prixAnnuel} €</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
           )}
         </div>
       </div>

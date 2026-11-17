@@ -56,8 +56,12 @@ export default async function Bienvenue() {
           </div>
           <p className="mt-5 text-sm text-ink-soft">
             Indépendant ou société ?{" "}
-            <Link href="/tarifs" className="font-semibold text-navy-700 underline underline-offset-4">
-              Voir les formules pro
+            <Link href="/adherer?formule=independant" className="font-semibold text-navy-700 underline underline-offset-4">
+              Indépendant (400 €)
+            </Link>{" "}
+            ou{" "}
+            <Link href="/adherer?formule=societe" className="font-semibold text-navy-700 underline underline-offset-4">
+              Société (800 €)
             </Link>
           </p>
         </>

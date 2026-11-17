@@ -3,6 +3,7 @@ import { BoutonContact } from "@/components/Contact";
 import { coordonneesBancaires } from "@/lib/paiement";
 import { ASSO } from "@/lib/data";
 import { CopierTexte } from "@/components/CopierTexte";
+import { QrVirement } from "@/components/QrVirement";
 
 /**
  * Ce qu'il faut faire pour payer son adhésion, une fois la demande posée.
@@ -86,6 +87,20 @@ export function InstructionsVirement({
           </div>
         )}
       </dl>
+
+      {banque && (
+        <div className="mt-5 flex flex-col items-center gap-4 rounded-2xl border border-line bg-paper p-4 sm:flex-row">
+          <QrVirement
+            virement={{ iban: banque.iban, bic: banque.bic, beneficiaire: banque.beneficiaire, montant, communication }}
+            taille={140}
+            className="shrink-0 border border-line p-1"
+          />
+          <p className="text-sm leading-relaxed text-ink">
+            <strong className="text-navy-900">Le plus simple :</strong> scannez ce QR code avec l&apos;application de votre
+            banque. Montant, compte et communication structurée sont déjà remplis.
+          </p>
+        </div>
+      )}
 
       {/* La communication structurée est mise en avant : c'est le seul champ
           du virement que l'association ne peut pas deviner. */}

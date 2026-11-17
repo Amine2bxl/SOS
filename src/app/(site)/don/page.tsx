@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ASSO } from "@/lib/data";
 import { coordonneesBancaires, lienDonCarte } from "@/lib/paiement";
 import { CopierTexte } from "@/components/CopierTexte";
+import { DonVirement } from "./DonVirement";
 import { BoutonContact } from "@/components/Contact";
 import { LinkBtn } from "@/components/ui";
 import { IconeFleche } from "@/components/icones";
@@ -127,14 +128,17 @@ export default function DonPage() {
                 <dd className="mt-0.5 font-mono">{banque.bic}</dd>
               </div>
             )}
-            <div className="p-4">
-              <dt className="text-xs text-navy-100">Communication</dt>
-              <dd className="mt-1 flex flex-wrap items-center justify-between gap-2">
-                <span className="font-semibold">{COMMUNICATION_DON}</span>
-                <CopierTexte valeur={COMMUNICATION_DON} libelle="Copier la communication" />
-              </dd>
-            </div>
+            {!banque && (
+              <div className="p-4">
+                <dt className="text-xs text-navy-100">Communication</dt>
+                <dd className="mt-1 flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-semibold">{COMMUNICATION_DON}</span>
+                  <CopierTexte valeur={COMMUNICATION_DON} libelle="Copier la communication" />
+                </dd>
+              </div>
+            )}
           </dl>
+          {banque && <DonVirement iban={banque.iban} bic={banque.bic} beneficiaire={banque.beneficiaire} />}
 
           <p className="mt-5 text-sm leading-relaxed text-navy-100">
             Merci : c&apos;est grâce à vous que l&apos;analyse reste gratuite.
