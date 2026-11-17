@@ -83,6 +83,78 @@ html {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* -------------------------------------------------------------------------- */
+/*  Mode sombre                                                               */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * Le thème suit le téléphone, et chacun peut le changer (bouton soleil/lune).
+ * `data-theme` est posé sur <html> avant le premier affichage (script dans
+ * layout.tsx) : aucun flash blanc.
+ *
+ * L'encre (`navy`) sert à la fois de couleur de texte et de fond fort. En
+ * sombre, le texte encre devient clair, les fonds forts s'éclaircissent d'un
+ * ton pour se détacher de la page, et les fonds pâles (statuts, signal)
+ * deviennent des teintes sombres avec un texte éclairci : chaque paire garde
+ * son contraste. Les boutons jaunes, eux, ne changent pas.
+ */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-paper: #0b1324;
+  --color-card: #111c31;
+  --color-ink: #e7ecf5;
+  --color-ink-soft: #a9b4c8;
+  --color-ink-faint: #7f8aa1;
+  --color-line: #253350;
+  --color-line-soft: #1a2640;
+  --shadow-carte: 0 1px 2px rgb(0 0 0 / 0.3), 0 10px 30px -14px rgb(0 0 0 / 0.6);
+  --shadow-flotte: 0 2px 4px rgb(0 0 0 / 0.3), 0 24px 48px -20px rgb(0 0 0 / 0.7);
+}
+:root[data-theme="dark"] .text-navy-900,
+:root[data-theme="dark"] .text-navy-800 { color: #f1f4fb; }
+:root[data-theme="dark"] .text-navy-700 { color: #b9c7e4; }
+:root[data-theme="dark"] :is(.bg-gold-300, .bg-gold-400, .bg-gold-500):is(.text-navy-900, .text-navy-800),
+:root[data-theme="dark"] :is(.bg-gold-300, .bg-gold-400, .bg-gold-500) :is(.text-navy-900, .text-navy-800, .text-navy-700) { color: #0f1e3d; }
+:root[data-theme="dark"] .bg-white { background-color: #14203a; }
+:root[data-theme="dark"] .bg-navy-50 { background-color: #18243e; }
+:root[data-theme="dark"] .bg-navy-100 { background-color: #1d2b48; }
+:root[data-theme="dark"] .bg-navy-900 { background-color: #22345c; }
+:root[data-theme="dark"] .bg-navy-800 { background-color: #2b3f6c; }
+:root[data-theme="dark"] .bg-gold-50 { background-color: #251e0f; }
+:root[data-theme="dark"] .bg-gold-100 { background-color: #3a2d0d; }
+:root[data-theme="dark"] .text-gold-700 { color: #f2c14d; }
+:root[data-theme="dark"] :is(.bg-ok-50, .bg-ok-100) { background-color: #0f2a20; }
+:root[data-theme="dark"] .text-ok-700 { color: #6fdcaa; }
+:root[data-theme="dark"] .bg-warn-100 { background-color: #3a2a0c; }
+:root[data-theme="dark"] .text-warn-700 { color: #f5c470; }
+:root[data-theme="dark"] :is(.bg-danger-50, .bg-danger-100) { background-color: #3a1718; }
+:root[data-theme="dark"] .text-danger-700 { color: #ff9d96; }
+:root[data-theme="dark"] :is(.bg-azur-50, .bg-azur-100) { background-color: #16274b; }
+:root[data-theme="dark"] .text-azur-700 { color: #93b4ff; }
+:root[data-theme="dark"] .border-navy-900 { border-color: #c9d4ea; }
+:root[data-theme="dark"] .border-navy-200 { border-color: #34446a; }
+:root[data-theme="dark"] .border-gold-300 { border-color: #6b5316; }
+@media (hover: hover) {
+  :root[data-theme="dark"] .hover\:bg-navy-50:hover { background-color: #1d2b48; }
+  :root[data-theme="dark"] .hover\:bg-navy-800:hover { background-color: #2f4475; }
+  :root[data-theme="dark"] .hover\:text-navy-900:hover { color: #ffffff; }
+}
+/* La carte des communes : des teintes d'encre, la commune choisie en bleu P. */
+:root[data-theme="dark"] .fill-navy-100 { fill: #1d2b48; }
+:root[data-theme="dark"] .fill-navy-200 { fill: #2a3c63; }
+:root[data-theme="dark"] .fill-navy-200\/60 { fill: rgb(0 0 0 / 0.35); }
+:root[data-theme="dark"] .fill-navy-900 { fill: #34508f; }
+:root[data-theme="dark"] .fill-gold-100 { fill: #3a2d0d; }
+:root[data-theme="dark"] .fill-gold-300 { fill: #6b5316; }
+:root[data-theme="dark"] .stroke-navy-900 { stroke: #8fa2c9; }
+:root[data-theme="dark"] [class*="text-shadow:0_0_3px_#fff"] { text-shadow: 0 0 3px #0b1324, 0 0 3px #0b1324; }
+/* Le bouclier du logo, encre sur encre : il s'éclaircit et prend un liseré. */
+:root[data-theme="dark"] .marque-sos > path:first-of-type {
+  fill: #22396b;
+  stroke: rgb(255 255 255 / 0.35);
+  stroke-width: 1.4;
+}
+
 body {
   background-color: var(--color-paper);
   color: var(--color-ink);

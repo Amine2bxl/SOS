@@ -21,7 +21,13 @@ export default async function DossiersConfies() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:py-10">
-      <h1 className="font-display text-[1.8rem] font-extrabold leading-tight text-navy-900">Dossiers confiés</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-[1.8rem] font-extrabold leading-tight text-navy-900">Dossiers confiés</h1>
+        <Link href="/operateur/statistiques" className="inline-flex h-10 items-center gap-2 rounded-full border border-line bg-card px-4 text-sm font-semibold text-navy-900 transition hover:bg-navy-50">
+          L&apos;association en chiffres
+          <IconeFleche className="h-4 w-4" />
+        </Link>
+      </div>
       <p className="mt-1 text-ink-soft">
         Les dossiers sur lesquels un membre a donné mandat à l&apos;association. Lecture seule, dans les limites du mandat.
       </p>

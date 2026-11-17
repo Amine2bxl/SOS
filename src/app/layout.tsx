@@ -83,6 +83,9 @@ const jsonLd = {
   sameAs: [`https://www.tiktok.com/@${ASSO.tiktok}`],
 };
 
+/** Le choix enregistré (bouton soleil/lune), sinon celui du téléphone. */
+const SCRIPT_THEME = `try{var c=localStorage.getItem("sos:theme");var s=c?c==="sombre":matchMedia("(prefers-color-scheme: dark)").matches;document.documentElement.dataset.theme=s?"dark":"light"}catch(e){}`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     // `data-scroll-behavior` : depuis Next 16, sans cet attribut, le défilement
@@ -92,7 +95,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="fr"
       data-scroll-behavior="smooth"
       className={`${bricolage.variable} ${dmSans.variable}`}
+      // Le thème est posé par le script ci-dessous avant le premier rendu.
+      suppressHydrationWarning
     >
+      <head>
+        {/* Thème clair ou sombre, choisi avant le premier affichage : pas de flash. */}
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_THEME }} />
+      </head>
       <body className="flex min-h-screen flex-col font-sans antialiased">
         <SessionProvider>
           <a

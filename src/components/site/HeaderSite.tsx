@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { BasculeTheme } from "@/components/BasculeTheme";
 import { Logo } from "@/components/Logo";
 import { useSession } from "@/components/useSession";
 import { useLangue, t, ChoixLangue } from "@/lib/i18n";
@@ -99,6 +100,10 @@ export function HeaderSite() {
         </nav>
 
         <div className="flex items-center gap-1 sm:gap-1.5">
+          {/* Sur téléphone, le bouton du thème est dans le menu : l'en-tête est déjà plein. */}
+          <span className="hidden sm:block">
+            <BasculeTheme className="border border-white/15 text-navy-100 hover:bg-white/10 hover:text-white" />
+          </span>
           <ChoixLangue />
           <AccesCompte />
           <button
@@ -129,6 +134,10 @@ export function HeaderSite() {
                 {t(langue, item.cle)}
               </Link>
             ))}
+            <div className="mt-2 flex items-center justify-between rounded-2xl px-4 py-2 text-base font-medium text-navy-100 sm:hidden">
+              Clair ou sombre
+              <BasculeTheme className="border border-white/15 text-navy-100" />
+            </div>
             <Link
               href="/#analyser"
               onClick={() => setOuvert(false)}

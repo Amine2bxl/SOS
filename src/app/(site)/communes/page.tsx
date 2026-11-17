@@ -26,7 +26,7 @@ export default async function CommunesPage({
   const slugInitial = typeof commune === "string" && COMMUNES.some((c) => c.slug === commune) ? commune : undefined;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:py-16">
+    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:py-12">
       <PageHead
         title="Les 19 communes bruxelloises"
         intro="Chaque commune a ses propres règles : zones, horaires, gratuité. Touchez la vôtre sur la carte."
@@ -34,23 +34,24 @@ export default async function CommunesPage({
 
       <ExplorateurCommunes direct={direct} slugInitial={slugInitial} />
 
-      <div className="mx-auto mt-10 grid max-w-4xl gap-3 md:grid-cols-2">
+      <div className="mt-6 grid gap-3 md:grid-cols-2">
         <CadreReglementaire />
         <KeyBox title="Bruxelles d'abord" ton="info">
           Les 19 communes de Bruxelles, aujourd&apos;hui. La Flandre puis la Wallonie, ensuite.
         </KeyBox>
       </div>
 
-      <p className="mx-auto mt-8 max-w-3xl text-center text-xs leading-relaxed text-ink-soft">
-        C&apos;est de l&apos;information : le règlement de la commune fait foi. Un doute ?{" "}
-        <BoutonContact variante="lien">Écrivez-nous</BoutonContact>.
-      </p>
-
-      <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-        <LinkBtn href="/#analyser" variant="gold">
-          Vérifier ma lettre
-        </LinkBtn>
-        <BoutonContact variante="secondaire">Demander de l&apos;aide</BoutonContact>
+      <div className="mt-6 flex flex-col items-center justify-between gap-4 rounded-[var(--radius-carte)] border border-line/80 bg-card p-5 shadow-carte sm:flex-row">
+        <p className="text-sm leading-relaxed text-ink-soft">
+          C&apos;est de l&apos;information : le règlement de la commune fait foi. Un doute ?{" "}
+          <BoutonContact variante="lien">Écrivez-nous</BoutonContact>.
+        </p>
+        <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+          <LinkBtn href="/#analyser" variant="gold">
+            Vérifier ma lettre
+          </LinkBtn>
+          <BoutonContact variante="secondaire">Demander de l&apos;aide</BoutonContact>
+        </div>
       </div>
     </div>
   );

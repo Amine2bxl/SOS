@@ -84,7 +84,7 @@ export function AbonnementAgenda({ jeton: initial, site }: { jeton: string | nul
         </Btn>
       ) : (
         <>
-          <div className="mt-4 grid gap-2">
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
             <a
               href={lienAbonnementGoogle(url)}
               target="_blank"

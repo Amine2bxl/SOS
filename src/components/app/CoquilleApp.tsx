@@ -8,6 +8,7 @@ import { ICONES, IconeMainTendue, IconeScanDoc, IconeSortie } from "@/components
 import { MODULES, moduleActif, type Module } from "@/components/app/modules";
 import { seDeconnecter } from "@/lib/auth-actions";
 import { RepriseBrouillon } from "@/components/app/RepriseBrouillon";
+import { BasculeTheme } from "@/components/BasculeTheme";
 
 export type InfosMembre = {
   prenom: string;
@@ -89,6 +90,7 @@ export function CoquilleApp({ membre, children }: { membre: InfosMembre; childre
               </span>
               <span className="block truncate text-xs text-ink-soft">{membre.email}</span>
             </span>
+            <BasculeTheme className="h-9 w-9 text-ink-soft hover:bg-navy-50 hover:text-navy-900" />
             <button
               type="button"
               onClick={sortir}
@@ -112,6 +114,8 @@ export function CoquilleApp({ membre, children }: { membre: InfosMembre; childre
               {actif?.titre ?? "Mon espace"}
             </span>
           </Link>
+          <span className="flex items-center gap-1.5">
+          <BasculeTheme className="h-9 w-9 text-ink-soft" />
           <Link
             href="/tableau-de-bord/compte"
             aria-label="Mon compte"
@@ -119,6 +123,7 @@ export function CoquilleApp({ membre, children }: { membre: InfosMembre; childre
           >
             {membre.initiale}
           </Link>
+          </span>
         </header>
 
         <main id="contenu" className="flex-1 pb-28 lg:pb-12">

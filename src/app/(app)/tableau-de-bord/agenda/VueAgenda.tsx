@@ -46,12 +46,17 @@ export function VueAgenda({
   const aVenir = evenements.filter((e) => e.date >= aujourdhui && e.type !== "ferie" && e.type !== "constat").slice(0, 6);
   const typesPresents = Array.from(new Set(duMois.map((e) => e.type))) as TypeEvenement[];
 
+  const prochaine = aVenir.find((e) => !e.date.startsWith(prefixe));
+
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:py-10">
+    <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:py-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-[1.8rem] font-extrabold capitalize leading-tight text-navy-900">
-          {nomMois(annee, mois0)}
-        </h1>
+        <div>
+          <h1 className="font-display text-[1.8rem] font-extrabold capitalize leading-tight text-navy-900">{nomMois(annee, mois0)}</h1>
+          <p className="text-sm text-ink-soft">
+            {duMois.length === 0 ? "Rien de prévu ce mois-ci." : `${duMois.length} date${duMois.length > 1 ? "s" : ""} ce mois-ci`}
+          </p>
+        </div>
         <nav aria-label="Changer de mois" className="flex items-center gap-1.5">
           <Link
             href={`?mois=${cleMois(prec.annee, prec.mois0)}`}
@@ -76,9 +81,9 @@ export function VueAgenda({
         </nav>
       </div>
 
-      <div className="mt-5 grid gap-6 lg:grid-cols-[1fr_20rem]">
-        <div>
-          {/* ------------------------------------------------------- la grille */}
+      {/* La grille à gauche, la liste du mois à droite : la page tient sur un écran. */}
+      <div className="mt-4 grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start">
+        <div className="min-w-0 space-y-4">
           <div className="overflow-hidden rounded-[var(--radius-carte)] border border-line/80 bg-card shadow-carte">
             <div className="grid grid-cols-7 border-b border-line bg-paper">
               {JOURS_SEMAINE.map((j) => (
@@ -108,20 +113,20 @@ export function VueAgenda({
                       ))}
                     </span>
                     <span className="mt-1 hidden space-y-1 sm:block">
-                      {evs.slice(0, 3).map((e) => (
+                      {evs.slice(0, 2).map((e) => (
                         <span key={e.id} className={`block truncate rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${TYPES_EVENEMENT[e.type].pastille}`}>
                           {e.titre}
                         </span>
                       ))}
-                      {evs.length > 3 && <span className="block text-[11px] text-ink-soft">+{evs.length - 3}</span>}
+                      {evs.length > 2 && <span className="block text-[11px] font-semibold text-ink-soft">+{evs.length - 2}</span>}
                     </span>
                   </>
                 );
-                const classes = `min-h-16 border-b border-r border-line p-1.5 sm:min-h-28 sm:p-2 ${weekend ? "bg-paper/60" : ""} ${
-                  !j.dansMois ? "opacity-60" : ""
-                } [&:nth-child(7n)]:border-r-0`;
+                const classes = `min-h-14 border-b border-r border-line p-1.5 sm:min-h-[5.6rem] sm:p-2 ${weekend ? "bg-paper/60" : ""} ${
+                  !j.dansMois ? "opacity-55" : ""
+                } [&:nth-child(7n)]:border-r-0 [&:nth-last-child(-n+7)]:border-b-0`;
                 return evs.length > 0 && j.dansMois ? (
-                  <a key={j.iso} href={`#j-${j.iso}`} className={`${classes} block transition hover:bg-navy-50`} aria-label={`${jourLong(j.iso)} : ${evs.length} événement${evs.length > 1 ? "s" : ""}`}>
+                  <a key={j.iso} href={`#j-${j.iso}`} className={`${classes} block transition hover:bg-navy-50`} aria-label={`${jourLong(j.iso)} : ${evs.length} date${evs.length > 1 ? "s" : ""}`}>
                     {contenu}
                   </a>
                 ) : (
@@ -134,7 +139,7 @@ export function VueAgenda({
           </div>
 
           {typesPresents.length > 0 && (
-            <ul aria-label="Légende" className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-ink-soft">
+            <ul aria-label="Légende" className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-ink-soft">
               {typesPresents.map((t) => (
                 <li key={t} className="flex items-center gap-1.5">
                   <span className={`h-2 w-2 rounded-full ${TYPES_EVENEMENT[t].point}`} />
@@ -143,21 +148,33 @@ export function VueAgenda({
               ))}
             </ul>
           )}
+          <AbonnementAgenda jeton={jeton} site={site} />
+        </div>
 
-          {/* --------------------------------------------- la liste du mois */}
-          <section className="mt-8">
-            <h2 className="font-display text-xl font-bold text-navy-900">Ce mois-ci</h2>
+        <aside className="min-w-0 space-y-4">
+          <section className="rounded-[var(--radius-carte)] border border-line/80 bg-card shadow-carte">
+            <h2 className="border-b border-line px-5 py-3.5 font-display text-lg font-bold text-navy-900">Ce mois-ci</h2>
             {joursDuMois.length === 0 ? (
-              <p className="mt-3 rounded-2xl bg-card p-5 text-sm text-ink-soft">Rien de prévu ce mois-ci.</p>
+              <div className="px-5 py-4 text-sm text-ink-soft">
+                <p>Aucune date ce mois-ci.</p>
+                {prochaine && (
+                  <p className="mt-2">
+                    Prochaine :{" "}
+                    <Link href={`?mois=${prochaine.date.slice(0, 7)}`} className="font-semibold text-navy-700 underline underline-offset-4">
+                      {prochaine.titre}, {jourLong(prochaine.date)}
+                    </Link>
+                  </p>
+                )}
+              </div>
             ) : (
-              <ol className="mt-3 space-y-4">
+              <ol className="divide-y divide-line">
                 {joursDuMois.map((jour) => (
-                  <li key={jour} id={`j-${jour}`} className="scroll-mt-24">
-                    <h3 className={`text-sm font-bold capitalize ${jour === aujourdhui ? "text-navy-900" : "text-ink-soft"}`}>
+                  <li key={jour} id={`j-${jour}`} className="scroll-mt-24 px-5 py-3">
+                    <h3 className={`text-xs font-bold capitalize ${jour === aujourdhui ? "text-navy-900" : "text-ink-soft"}`}>
                       {jourLong(jour)}
                       {jour === aujourdhui && " · aujourd'hui"}
                     </h3>
-                    <ul className="mt-2 space-y-2">
+                    <ul className="mt-1.5 space-y-2">
                       {(parJour.get(jour) ?? []).map((e) => (
                         <LigneEvenement key={e.id} ev={e} site={site} />
                       ))}
@@ -167,35 +184,6 @@ export function VueAgenda({
               </ol>
             )}
           </section>
-        </div>
-
-        {/* ----------------------------------------------------- à côté */}
-        <aside className="space-y-4">
-          <section className="rounded-[var(--radius-carte)] border border-line/80 bg-card p-5 shadow-carte">
-            <h2 className="font-display text-lg font-bold text-navy-900">À venir</h2>
-            {aVenir.length === 0 ? (
-              <p className="mt-2 text-sm text-ink-soft">Aucune date à surveiller. Tout est en ordre.</p>
-            ) : (
-              <ul className="mt-3 space-y-3">
-                {aVenir.map((e) => (
-                  <li key={e.id} className="flex items-start gap-3">
-                    <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${TYPES_EVENEMENT[e.type].point}`} />
-                    <span className="min-w-0">
-                      <span className="block text-xs font-semibold capitalize text-ink-soft">{jourLong(e.date)}</span>
-                      {e.lien ? (
-                        <Link href={e.lien} className="block text-sm font-semibold text-navy-900 hover:underline">
-                          {e.titre}
-                        </Link>
-                      ) : (
-                        <span className="block text-sm font-semibold text-navy-900">{e.titre}</span>
-                      )}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-          <AbonnementAgenda jeton={jeton} site={site} />
         </aside>
       </div>
     </div>
@@ -205,19 +193,21 @@ export function VueAgenda({
 function LigneEvenement({ ev, site }: { ev: EvenementCalendrier; site: string }) {
   const type = TYPES_EVENEMENT[ev.type];
   return (
-    <li className="flex flex-wrap items-start justify-between gap-3 rounded-2xl border border-line/80 bg-card p-3.5">
+    <li className="flex items-start justify-between gap-2">
       <div className="min-w-0 flex-1">
-        <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-bold ${type.pastille}`}>{type.libelle}</span>
-        <p className="mt-1 font-semibold text-navy-900">
+        <p className="flex items-center gap-1.5 text-sm font-semibold leading-snug text-navy-900">
+          <span className={`h-2 w-2 shrink-0 rounded-full ${type.point}`} aria-hidden="true" />
           {ev.lien ? (
-            <Link href={ev.lien} className="hover:underline">
+            <Link href={ev.lien} className="min-w-0 truncate hover:underline">
               {ev.titre}
             </Link>
           ) : (
-            ev.titre
+            <span className="min-w-0 truncate">{ev.titre}</span>
           )}
         </p>
-        {ev.detail && <p className="mt-0.5 text-sm leading-relaxed text-ink-soft">{ev.detail}</p>}
+        <p className="mt-0.5 pl-3.5 text-xs text-ink-soft">
+          {ev.detail ?? type.libelle}
+        </p>
       </div>
       {ev.type !== "ferie" && <AjouterAgenda ev={ev} site={site} />}
     </li>
