@@ -34,6 +34,8 @@ import {
 
 export type EtatTelephone = {
   erreur?: string;
+  /** « Se connecter » avec un numéro inconnu. */
+  pasDeCompte?: boolean;
   envoye?: boolean;
   verifie?: boolean;
   telephone?: string;
@@ -71,8 +73,19 @@ export async function envoyerCodeSms(_p: EtatTelephone, donnees: FormData): Prom
     return { erreur: messageQuotaAtteint("codeConnexion") };
   }
 
-  const { error } = await supabase.auth.signInWithOtp({ phone: telephone, options: { shouldCreateUser: true } });
-  if (error) return { erreur: traduireErreurSms(error.message) };
+  // « Se connecter » ne crée jamais de compte ; « Créer un compte » sur un
+  // numéro déjà inscrit connecte simplement : jamais de doublon.
+  const intention = donnees.get("intention");
+  const { error } = await supabase.auth.signInWithOtp({
+    phone: telephone,
+    options: { shouldCreateUser: intention !== "connexion" },
+  });
+  if (error) {
+    if (intention === "connexion" && /signups? not allowed|not found/i.test(error.message)) {
+      return { pasDeCompte: true, telephone, erreur: "Aucun compte avec ce numéro." };
+    }
+    return { erreur: traduireErreurSms(error.message) };
+  }
   return { envoye: true, telephone };
 }
 

@@ -92,6 +92,11 @@ export function FormulaireAcces({
   const brute = parametres.get("suite") ?? "/tableau-de-bord";
   const suite = cheminSur(brute);
   const erreurUrl = ERREURS_URL[parametres.get("erreur") ?? ""] ?? null;
+  // « Se connecter » ou « Créer un compte » : deux portes, un seul compte par personne.
+  const [intention, setIntention] = useState<"connexion" | "inscription">(
+    parametres.get("compte") === "nouveau" ? "inscription" : "connexion",
+  );
+  const formulaireEmail = useRef<HTMLFormElement>(null);
 
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -250,6 +255,11 @@ export function FormulaireAcces({
           Entrez votre code
         </h1>
         <p className="mt-2 leading-relaxed text-ink-soft">
+          {envoi.dejaInscrit && (
+            <span className="mb-2 block rounded-xl bg-ok-50 p-3 text-sm font-medium text-ok-700">
+              Vous aviez déjà un compte avec cette adresse : on vous connecte, sans en créer un deuxième.
+            </span>
+          )}
           Un e-mail de vérification vient de partir vers{" "}
           <strong className="text-ink">{adresse}</strong>.
           {" "}Saisissez son code ici pour continuer sur cette page.
@@ -313,6 +323,7 @@ export function FormulaireAcces({
         >
           <input type="hidden" name="email" value={adresse} />
           <input type="hidden" name="suite" value={suite} />
+          <input type="hidden" name="intention" value={intention} />
           {jetonHumain && <input type="hidden" name="cf-turnstile-response" value={jetonHumain} />}
           {cleTurnstile && <AntiRobot key={cycleHumain} cle={cleTurnstile} surJeton={setJetonHumain} />}
           <button
@@ -336,11 +347,34 @@ export function FormulaireAcces({
   /* -------------------------------------------------------- étape 1 : e-mail */
   return (
     <div className="w-full max-w-sm animate-rise">
-      <h1 className="font-display text-[2rem] font-extrabold leading-[1.08] text-navy-900">
-        Entrer dans mon espace
+      <div role="tablist" aria-label="Se connecter ou créer un compte" className="grid grid-cols-2 border-b border-line">
+        {(
+          [
+            ["connexion", "Se connecter"],
+            ["inscription", "Créer un compte"],
+          ] as const
+        ).map(([id, libelle]) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={intention === id}
+            onClick={() => setIntention(id)}
+            className={`-mb-px border-b-2 pb-3 text-[0.95rem] font-semibold transition-colors ${
+              intention === id ? "border-navy-900 text-navy-900" : "border-transparent text-ink-soft hover:text-navy-900"
+            }`}
+          >
+            {libelle}
+          </button>
+        ))}
+      </div>
+      <h1 className="mt-6 font-display text-[2rem] font-extrabold leading-[1.08] text-navy-900">
+        {intention === "inscription" ? "Créer mon compte" : "Bon retour"}
       </h1>
       <p className="mt-2.5 leading-relaxed text-ink-soft">
-        Un code, et c&apos;est tout. Pas de mot de passe. Première fois ? Votre compte se crée tout seul.
+        {intention === "inscription"
+          ? "Gratuit. Un code par e-mail ou SMS, pas de mot de passe. Déjà inscrit ? On vous connecte, sans doublon."
+          : "Recevez un code et entrez. Pas de mot de passe."}
       </p>
 
       {appareil && !autreCompte && (
@@ -407,7 +441,13 @@ export function FormulaireAcces({
 
       {canal === "sms" && (
         <div className="mt-6">
-          <ConnexionSms suite={suite} surVerifie={setTelephoneVerifie} cleTurnstile={cleTurnstile} />
+          <ConnexionSms
+            suite={suite}
+            intention={intention}
+            surVerifie={setTelephoneVerifie}
+            surPasDeCompte={() => setIntention("inscription")}
+            cleTurnstile={cleTurnstile}
+          />
         </div>
       )}
 
@@ -437,10 +477,12 @@ export function FormulaireAcces({
       )}
 
       <form
+        ref={formulaireEmail}
         action={envoyer}
         className={googleActif ? "" : "mt-6"}
       >
         <input type="hidden" name="suite" value={suite} />
+        <input type="hidden" name="intention" value={intention} />
         {jetonHumain && <input type="hidden" name="cf-turnstile-response" value={jetonHumain} />}
         <label className="block">
           <span className="mb-1.5 block text-sm font-semibold text-navy-900">Adresse e-mail</span>
@@ -464,10 +506,25 @@ export function FormulaireAcces({
           </div>
         )}
 
-        {envoi.erreur && (
+        {envoi.erreur && !envoi.pasDeCompte && (
           <p role="alert" className="mt-4 rounded-xl bg-danger-50 p-3 text-sm font-medium text-danger-700">
             {envoi.erreur}
           </p>
+        )}
+        {envoi.pasDeCompte && intention === "connexion" && (
+          <div role="alert" className="mt-4 rounded-xl bg-gold-50 p-3 text-sm text-ink">
+            <p className="font-semibold text-navy-900">Aucun compte avec cette adresse.</p>
+            <button
+              type="button"
+              onClick={() => {
+                setIntention("inscription");
+                setTimeout(() => formulaireEmail.current?.requestSubmit(), 0);
+              }}
+              className="mt-1 font-semibold text-navy-700 underline decoration-navy-200 underline-offset-4 hover:text-navy-900"
+            >
+              Créer mon compte avec cette adresse
+            </button>
+          </div>
         )}
 
         <Btn
@@ -477,7 +534,7 @@ export function FormulaireAcces({
           className="mt-5 w-full"
           disabled={envoiEnCours || (!!cleTurnstile && !jetonHumain)}
         >
-          {envoiEnCours ? "Envoi du code…" : "Recevoir mon code"}
+          {envoiEnCours ? "Envoi du code…" : intention === "inscription" ? "Créer mon compte" : "Recevoir mon code"}
         </Btn>
       </form>
       {erreurGoogle && <p role="alert" className="mt-3 text-sm text-danger-700">{erreurGoogle}</p>}

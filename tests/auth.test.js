@@ -291,3 +291,41 @@ test('l\'attente mémorise la longueur du code, et seulement une longueur plausi
   assert.equal(lireAttenteAuth(JSON.stringify({ ...base, longueur: 4 }), '/adherer', 2000), null);
   assert.equal(lireAttenteAuth(JSON.stringify(base), '/adherer', 2000).longueur, undefined);
 });
+
+/* ------------------------------------- se connecter / créer : un seul compte */
+
+function adminAvecCompte(existe) {
+  const liens = [];
+  const admin = {
+    from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: existe ? { email: 'citoyen@example.be' } : null }) }) }) }),
+    auth: { admin: { generateLink: async (p) => { liens.push(p.type); return { error: null, data: {
+      properties: { email_otp: '123456', hashed_token: 'x' }, user: { user_metadata: {} },
+    } }; } } },
+  };
+  return { admin, liens };
+}
+
+test('« Se connecter » avec une adresse inconnue ne crée rien et propose la création', async () => {
+  const { admin, liens } = adminAvecCompte(false);
+  const a = actions({ admin, mail: true });
+  const r = await a.envoyerCode({}, formulaire({ email: 'citoyen@example.be', intention: 'connexion' }));
+  assert.equal(r.pasDeCompte, true);
+  assert.equal(r.envoye, undefined);
+  assert.deepEqual(liens, []);
+});
+
+test('« Créer un compte » avec une adresse déjà inscrite connecte, sans second compte', async () => {
+  const { admin, liens } = adminAvecCompte(true);
+  const a = actions({ admin, mail: true });
+  const r = await a.envoyerCode({}, formulaire({ email: 'citoyen@example.be', intention: 'inscription' }));
+  assert.equal(r.envoye, true);
+  assert.equal(r.dejaInscrit, true);
+  assert.deepEqual(liens, ['magiclink']);
+});
+
+test('« Se connecter » par le repli Supabase ne crée jamais de compte', async () => {
+  let options;
+  const a = actions({ signInWithOtp: async (p) => { options = p.options; return { error: null }; } });
+  await a.envoyerCode({}, formulaire({ email: 'citoyen@example.be', intention: 'connexion' }));
+  assert.equal(options.shouldCreateUser, false);
+});

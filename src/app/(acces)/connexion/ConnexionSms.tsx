@@ -12,11 +12,16 @@ import { AntiRobot } from "./AntiRobot";
  */
 export function ConnexionSms({
   suite,
+  intention,
   surVerifie,
+  surPasDeCompte,
   cleTurnstile,
 }: {
   suite: string;
+  intention: "connexion" | "inscription";
   surVerifie: (telephone: string) => void;
+  /** « Se connecter » avec un numéro inconnu : basculer vers la création. */
+  surPasDeCompte: () => void;
   cleTurnstile: string | null;
 }) {
   const [saisie, setSaisie] = useState("");
@@ -83,6 +88,7 @@ export function ConnexionSms({
         <form action={envoyer} className="mt-4 text-center">
           <input type="hidden" name="telephone" value={envoi.telephone} />
           <input type="hidden" name="suite" value={suite} />
+          <input type="hidden" name="intention" value={intention} />
           <button
             type="submit"
             disabled={envoiEnCours}
@@ -103,6 +109,7 @@ export function ConnexionSms({
       }}
     >
       <input type="hidden" name="suite" value={suite} />
+      <input type="hidden" name="intention" value={intention} />
       {jetonHumain && <input type="hidden" name="cf-turnstile-response" value={jetonHumain} />}
       <label className="block">
         <span className="mb-1.5 block text-sm font-semibold text-navy-900">Numéro de GSM</span>
@@ -126,13 +133,21 @@ export function ConnexionSms({
           <AntiRobot cle={cleTurnstile} surJeton={setJetonHumain} />
         </div>
       )}
-      {envoi.erreur && (
+      {envoi.erreur && !envoi.pasDeCompte && (
         <p role="alert" className="mt-4 rounded-xl bg-danger-50 p-3 text-sm font-medium text-danger-700">
           {envoi.erreur}
         </p>
       )}
+      {envoi.pasDeCompte && intention === "connexion" && (
+        <p role="alert" className="mt-4 rounded-xl bg-gold-50 p-3 text-sm text-ink">
+          <strong className="text-navy-900">Aucun compte avec ce numéro.</strong>{" "}
+          <button type="button" onClick={surPasDeCompte} className="font-semibold text-navy-700 underline underline-offset-4">
+            Créer mon compte
+          </button>
+        </p>
+      )}
       <Btn type="submit" variant="gold" taille="lg" className="mt-5 w-full" disabled={envoiEnCours || (!!cleTurnstile && !jetonHumain)}>
-        {envoiEnCours ? "Envoi du SMS…" : "Recevoir mon code par SMS"}
+        {envoiEnCours ? "Envoi du SMS…" : intention === "inscription" ? "Créer mon compte par SMS" : "Recevoir mon code par SMS"}
       </Btn>
       <p className="mt-3 text-xs text-ink-soft">Le SMS est gratuit à recevoir.</p>
     </form>
