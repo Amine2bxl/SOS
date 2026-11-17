@@ -209,6 +209,7 @@ export default async function FicheDossier({
                 region={dossier.region}
                 crediteur={dossier.crediteur ?? dossier.autorite}
                 statut={dossier.statut}
+                dossierInfos={{ reference: dossier.reference ?? "", plaque: dossier.plaque ?? "", email: profil?.email ?? "" }}
               />
             ),
           },

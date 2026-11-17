@@ -81,3 +81,11 @@ test("tri : par date, la date limite avant le reste", () => {
   ]);
   assert.deepEqual(t.map((e) => e.id), ["3", "2", "1"]);
 });
+
+const { texteSms, rappelDu } = require("../.test-build/lib/rappels.js");
+
+test("rappel par SMS : une phrase, la référence, le lien", () => {
+  const r = rappelDu({ statut: "a_contester", date_envoi_contestation: null }, 1, new Set());
+  const sms = texteSms(r, "2026/0091234", "https://soscitizens.vercel.app/tableau-de-bord/x#lettre");
+  assert.equal(sms, "SOS Citizens : Demain, dernier jour pour contester (réf. 2026/0091234). https://soscitizens.vercel.app/tableau-de-bord/x#lettre");
+});

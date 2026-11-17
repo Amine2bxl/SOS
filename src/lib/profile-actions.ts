@@ -110,3 +110,29 @@ export async function supprimerMonCompte(
   revalidatePath("/", "layout");
   redirect("/?compte=supprime");
 }
+
+/**
+ * Les rappels : par e-mail, par SMS, ou les deux. Le SMS demande un numéro
+ * sur le compte ; il part de la passerelle de l'association, vers ce numéro
+ * seulement.
+ */
+export async function enregistrerRappels(choix: { email: boolean; sms: boolean }): Promise<EtatProfil> {
+  const supabase = await creerClientServeur();
+  if (!supabase) return { erreur: "Service indisponible." };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { erreur: "Vous devez être connecté." };
+
+  if (choix.sms) {
+    const { data: profil } = await supabase.from("profiles").select("telephone").eq("id", user.id).maybeSingle();
+    if (!profil?.telephone) return { erreur: "Ajoutez d'abord votre numéro de téléphone dans « Vos coordonnées »." };
+  }
+  const { error } = await supabase
+    .from("profiles")
+    .update({ rappels_email: !!choix.email, rappels_sms: !!choix.sms })
+    .eq("id", user.id);
+  if (error) return { erreur: /column|schema cache/i.test(error.message) ? "Les rappels arrivent bientôt sur votre compte." : "Le choix n'a pas pu être enregistré." };
+  revalidatePath("/tableau-de-bord/compte");
+  return { message: "C'est noté." };
+}

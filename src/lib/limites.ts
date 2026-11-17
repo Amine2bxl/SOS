@@ -64,6 +64,8 @@ export const QUOTAS = {
   contact: { max: 5, fenetreSecondes: 3600 },
   /** Demande d'accompagnement (mandat) : un e-mail part vers l'association. */
   mandat: { max: 10, fenetreSecondes: 3600 },
+  /** Lettre envoyée par e-mail depuis l'app : part vers un tiers, au nom du membre. */
+  envoiLettre: { max: 5, fenetreSecondes: 86400 },
 } satisfies Record<string, Quota>;
 
 /**

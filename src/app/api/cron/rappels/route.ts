@@ -4,7 +4,8 @@ import { emailRappel } from "@/lib/mail/gabarits";
 import { estEmailTechnique } from "@/lib/telephone";
 import { analyser } from "@/cerveau";
 import { faitsDepuisDossier } from "@/lib/faits";
-import { rappelDu, TITRES_RAPPEL } from "@/lib/rappels";
+import { rappelDu, texteSms, TITRES_RAPPEL } from "@/lib/rappels";
+import { envoyerSms, smsConfigure } from "@/lib/sms";
 import type { Dossier } from "@/lib/dossiers-format";
 
 export const dynamic = "force-dynamic";
@@ -25,8 +26,10 @@ export async function GET(requete: Request) {
   }
 
   const admin = creerClientAdmin();
-  if (!admin || !mailConfigure()) {
-    return Response.json({ erreur: "rappels inactifs : clé service_role ou envoi d'e-mails manquant" }, { status: 503 });
+  const parEmail = mailConfigure();
+  const parSms = smsConfigure();
+  if (!admin || (!parEmail && !parSms)) {
+    return Response.json({ erreur: "rappels inactifs : clé service_role, ou ni e-mail ni SMS configuré" }, { status: 503 });
   }
 
   const { data: dossiers, error } = await admin
@@ -50,7 +53,7 @@ export async function GET(requete: Request) {
       .in("dossier_id", ids),
     admin
       .from("profiles")
-      .select("id, email, prenom")
+      .select("*")
       .in("id", Array.from(new Set(liste.map((d) => d.user_id)))),
   ]);
 
@@ -59,17 +62,21 @@ export async function GET(requete: Request) {
     if (!partisParDossier.has(e.dossier_id)) partisParDossier.set(e.dossier_id, new Set());
     partisParDossier.get(e.dossier_id)!.add(e.titre);
   }
-  const profilParId = new Map(
-    ((profils ?? []) as { id: string; email: string | null; prenom: string | null }[]).map((p) => [p.id, p]),
-  );
+  // « select * » : les colonnes de préférence peuvent manquer sur une base pas
+  // encore migrée ; e-mail par défaut, SMS seulement sur demande.
+  type ProfilRappel = { id: string; email: string | null; prenom: string | null; telephone: string | null; rappels_email?: boolean; rappels_sms?: boolean };
+  const profilParId = new Map(((profils ?? []) as ProfilRappel[]).map((p) => [p.id, p]));
 
   const site = urlDuSite();
   let envoyes = 0;
 
   for (const d of liste) {
     const profil = profilParId.get(d.user_id);
+    if (!profil) continue;
     // Les comptes ouverts par téléphone n'ont qu'une adresse technique : pas d'e-mail.
-    if (!profil?.email || estEmailTechnique(profil.email)) continue;
+    const versEmail = parEmail && profil.rappels_email !== false && !!profil.email && !estEmailTechnique(profil.email);
+    const versSms = parSms && profil.rappels_sms === true && !!profil.telephone;
+    if (!versEmail && !versSms) continue;
 
     const analyse = analyser(faitsDepuisDossier(d));
     const rappel = rappelDu(d, analyse.delai.joursRestants, partisParDossier.get(d.id) ?? new Set());
@@ -86,8 +93,12 @@ export async function GET(requete: Request) {
       urlSite: site,
     });
 
-    const envoi = await envoyerEmail({ destinataire: profil.email, ...gabarit });
-    if (!envoi.ok) continue;
+    const lien = `${site}/tableau-de-bord/${d.id}#${rappel.ancre}`;
+    const parti = [
+      versEmail ? (await envoyerEmail({ destinataire: profil.email as string, ...gabarit })).ok : false,
+      versSms ? (await envoyerSms(profil.telephone as string, texteSms(rappel, d.reference, lien))).ok : false,
+    ].some(Boolean);
+    if (!parti) continue;
 
     // Consigné dans l'historique : l'utilisateur le voit, et il ne repartira pas.
     await admin.from("evenements").insert({

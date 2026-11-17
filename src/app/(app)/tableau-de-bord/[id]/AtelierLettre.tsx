@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from
 import { useRouter } from "next/navigation";
 import { redigerLettreDossier } from "@/lib/cerveau-actions";
 import { enregistrerLettreDossier, marquerContestationEnvoyee } from "@/lib/dossiers-actions";
+import { envoyerLettreParEmail } from "@/lib/envoi-actions";
 import { enregistrerProfil } from "@/lib/profile-actions";
 import type { TypeLettre } from "@/cerveau/types";
 import { MODES_ENVOI, type Lettre } from "@/lib/dossiers-format";
@@ -18,6 +19,7 @@ import {
   IconeImprimer,
   IconeLibre,
   IconeOk,
+  IconeFleche,
   IconeRecommande,
 } from "@/components/icones";
 
@@ -63,7 +65,10 @@ export function AtelierLettre({
   region,
   crediteur,
   statut,
+  dossierInfos,
 }: {
+  /** Ce que le formulaire officiel demande, prêt à copier. */
+  dossierInfos: { reference: string; plaque: string; email: string };
   dossierId: string;
   typeConseille: TypeLettre;
   langueConseillee: "fr" | "nl";
@@ -431,52 +436,29 @@ export function AtelierLettre({
         </p>
       )}
 
-      {/* ------------------------------------------------------ comment l'envoyer */}
-      <section className="rounded-[var(--radius-carte)] border border-line/80 bg-card p-5 shadow-carte sm:p-6">
-        <div className="flex items-start gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-navy-50 text-navy-900">
-            <IconeRecommande className="h-7 w-7" />
-          </span>
-          <div>
-            <h2 className="font-display text-lg font-bold text-navy-900">Comment l&apos;envoyer</h2>
-            <ol className="mt-3 space-y-2 text-sm leading-relaxed text-ink">
-              {bruxelles && type !== "demande_preuves" ? (
-                <>
-                  <Pas n={1}>
-                    Ouvrez le formulaire de contestation en ligne de{" "}
-                    <a href="https://www.parking.brussels" target="_blank" rel="noopener noreferrer" className="font-semibold text-navy-700 underline">
-                      parking.brussels
-                    </a>{" "}
-                    — les contestations par e-mail y sont refusées.
-                  </Pas>
-                  <Pas n={2}>Collez-y le texte de la lettre (bouton « Copier ») et joignez vos pièces.</Pas>
-                  <Pas n={3}>Faites une capture d&apos;écran de la confirmation : c&apos;est votre preuve.</Pas>
-                </>
-              ) : type === "demande_preuves" ? (
-                <>
-                  <Pas n={1}>
-                    Envoyez-la à l&apos;organisme qui vous réclame la somme, à l&apos;adresse de son courrier ou de
-                    son délégué à la protection des données s&apos;il en indique un.
-                  </Pas>
-                  <Pas n={2}>Joignez une copie de votre carte d&apos;identité : elle prouve que vous êtes la personne concernée.</Pas>
-                  <Pas n={3}>L&apos;organisme a un mois pour répondre. Gardez la preuve de l&apos;envoi.</Pas>
-                </>
-              ) : (
-                <>
-                  <Pas n={1}>
-                    Envoyez-la par le canal indiqué sur votre courrier — à défaut, par recommandé à l&apos;adresse de
-                    l&apos;organisme.
-                  </Pas>
-                  <Pas n={2}>Imprimez-la, signez-la, et joignez une copie du courrier reçu et vos pièces.</Pas>
-                  <Pas n={3}>Gardez le récépissé du recommandé ou la confirmation d&apos;envoi : c&apos;est votre preuve.</Pas>
-                </>
-              )}
-            </ol>
-          </div>
-        </div>
-
-        <EnvoiFait dossierId={dossierId} dejaEnvoyee={dejaEnvoyee && type === "contestation"} libelle={type === "relance" ? "la relance" : "ma lettre"} />
-      </section>
+      {/* ------------------------------------------------------ l'envoyer, depuis l'app */}
+      <EnvoiAssiste
+        dossierId={dossierId}
+        bruxelles={bruxelles}
+        type={type}
+        texteCourt={texteCourt}
+        pret={!!texte && !generation && trous.length === 0}
+        champs={[
+          ["Référence de la redevance", dossierInfos.reference],
+          ["Plaque", dossierInfos.plaque],
+          ["Prénom", profil.prenom],
+          ["Nom", profil.nom],
+          ["Adresse", profil.adresse],
+          ["Code postal", profil.code_postal],
+          ["Commune", profil.commune],
+          ["E-mail", dossierInfos.email],
+          ["Téléphone", profil.telephone],
+        ]}
+        avantEnvoi={sauver}
+        imprimer={imprimer}
+        dejaEnvoyee={dejaEnvoyee && type === "contestation"}
+        libelle={type === "relance" ? "la relance" : "ma lettre"}
+      />
 
       {/* La zone d'impression : la lettre seule, sans l'interface. */}
       <div id="print-zone" className="letter-paper hidden print:block">
@@ -518,6 +500,189 @@ function TexteSurligne({ texte }: { texte: string }) {
         ),
       )}
     </>
+  );
+}
+
+const URL_FORMULAIRE_PARKING =
+  "https://parking.brussels/fr/stationner-sa-voiture/redevances-reclamations-et-contestations/reclamation-ou-contestation";
+
+/**
+ * Envoyer la lettre sans quitter l'app.
+ *
+ * Trois canaux, celui qui convient en premier : le formulaire officiel de
+ * parking.brussels (qui refuse les e-mails depuis le 15 mars 2026), guidé
+ * champ par champ ; l'e-mail, envoyé d'ici au nom du membre, pour les
+ * organismes qui l'acceptent ; le recommandé, à imprimer. Quel que soit le
+ * canal, l'envoi est noté et le suivi démarre.
+ */
+function EnvoiAssiste({
+  dossierId,
+  bruxelles,
+  type,
+  texteCourt,
+  pret,
+  champs,
+  avantEnvoi,
+  imprimer,
+  dejaEnvoyee,
+  libelle,
+}: {
+  dossierId: string;
+  bruxelles: boolean;
+  type: TypeLettre;
+  texteCourt: string | null;
+  pret: boolean;
+  champs: [string, string][];
+  avantEnvoi: (apres?: () => void) => void;
+  imprimer: () => void;
+  dejaEnvoyee: boolean;
+  libelle: string;
+}) {
+  const router = useRouter();
+  const formulaireConseille = bruxelles && type !== "demande_preuves";
+  const [canal, setCanal] = useState<"formulaire" | "email" | "recommande">(formulaireConseille ? "formulaire" : "email");
+  const [destinataire, setDestinataire] = useState("");
+  const [accord, setAccord] = useState(false);
+  const [message, setMessage] = useState<{ ok: boolean; texte: string } | null>(null);
+  const [envoi, demarrerEnvoi] = useTransition();
+
+  const CANAUX = [
+    ...(bruxelles ? [{ id: "formulaire" as const, libelle: "Formulaire officiel" }] : []),
+    { id: "email" as const, libelle: "E-mail" },
+    { id: "recommande" as const, libelle: "Recommandé" },
+  ];
+
+  const envoyer = () =>
+    avantEnvoi(() =>
+      demarrerEnvoi(async () => {
+        setMessage(null);
+        const r = await envoyerLettreParEmail(dossierId, destinataire, accord);
+        if (r.erreur) return setMessage({ ok: false, texte: r.erreur });
+        setMessage({ ok: true, texte: `Lettre envoyée à ${destinataire}. Vous êtes en copie : gardez cet e-mail, c'est votre preuve.` });
+        router.refresh();
+      }),
+    );
+
+  return (
+    <section className="rounded-[var(--radius-carte)] border border-line/80 bg-card p-5 shadow-carte sm:p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="font-display text-lg font-bold text-navy-900">Envoyer la lettre</h2>
+        <div role="tablist" aria-label="Canal d'envoi" className="inline-flex rounded-full bg-paper p-1">
+          {CANAUX.map((c) => (
+            <button
+              key={c.id}
+              role="tab"
+              type="button"
+              aria-selected={canal === c.id}
+              onClick={() => setCanal(c.id)}
+              className={`h-9 rounded-full px-3.5 text-sm font-semibold transition ${
+                canal === c.id ? "bg-navy-900 text-white shadow-sm" : "text-navy-900 hover:bg-navy-50"
+              }`}
+            >
+              {c.libelle}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {canal === "formulaire" && (
+        <div className="mt-4 space-y-4">
+          <p className="text-sm leading-relaxed text-ink-soft">
+            parking.brussels n&apos;accepte que son formulaire en ligne (« réclamation » pour un avis ou un rappel,
+            « contestation » pour une mise en demeure). Ouvrez-le à côté : tout ce qu&apos;il demande est ici, prêt à copier.
+          </p>
+          <a
+            href={URL_FORMULAIRE_PARKING}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-11 items-center gap-2 rounded-full bg-gold-400 px-5 text-sm font-bold text-navy-950 shadow-bouton transition hover:bg-gold-300 active:scale-[0.97]"
+          >
+            Ouvrir le formulaire officiel
+            <IconeFleche className="h-4 w-4" />
+          </a>
+          <dl className="grid gap-x-4 sm:grid-cols-2">
+            {champs.map(([nom, valeur]) => (
+              <div key={nom} className="flex items-center justify-between gap-2 border-b border-line py-2.5">
+                <span className="min-w-0">
+                  <dt className="text-xs text-ink-soft">{nom}</dt>
+                  <dd className={`truncate text-sm font-semibold ${valeur ? "text-navy-900" : "text-ink-faint"}`}>{valeur || "à compléter dans « Mon compte »"}</dd>
+                </span>
+                {valeur && <CopierTexte valeur={valeur} libelle={`Copier : ${nom}`} />}
+              </div>
+            ))}
+          </dl>
+          {texteCourt && (
+            <div className="rounded-2xl bg-paper p-4">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-semibold text-navy-900">Le motif, à coller dans le formulaire</p>
+                <CopierTexte valeur={texteCourt} libelle="Copier le motif" />
+              </div>
+              <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-ink-soft">{texteCourt}</p>
+            </div>
+          )}
+          <p className="text-sm text-ink-soft">
+            Joignez la lettre complète en PDF{" "}
+            <button type="button" onClick={imprimer} className="font-semibold text-navy-700 underline underline-offset-4">
+              (la télécharger)
+            </button>{" "}
+            et vos pièces, puis faites une capture de la confirmation : c&apos;est votre preuve.
+          </p>
+        </div>
+      )}
+
+      {canal === "email" && (
+        <div className="mt-4 space-y-3">
+          {bruxelles && (
+            <p className="flex items-start gap-2 rounded-xl bg-warn-100 p-3 text-sm text-warn-700">
+              <IconeAttention className="mt-0.5 h-4 w-4 shrink-0" />
+              parking.brussels refuse les e-mails depuis le 15 mars 2026 : pour eux, utilisez le formulaire officiel. L&apos;e-mail
+              convient à une commune, une société de recouvrement ou un huissier qui l&apos;indique sur son courrier.
+            </p>
+          )}
+          <label className="block">
+            <span className="mb-1.5 block text-sm font-semibold text-navy-900">Adresse de l&apos;organisme</span>
+            <input
+              type="email"
+              value={destinataire}
+              onChange={(e) => setDestinataire(e.target.value)}
+              placeholder="Celle indiquée sur votre courrier"
+              autoComplete="off"
+              className="w-full rounded-xl border border-line bg-white px-3.5 py-3 text-[0.95rem] outline-none focus:border-navy-600 focus:ring-4 focus:ring-gold-300/40"
+            />
+          </label>
+          <label className="flex items-start gap-2.5 text-sm leading-relaxed text-ink">
+            <input type="checkbox" checked={accord} onChange={(e) => setAccord(e.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-navy-900" />
+            J&apos;autorise SOS Citizens à envoyer cette lettre en mon nom. Je suis en copie, et l&apos;organisme me répond directement.
+          </label>
+          <Btn variant="gold" onClick={envoyer} disabled={!pret || !accord || !destinataire || envoi || dejaEnvoyee}>
+            <IconeEnvoyer className="h-5 w-5" />
+            {envoi ? "Envoi…" : "Envoyer la lettre"}
+          </Btn>
+          {!pret && <p className="text-xs text-ink-soft">Complétez d&apos;abord la lettre (plus aucun passage entre crochets).</p>}
+          {message && (
+            <p role="status" className={`text-sm font-medium ${message.ok ? "text-ok-700" : "text-danger-700"}`}>
+              {message.texte}
+            </p>
+          )}
+        </div>
+      )}
+
+      {canal === "recommande" && (
+        <ol className="mt-4 space-y-2 text-sm leading-relaxed text-ink">
+          <Pas n={1}>
+            Téléchargez la lettre{" "}
+            <button type="button" onClick={imprimer} className="font-semibold text-navy-700 underline underline-offset-4">
+              en PDF
+            </button>
+            , imprimez-la et signez-la.
+          </Pas>
+          <Pas n={2}>Joignez une copie du courrier reçu et vos pièces, puis envoyez-la en recommandé à l&apos;adresse de l&apos;organisme.</Pas>
+          <Pas n={3}>Gardez le récépissé : son numéro est votre preuve.</Pas>
+        </ol>
+      )}
+
+      {canal !== "email" && <EnvoiFait dossierId={dossierId} dejaEnvoyee={dejaEnvoyee} libelle={libelle} />}
+    </section>
   );
 }
 

@@ -10,6 +10,7 @@ import { FormulaireProfil } from "./FormulaireProfil";
 import { SupprimerCompte } from "./SupprimerCompte";
 import { BoutonDeconnexion } from "./BoutonDeconnexion";
 import { AppareilsReconnus, type Appareil } from "./AppareilsReconnus";
+import { PreferencesRappels } from "./PreferencesRappels";
 import { emailAffichable } from "@/lib/telephone";
 import { cookies } from "next/headers";
 import { COOKIE_APPAREIL } from "@/lib/appareils";
@@ -98,6 +99,19 @@ export default async function MonCompte() {
           organisation={profil?.organisation ?? ""}
           langueInterface={profil?.langue_interface ?? "fr"}
         />
+      </section>
+
+      {/* ---------------------------------------------------------- rappels */}
+      <section className="mt-4 rounded-[var(--radius-carte)] border border-line/80 bg-card p-5 shadow-carte sm:p-6">
+        <h2 className="font-display text-lg font-bold text-navy-900">Vos rappels</h2>
+        <p className="mt-1 text-sm text-ink-soft">En plus de l&apos;agenda : nous vous prévenons avant chaque date importante.</p>
+        <div className="mt-4">
+          <PreferencesRappels
+            email={(profil as { rappels_email?: boolean } | null)?.rappels_email !== false}
+            sms={(profil as { rappels_sms?: boolean } | null)?.rappels_sms === true}
+            aTelephone={!!profil?.telephone}
+          />
+        </div>
       </section>
 
       {/* ----------------------------------------------------------- données */}
