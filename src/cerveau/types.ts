@@ -304,7 +304,9 @@ export type TypeLettre =
   | "relance"
   | "reponse_huissier"
   | "demande_preuves"
-  | "remboursement";
+  | "remboursement"
+  | "echelonnement"
+  | "bonne_foi";
 
 export type Identite = {
   prenom: string;

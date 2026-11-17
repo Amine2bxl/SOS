@@ -35,6 +35,8 @@ const TYPES_LETTRE: TypeLettre[] = [
   "reponse_huissier",
   "demande_preuves",
   "remboursement",
+  "echelonnement",
+  "bonne_foi",
 ];
 
 const texte = (v: unknown, max: number): string | null =>

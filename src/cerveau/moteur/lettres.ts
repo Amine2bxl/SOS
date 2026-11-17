@@ -1,13 +1,19 @@
 /**
  * La rédaction des lettres.
  *
- * Cinq courriers, parce qu'un dossier n'en compte presque jamais qu'un :
+ * Sept courriers, parce qu'un dossier n'en compte presque jamais qu'un :
  *
  *  - la CONTESTATION, au premier courrier ou au rappel ;
  *  - la RELANCE, quand la contestation reste sans réponse ;
  *  - la RÉPONSE À L'HUISSIER (ou à la contrainte) ;
  *  - la DEMANDE DES PHOTOS, au titre du droit d'accès du RGPD ;
- *  - la demande d'ARRÊT ET DE REMBOURSEMENT, quand on a déjà payé.
+ *  - la demande d'ARRÊT ET DE REMBOURSEMENT, quand on a déjà payé ;
+ *  - le PLAN DE PAIEMENT, quand on doit mais ne peut pas tout payer d'un coup ;
+ *  - l'ANNULATION À TITRE GRACIEUX, quand la faute est réelle mais de bonne foi.
+ *
+ * Le ton, l'enjeu et les paragraphes propres au cas viennent du scénario
+ * (`scenario.ts`) : stade, montant, nombre de redevances, délai dépassé,
+ * points relevés sur le courrier.
  *
  * Chaque lettre existe en français et en néerlandais : en Flandre,
  * l'administration travaille en néerlandais, et une lettre dans sa langue est
@@ -16,6 +22,7 @@
  */
 
 import { MOYENS } from "../base/moyens";
+import { formuleFinale, lireScenario, ouverture, PARAGRAPHE_TARDIF } from "./scenario";
 import type { Faits, Identite, Langue, TypeLettre } from "../types";
 
 type T = { fr: string; nl: string };
@@ -68,6 +75,8 @@ export type OptionsLettre = {
   ibanRemboursement?: string | null;
   /** Date de la lettre ; aujourd'hui par défaut. */
   date?: string;
+  /** Nombre de redevances visées par la lettre (1 par défaut). */
+  nombre?: number;
 };
 
 export type LettreComposee = {
@@ -76,6 +85,10 @@ export type LettreComposee = {
   texte: string;
   /** Pièces à joindre, telles qu'elles figurent en annexe. */
   annexes: string[];
+  /** Version courte, pour un formulaire en ligne ou un e-mail. */
+  texteCourt: string;
+  /** Le ton retenu, pour l'afficher à l'utilisateur. */
+  ton: "courtois" | "ferme" | "pressant";
 };
 
 const TITRES: Record<TypeLettre, T> = {
@@ -84,6 +97,8 @@ const TITRES: Record<TypeLettre, T> = {
   reponse_huissier: { fr: "Réponse à l'huissier ou à la contrainte", nl: "Antwoord aan de gerechtsdeurwaarder" },
   demande_preuves: { fr: "Demande des photos du contrôle (RGPD)", nl: "Verzoek om de foto's van de controle (AVG)" },
   remboursement: { fr: "Demande d'arrêt et de remboursement", nl: "Verzoek tot stopzetting en terugbetaling" },
+  echelonnement: { fr: "Demande de plan de paiement", nl: "Verzoek om een afbetalingsplan" },
+  bonne_foi: { fr: "Demande d'annulation à titre gracieux", nl: "Verzoek tot kwijtschelding uit coulance" },
 };
 
 export function titreLettre(type: TypeLettre, langue: Langue): string {
@@ -93,6 +108,7 @@ export function titreLettre(type: TypeLettre, langue: Langue): string {
 export function composerLettre(o: OptionsLettre): LettreComposee {
   const { langue, faits, identite } = o;
   const L = (x: T) => t(langue, x);
+  const scenario = lireScenario(faits, o.nombre ?? 1);
 
   const nomComplet = `${ou(identite.prenom, { fr: "Prénom", nl: "Voornaam" }, langue)} ${ou(identite.nom, { fr: "Nom", nl: "Naam" }, langue)}`;
   const reference = ou(faits.reference, { fr: "référence figurant sur votre courrier", nl: "referentie op uw brief" }, langue);
@@ -143,6 +159,14 @@ export function composerLettre(o: OptionsLettre): LettreComposee {
       fr: `Objet : redevance déjà acquittée — arrêt du recouvrement — référence ${reference}`,
       nl: `Betreft: reeds betaalde retributie — stopzetting van de invordering — referentie ${reference}`,
     },
+    echelonnement: {
+      fr: `Objet : demande de plan de paiement — référence ${reference}`,
+      nl: `Betreft: verzoek om een afbetalingsplan — referentie ${reference}`,
+    },
+    bonne_foi: {
+      fr: `Objet : demande d'annulation à titre gracieux — référence ${reference}`,
+      nl: `Betreft: verzoek tot kwijtschelding uit coulance — referentie ${reference}`,
+    },
   };
   const objet = L(objets[o.type]);
 
@@ -190,12 +214,11 @@ export function composerLettre(o: OptionsLettre): LettreComposee {
 
   switch (o.type) {
     case "contestation": {
-      corps.push(
-        L({
-          fr: `Je soussigné(e) ${nomComplet} conteste par la présente cette redevance. ${identification}`,
-          nl: `Ondergetekende, ${nomComplet}, betwist hierbij deze retributie. ${identification}`,
-        }),
-      );
+      corps.push(L(ouverture(scenario, nomComplet, identification)));
+      if (scenario.tardif) {
+        corps.push("");
+        corps.push(L(PARAGRAPHE_TARDIF));
+      }
       corps.push("");
       corps.push(L({ fr: "EXPOSÉ DES FAITS ET MOYENS", nl: "FEITEN EN MIDDELEN" }));
       if (moyensChoisis.length === 0) {
@@ -214,7 +237,25 @@ export function composerLettre(o: OptionsLettre): LettreComposee {
         corps.push("");
         corps.push(recitUtilisateur);
       }
-      demandes.push(...DEMANDES[langue]);
+      if (scenario.pointsReleves.length > 0) {
+        corps.push("");
+        corps.push(L({ fr: "POINTS RELEVÉS SUR LE COURRIER", nl: "OPMERKINGEN OVER DE BRIEF" }));
+        scenario.pointsReleves.forEach((p, i) => {
+          if (i > 0) corps.push("");
+          corps.push(L(p));
+        });
+      }
+      // Une petite redevance : trois demandes, l'essentiel. Un dossier lourd :
+      // tout, et un examen redevance par redevance.
+      demandes.push(...(scenario.enjeu === "faible" ? [DEMANDES[langue][0], DEMANDES[langue][1], DEMANDES[langue][4]] : DEMANDES[langue]));
+      if (scenario.enjeu === "eleve") {
+        demandes.push(
+          L({
+            fr: `un examen individualisé de chacune des redevances${scenario.nombre > 1 ? ` (${scenario.nombre} au total)` : ""}, accompagné d'un décompte détaillé par redevance.`,
+            nl: `een individueel onderzoek van elke retributie${scenario.nombre > 1 ? ` (${scenario.nombre} in totaal)` : ""}, samen met een gedetailleerde afrekening per retributie.`,
+          }),
+        );
+      }
       if (faits.reponses?.deja_paye === "oui" || o.ibanRemboursement) {
         demandes.push(
           L({
@@ -392,6 +433,85 @@ export function composerLettre(o: OptionsLettre): LettreComposee {
       annexes.push(L({ fr: "Preuve du paiement", nl: "Betalingsbewijs" }));
       break;
     }
+
+    case "echelonnement": {
+      // Le nombre de mensualités suit le montant : trois pour une petite somme,
+      // jusqu'à dix pour une dette lourde. La mensualité est arrondie à l'euro.
+      const total = (faits.montant ?? 0) * Math.max(1, o.nombre ?? 1);
+      const n = total <= 100 ? 3 : total <= 500 ? 6 : 10;
+      const mensualite = total > 0 ? Math.ceil(total / n) : null;
+      corps.push(identification);
+      corps.push("");
+      corps.push(
+        L({
+          fr: `Ma situation financière ne me permet pas de régler en une seule fois la somme réclamée${total > 0 ? `, soit ${total.toFixed(2).replace(".", ",")} €` : ""}. Je souhaite néanmoins m'acquitter de mes obligations.`,
+          nl: `Mijn financiële situatie laat mij niet toe het gevorderde bedrag${total > 0 ? ` van € ${total.toFixed(2).replace(".", ",")}` : ""} in één keer te betalen. Ik wens niettemin mijn verplichtingen na te komen.`,
+        }),
+      );
+      if (recitUtilisateur) {
+        corps.push("");
+        corps.push(recitUtilisateur);
+      }
+      demandes.push(
+        L({
+          fr: mensualite
+            ? `un plan de paiement en ${n} mensualités de ${mensualite} € environ, à compter du mois prochain ;`
+            : `un plan de paiement en ${n} mensualités, à compter du mois prochain ;`,
+          nl: mensualite
+            ? `een afbetalingsplan in ${n} maandelijkse termijnen van ongeveer € ${mensualite}, vanaf volgende maand;`
+            : `een afbetalingsplan in ${n} maandelijkse termijnen, vanaf volgende maand;`,
+        }),
+        L({
+          fr: "l'absence de tout frais, intérêt ou mesure de recouvrement supplémentaire pendant la durée du plan ;",
+          nl: "het uitblijven van bijkomende kosten, intresten of invorderingsmaatregelen tijdens de duur van het plan;",
+        }),
+        L({
+          fr: "la confirmation écrite du plan, avec le numéro de compte et la communication à utiliser.",
+          nl: "de schriftelijke bevestiging van het plan, met het rekeningnummer en de te gebruiken mededeling.",
+        }),
+      );
+      break;
+    }
+
+    case "bonne_foi": {
+      corps.push(
+        L({
+          fr: `Je soussigné(e) ${nomComplet} sollicite, par la présente, l'annulation à titre gracieux de la redevance mentionnée ci-dessous. ${identification}`,
+          nl: `Ondergetekende, ${nomComplet}, verzoekt hierbij om de kwijtschelding uit coulance van de hieronder vermelde retributie. ${identification}`,
+        }),
+      );
+      corps.push("");
+      const circonstance =
+        faits.reponses?.carte === "riverain"
+          ? L({
+              fr: "Je suis titulaire d'une carte de riverain pour ce quartier. Son renouvellement m'a échappé, sans aucune intention de me soustraire au paiement : j'ai régularisé ma situation dès que je m'en suis aperçu(e).",
+              nl: "Ik ben houder van een bewonerskaart voor deze wijk. De vernieuwing ervan is mij ontgaan, zonder enige bedoeling om de betaling te ontlopen: ik heb mijn situatie geregulariseerd zodra ik het merkte.",
+            })
+          : faits.reponses?.carte === "pmr"
+            ? L({
+                fr: "Le véhicule transportait une personne titulaire d'une carte de stationnement pour personne handicapée. L'enregistrement du véhicule a fait défaut, par méconnaissance de la procédure et non par négligence.",
+                nl: "Het voertuig vervoerde een houder van een parkeerkaart voor personen met een handicap. De registratie van het voertuig ontbrak, uit onwetendheid over de procedure en niet uit nalatigheid.",
+              })
+            : L({
+                fr: "Il s'agit d'un manquement isolé, commis de bonne foi. Je m'acquitte habituellement de mes obligations de stationnement sans difficulté.",
+                nl: "Het gaat om een alleenstaande tekortkoming, te goeder trouw begaan. Ik kom mijn parkeerverplichtingen gewoonlijk zonder problemen na.",
+              });
+      corps.push(circonstance);
+      if (recitUtilisateur) {
+        corps.push("");
+        corps.push(recitUtilisateur);
+      }
+      demandes.push(
+        L({ fr: "l'annulation de la redevance à titre gracieux ;", nl: "de kwijtschelding van de retributie uit coulance;" }),
+        L({
+          fr: "à défaut, sa réduction au montant initial, sans frais de rappel ni majoration ;",
+          nl: "zo niet, de vermindering ervan tot het oorspronkelijke bedrag, zonder herinneringskosten of verhogingen;",
+        }),
+        L({ fr: "une réponse écrite et motivée.", nl: "een schriftelijk en gemotiveerd antwoord." }),
+      );
+      annexes.push(L({ fr: "Justificatif de ma situation (carte, attestation)", nl: "Bewijs van mijn situatie (kaart, attest)" }));
+      break;
+    }
   }
 
   annexes.push(L({ fr: "Copie du courrier reçu", nl: "Kopie van de ontvangen brief" }));
@@ -418,17 +538,14 @@ export function composerLettre(o: OptionsLettre): LettreComposee {
     }),
     ...demandes.map((d, i) => `${i + 1}. ${d}`),
     "",
-    o.type === "demande_preuves"
+    o.type === "demande_preuves" || o.type === "echelonnement" || o.type === "bonne_foi"
       ? null
       : L({
           fr: "La présente ne constitue en aucune manière une reconnaissance de dette. Tous mes droits et moyens demeurent expressément réservés.",
           nl: "Deze brief houdt geenszins een erkenning van schuld in. Al mijn rechten en middelen blijven uitdrukkelijk voorbehouden.",
         }),
     "",
-    L({
-      fr: "Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.",
-      nl: "Met de meeste hoogachting,",
-    }),
+    L(formuleFinale(o.type === "bonne_foi" || o.type === "echelonnement" ? "courtois" : scenario.ton)),
     "",
     "",
     nomComplet,
@@ -437,11 +554,35 @@ export function composerLettre(o: OptionsLettre): LettreComposee {
     ...annexesUniques.map((p) => `— ${p}`),
   ];
 
+  // La version courte : un formulaire en ligne n'accepte souvent que quelques
+  // centaines de mots. L'essentiel, dans l'ordre : qui, quoi, pourquoi, quoi demander.
+  const motifs = moyensChoisis.slice(0, 3).map((m) => `- ${m.titre}`);
+  const court = [
+    objet,
+    "",
+    identification,
+    "",
+    ...(o.type === "contestation" || o.type === "reponse_huissier" || o.type === "relance"
+      ? [
+          L({ fr: "Je conteste cette redevance pour les motifs suivants :", nl: "Ik betwist deze retributie om de volgende redenen:" }),
+          ...(motifs.length ? motifs : [L({ fr: "- voir ma lettre jointe", nl: "- zie mijn bijgevoegde brief" })]),
+          ...scenario.pointsReleves.slice(0, 1).map((p) => `- ${L(p)}`),
+          "",
+        ]
+      : []),
+    L({ fr: "Je sollicite :", nl: "Ik verzoek om:" }),
+    ...demandes.slice(0, 3).map((d) => `- ${d.replace(/[;.]$/, "")}`),
+    "",
+    nomComplet,
+  ].join("\n");
+
   return {
     titre: titreLettre(o.type, langue),
     objet,
     texte: lignes.filter((l): l is string => l !== null).join("\n"),
     annexes: annexesUniques,
+    texteCourt: court,
+    ton: scenario.ton,
   };
 }
 

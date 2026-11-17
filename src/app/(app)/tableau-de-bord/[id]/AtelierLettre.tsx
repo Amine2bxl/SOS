@@ -7,6 +7,7 @@ import { enregistrerLettreDossier, marquerContestationEnvoyee } from "@/lib/doss
 import { enregistrerProfil } from "@/lib/profile-actions";
 import type { TypeLettre } from "@/cerveau/types";
 import { MODES_ENVOI, type Lettre } from "@/lib/dossiers-format";
+import { CopierTexte } from "@/components/CopierTexte";
 import { Btn, Pastille } from "@/components/ui";
 import {
   IconeAttention,
@@ -26,6 +27,8 @@ const LETTRES: { id: TypeLettre; titre: string; quand: string; icone: string }[]
   { id: "reponse_huissier", titre: "Réponse à l'huissier", quand: "Contrainte ou courrier d'huissier.", icone: "huissier" },
   { id: "demande_preuves", titre: "Demande des photos", quand: "Pour vérifier le constat, au titre du RGPD.", icone: "loupe" },
   { id: "remboursement", titre: "Arrêt et remboursement", quand: "Vous avez déjà payé cette somme.", icone: "euro" },
+  { id: "bonne_foi", titre: "Annulation à titre gracieux", quand: "Une erreur de bonne foi : carte oubliée, première fois.", icone: "main-tendue" },
+  { id: "echelonnement", titre: "Plan de paiement", quand: "Vous devez payer, mais pas tout d'un coup.", icone: "agenda" },
 ];
 
 /** Les lettres qui reposent sur des arguments : on peut choisir lesquels. */
@@ -83,6 +86,8 @@ export function AtelierLettre({
   // elle s'affiche d'emblée, sans attendre une nouvelle rédaction.
   const [initiale] = useState(() => lettres.find((l) => l.type === typeConseille && l.langue === langueConseillee));
   const [texte, setTexte] = useState(initiale?.contenu ?? "");
+  const [texteCourt, setTexteCourt] = useState<string | null>(null);
+  const [ton, setTon] = useState<string | null>(null);
   const [enregistree, setEnregistree] = useState(!!initiale);
   const [edition, setEdition] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -113,6 +118,8 @@ export function AtelierLettre({
         }
         setErreur(null);
         setTexte(r.lettre.texte);
+        setTexteCourt(r.lettre.texteCourt ?? null);
+        setTon(r.lettre.ton ?? null);
         setEnregistree(false);
         setEdition(false);
       });
@@ -332,7 +339,12 @@ export function AtelierLettre({
       {/* ------------------------------------------------------------ la lettre */}
       <section className="overflow-hidden rounded-[var(--radius-carte)] border border-line/80 bg-card shadow-carte">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-paper/60 px-4 py-3 sm:px-5">
-          <p className="flex items-center gap-2 text-sm font-semibold text-navy-900">
+          <p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-navy-900">
+            {ton && !generation && (
+              <span className="rounded-full bg-navy-50 px-2 py-0.5 text-xs font-bold text-navy-700">
+                Ton {ton === "courtois" ? "courtois" : ton === "ferme" ? "ferme" : "pressant"}
+              </span>
+            )}
             {enregistree ? (
               <>
                 <IconeOk className="h-4 w-4 text-ok-600" /> Rangée dans votre dossier
@@ -395,6 +407,22 @@ export function AtelierLettre({
           </Btn>
         </div>
       </section>
+
+      {texteCourt && !generation && (
+        <details className="group rounded-[var(--radius-carte)] border border-line/80 bg-card shadow-carte">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 text-sm font-semibold text-navy-900 sm:px-5">
+            Version courte, pour un formulaire en ligne ou un e-mail
+            <IconeChevron className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
+          </summary>
+          <div className="border-t border-line p-4 sm:px-5">
+            <pre className="whitespace-pre-wrap rounded-2xl bg-paper p-4 font-sans text-sm leading-relaxed text-ink">{texteCourt}</pre>
+            <div className="mt-3 flex items-center justify-between gap-3">
+              <span className="text-xs text-ink-soft">{texteCourt.length} caractères</span>
+              <CopierTexte valeur={texteCourt} libelle="Copier la version courte" />
+            </div>
+          </div>
+        </details>
+      )}
 
       {erreur && (
         <p role="alert" className="flex gap-2.5 rounded-2xl bg-danger-100 p-4 text-sm font-medium text-danger-700">
