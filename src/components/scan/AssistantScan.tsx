@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   lireDocument,
+  prechaufferOcr,
   FORMATS_ACCEPTES,
   TAILLE_MAX_OCTETS,
   type ProgressionOCR,
@@ -433,12 +434,14 @@ function EtapeDepot({
   const [survol, setSurvol] = useState(false);
 
   return (
-    <div className="animate-rise">
+    // Dès que la personne touche la zone (ou y amène un fichier), le moteur de
+    // lecture se prépare : le temps de choisir la photo, il est prêt.
+    <div className="animate-rise" onPointerDown={prechaufferOcr} onDragEnter={prechaufferOcr} onFocusCapture={prechaufferOcr}>
       <Titre className="font-display text-[1.9rem] font-extrabold leading-tight text-navy-900 sm:text-4xl">
-        Montrez-nous votre courrier
+        Montrez-nous votre lettre
       </Titre>
       <p className="mt-2 text-[1.05rem] text-ink-soft">
-        Une photo suffit. Le moteur lit les dates, le montant, la plaque — vous n&apos;avez rien à retaper.
+        Une photo suffit, même sombre ou de travers. Rien à recopier.
       </p>
 
       {/* Sur téléphone : deux gros boutons, l'appareil photo d'abord. */}
@@ -696,6 +699,14 @@ function EtapeVerification({
               ? "PDF lu directement — aucune erreur de lecture possible"
               : `Photo lue · fiabilité ${lecture.confiance} %`}
           </Pastille>
+          {lecture.diagnostic && (
+            <span className="ml-2 text-xs text-ink-soft">
+              {(lecture.diagnostic.duree / 1000).toFixed(1).replace(".", ",")} s · {lecture.diagnostic.lectures} lecture
+              {lecture.diagnostic.lectures > 1 ? "s croisées" : ""}
+              {lecture.diagnostic.relectures > 0 ? ` · ${lecture.diagnostic.relectures} chiffres revérifiés` : ""}
+              {Math.abs(lecture.diagnostic.biais) >= 1 ? " · photo redressée" : ""}
+            </span>
+          )}
         </p>
       )}
 

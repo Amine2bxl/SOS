@@ -166,10 +166,12 @@ test("une communication structurée valide est reconnue comme sûre", () => {
   const bonne = extraireDonnees("Communication +++090/9337/55493+++");
   assert.equal(bonne.communication.confiance, "haute");
 
-  // Même forme, clé de contrôle fausse : la valeur est gardée mais signalée.
+  // Même forme, clé de contrôle fausse et aucune correction unique possible :
+  // la valeur est gardée, mais au plus bas niveau de confiance — plusieurs
+  // lectures identiques ne suffiront pas à la faire passer pour sûre.
   const douteuse = extraireDonnees("Communication +++090/9337/55401+++");
   assert.equal(douteuse.communication.valeur, "+++090/9337/55401+++");
-  assert.equal(douteuse.communication.confiance, "moyenne");
+  assert.equal(douteuse.communication.confiance, "faible");
 });
 
 test("la date d'envoi du courrier est distinguée de celle du constat", () => {
