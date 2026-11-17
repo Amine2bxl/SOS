@@ -29,7 +29,7 @@ export default async function CommunesPage({
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:py-12">
       <PageHead
         title="Les 19 communes bruxelloises"
-        intro="Chaque commune a ses propres règles : zones, horaires, gratuité. Touchez la vôtre sur la carte."
+        intro="Zones, horaires, gratuité : chaque commune a ses règles. Touchez la vôtre."
       />
 
       <ExplorateurCommunes direct={direct} slugInitial={slugInitial} />
@@ -37,13 +37,13 @@ export default async function CommunesPage({
       <div className="mt-6 grid gap-3 md:grid-cols-2">
         <CadreReglementaire />
         <KeyBox title="Bruxelles d'abord" ton="info">
-          Les 19 communes de Bruxelles, aujourd&apos;hui. La Flandre puis la Wallonie, ensuite.
+          Les 19 communes aujourd&apos;hui. Puis la Flandre et la Wallonie.
         </KeyBox>
       </div>
 
       <div className="mt-6 flex flex-col items-center justify-between gap-4 rounded-[var(--radius-carte)] border border-line/80 bg-card p-5 shadow-carte sm:flex-row">
         <p className="text-sm leading-relaxed text-ink-soft">
-          C&apos;est de l&apos;information : le règlement de la commune fait foi. Un doute ?{" "}
+          Le règlement de la commune fait foi. Un doute ?{" "}
           <BoutonContact variante="lien">Écrivez-nous</BoutonContact>.
         </p>
         <div className="flex shrink-0 flex-col gap-2 sm:flex-row">

@@ -23,7 +23,7 @@ export function VideoExplication({ className = "" }: { className?: string }) {
         </video>
       </div>
       <figcaption className="mt-2 text-sm text-ink-soft">
-        1 minute pour tout comprendre : redevance, délai, frais, erreurs fréquentes.
+        1 minute : redevance, délai, frais, erreurs fréquentes.
         <span className="ml-1 text-ink-faint">Voix : ElevenLabs.</span>
       </figcaption>
     </figure>

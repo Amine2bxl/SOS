@@ -77,8 +77,7 @@ export function EscalierProcedure({ etapeCourante }: { etapeCourante?: number } 
 export function SourceProcedure({ sombre = false }: { sombre?: boolean }) {
   return (
     <p className={`text-xs leading-relaxed ${sombre ? "text-navy-100/60" : "text-ink-faint"}`}>
-      Procédure publiée par parking.brussels ; les montants et délais communaux peuvent différer.
-      C&apos;est toujours la mention portée sur votre courrier qui fait foi.
+      Procédure de parking.brussels. Les communes peuvent différer. Votre courrier fait foi.
     </p>
   );
 }
@@ -142,7 +141,7 @@ export function NotionsCles() {
 export function PreuvesUtiles() {
   return (
     <Card
-      title="Les preuves qui font la différence"
+      title="Les preuves qui comptent"
       subtitle="Sans preuve, une contestation aboutit rarement."
     >
       <ul className="grid gap-2 sm:grid-cols-2">
@@ -163,11 +162,10 @@ export function PreuvesUtiles() {
  */
 export function CadreReglementaire() {
   return (
-    <KeyBox title="Le cadre, valable partout en Région bruxelloise">
-      Le stationnement est réglementé par chaque commune dans son règlement-redevance, et géré en
-      pratique par <strong className="text-navy-900">parking.brussels</strong>. Ne pas payer donne
-      lieu à une <strong className="text-navy-900">redevance de stationnement</strong> : une dette
-      administrative locale, distincte d&apos;une amende pénale de police.
+    <KeyBox title="Partout à Bruxelles">
+      Chaque commune fixe ses règles. <strong className="text-navy-900">parking.brussels</strong> les applique.
+      Pas payé ? Une <strong className="text-navy-900">redevance</strong> : une dette administrative, pas une
+      amende de police.
     </KeyBox>
   );
 }
@@ -175,11 +173,10 @@ export function CadreReglementaire() {
 /** Le point qui surprend tout le monde : payer sans rien dire referme le dossier. */
 export function PayerOuContester() {
   return (
-    <KeyBox title="Payer ou contester : décidez avant de payer">
-      Payer sans rien dire vaut acceptation : le dossier se referme. Si vous contestez, faites-le{" "}
-      <strong>par écrit, dans le délai indiqué, avec une preuve d&apos;envoi</strong>. La contestation ne
-      suspend pas le délai de paiement : vous pouvez payer pour éviter les frais de rappel — si elle
-      aboutit, la somme vous est remboursée.
+    <KeyBox title="Décidez avant de payer">
+      Payer sans rien dire = accepter. Le dossier se referme. Contester :{" "}
+      <strong>par écrit, dans le délai, avec preuve d&apos;envoi</strong>. Le délai de paiement court quand même :
+      payer évite les frais de rappel, et si vous gagnez, vous êtes remboursé.
     </KeyBox>
   );
 }

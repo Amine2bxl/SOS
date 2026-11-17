@@ -38,8 +38,7 @@ export function FormulaireContact({ sujetInitial }: { sujetInitial: IdSujet | nu
           Message envoyé
         </p>
         <p className="mt-1.5 text-sm leading-relaxed text-ink">
-          Merci. Un bénévole de l&apos;association vous répond par e-mail, en général sous deux jours ouvrables. Si votre
-          délai est court, écrivez-nous aussi sur WhatsApp.
+          Réponse par e-mail sous 2 jours ouvrables. Délai court ? Écrivez aussi sur WhatsApp.
         </p>
       </div>
     );
@@ -61,7 +60,7 @@ export function FormulaireContact({ sujetInitial }: { sujetInitial: IdSujet | nu
         <Field label="Votre nom" required>
           <TextInput name="nom" autoComplete="name" required aria-invalid={!!erreurDe("nom")} />
         </Field>
-        <Field label="Votre e-mail" required hint="C'est là que nous vous répondrons.">
+        <Field label="Votre e-mail" required hint="Pour la réponse.">
           <TextInput name="email" type="email" autoComplete="email" inputMode="email" required aria-invalid={!!erreurDe("email")} />
         </Field>
       </div>
@@ -80,7 +79,7 @@ export function FormulaireContact({ sujetInitial }: { sujetInitial: IdSujet | nu
       <Field
         label="Votre message"
         required
-        hint="Type de courrier, commune, date, montant. Inutile d'y mettre votre plaque ou la référence : nous vous les demanderons si nécessaire."
+        hint="Type de courrier, commune, date, montant. Pas besoin de la plaque."
       >
         <TextArea
           name="message"

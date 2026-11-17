@@ -103,8 +103,7 @@ export default async function FicheDossier({
         <p className="animate-rise mt-4 flex items-start gap-3 rounded-2xl bg-ok-50 p-4 text-sm text-ok-700">
           <IconeOk className="mt-0.5 h-5 w-5 shrink-0" />
           <span>
-            <strong>Dossier ouvert.</strong> Votre lettre est prête juste en dessous : relisez-la, complétez ce qui est
-            surligné, puis envoyez-la.
+            <strong>Dossier ouvert.</strong> Votre lettre est juste en dessous : relisez, complétez le jaune, envoyez.
           </span>
         </p>
       )}
@@ -302,8 +301,7 @@ export default async function FicheDossier({
                   )}
                   {region?.couverture === "generale" && (
                     <p className="mt-3 text-xs leading-relaxed text-ink-faint">
-                      En {region.nom}, chaque commune fixe son règlement : le délai exact figure sur votre courrier, et
-                      c&apos;est lui qui fait foi.
+                      En {region.nom}, chaque commune fixe son délai : celui de votre courrier fait foi.
                     </p>
                   )}
                 </section>

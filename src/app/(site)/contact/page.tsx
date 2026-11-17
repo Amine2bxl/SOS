@@ -15,10 +15,10 @@ export const metadata: Metadata = {
 
 /** Ce qu'il est utile de préparer avant de nous écrire. */
 const A_PREPARER = [
-  "Une photo ou un scan du courrier que vous avez reçu",
-  "La référence du dossier et la date du constat",
-  "Vos preuves : reçu, capture de l'application, photos du lieu",
-  "En une phrase : ce qui s'est passé selon vous",
+  "Photo du courrier",
+  "Référence et date du constat",
+  "Vos preuves : ticket, capture de l'appli, photos du lieu",
+  "Ce qui s'est passé, en une phrase",
 ];
 
 const LIEN_WHATSAPP = `https://wa.me/${ASSO.whatsapp}?text=${encodeURIComponent(
@@ -33,7 +33,7 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
       <PageHead
         title="Écrivez-nous"
-        intro="Un bénévole vous répond par écrit. WhatsApp est le plus rapide."
+        intro="Un bénévole répond par écrit. Le plus rapide : WhatsApp."
       />
 
       {/* CONTACT DIRECT — WhatsApp et e-mail, jamais d'appel direct. */}
@@ -45,9 +45,9 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
           className="group rounded-[var(--radius-carte)] border-2 border-[#25d366]/40 bg-[#25d366]/10 p-6 text-center transition hover:bg-[#25d366]/20"
         >
           <WhatsAppIcon className="mx-auto h-7 w-7 text-[#1da851]" />
-          <p className="mt-3 font-display text-lg font-bold text-navy-900">Écrivez-nous sur WhatsApp</p>
+          <p className="mt-3 font-display text-lg font-bold text-navy-900">WhatsApp</p>
           <p className="mt-1 font-semibold text-navy-800 group-hover:underline">{ASSO.telephone}</p>
-          <p className="mt-2 text-sm text-ink-soft">Le plus rapide, surtout si votre délai est court.</p>
+          <p className="mt-2 text-sm text-ink-soft">Délai court ? Écrivez ici.</p>
         </a>
 
         <a
@@ -55,63 +55,51 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
           className="group rounded-[var(--radius-carte)] border border-line/80 bg-card p-6 text-center shadow-carte transition hover:border-navy-200"
         >
           <MailIcon className="mx-auto h-7 w-7 text-navy-700" />
-          <p className="mt-3 font-display text-lg font-bold text-navy-900">Écrivez-nous</p>
+          <p className="mt-3 font-display text-lg font-bold text-navy-900">E-mail</p>
           <p className="mt-1 break-all font-semibold text-navy-800 group-hover:underline">{ASSO.email}</p>
-          <p className="mt-2 text-sm text-ink-soft">Idéal pour joindre une photo de votre courrier.</p>
+          <p className="mt-2 text-sm text-ink-soft">Pour joindre la photo du courrier.</p>
         </a>
       </div>
 
-      <p className="mt-4 text-center text-xs text-ink-soft">
-        Pas de ligne d&apos;appel direct : nous répondons par écrit, et nous rappelons si nécessaire en
-        cas d&apos;urgence.
-      </p>
-
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <Card title="Ce qu'il faut nous préparer" subtitle="Avec ces éléments, nous pouvons vous aider tout de suite.">
-          <ul className="space-y-2.5">
-            {A_PREPARER.map((x) => (
-              <li key={x} className="flex gap-3 text-sm text-ink">
-                <span className="mt-2 h-1 w-3.5 shrink-0 rounded-full bg-gold-400" aria-hidden="true" />
-                {x}
+      <div className="mt-6 grid gap-6 lg:grid-cols-2 lg:items-start">
+        <div className="space-y-6">
+          <Card title="À joindre">
+            <ul className="space-y-2.5">
+              {A_PREPARER.map((x) => (
+                <li key={x} className="flex gap-3 text-sm text-ink">
+                  <span className="mt-2 h-1 w-3.5 shrink-0 rounded-full bg-gold-400" aria-hidden="true" />
+                  {x}
+                </li>
+              ))}
+            </ul>
+            <p className="mt-4 text-xs leading-relaxed text-ink-soft">Il manque quelque chose ? Écrivez quand même.</p>
+          </Card>
+          <Card title="Vos données personnelles">
+            <ul className="space-y-1.5 text-sm leading-relaxed text-ink-soft">
+              <li>La photo du courrier reste dans votre navigateur.</li>
+              <li>Vos dossiers : visibles par vous seul, supprimables depuis votre compte.</li>
+              <li>
+                Le formulaire : sert à vous répondre, effacé après 12 mois. Plus tôt ?{" "}
+                <a href={`mailto:${ASSO.email}`} className="font-semibold text-navy-700 underline">
+                  {ASSO.email}
+                </a>
               </li>
-            ))}
-          </ul>
-          <p className="mt-4 text-xs leading-relaxed text-ink-soft">
-            Il vous manque des éléments ? Écrivez-nous quand même, nous vous dirons quoi chercher.
-          </p>
-        </Card>
+            </ul>
+            <p className="mt-3 text-sm">
+              <Link href="/confidentialite" className="font-semibold text-navy-700 underline">
+                Politique de confidentialité
+              </Link>
+            </p>
+          </Card>
+        </div>
 
-        <Card title="Écrire à l'association" subtitle="Le message nous arrive directement ; la réponse vous parvient par e-mail.">
+        <Card title="Formulaire" subtitle="Réponse par e-mail.">
           <FormulaireContact sujetInitial={sujetInitial} />
           <p className="mt-4 text-xs leading-relaxed text-ink-soft">
-            Déjà membre ? Pour un dossier précis, demandez l&apos;accompagnement depuis la fiche du dossier : nous
-            aurons tout sous les yeux.
+            Membre ? Demandez l&apos;aide depuis votre dossier : on aura tout sous les yeux.
           </p>
         </Card>
       </div>
-
-      {/* DONNÉES PERSONNELLES */}
-      <Card title="Vos données personnelles" className="mt-6">
-        <p className="text-sm leading-relaxed text-ink-soft">
-          Votre courrier est lu dans votre navigateur : la photo ou le PDF n&apos;est envoyé nulle part.
-          Si vous créez un compte, vos dossiers sont conservés pour vous seul, et vous pouvez tout
-          supprimer vous-même, à tout moment, depuis votre compte.
-        </p>
-        <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-          Si vous nous écrivez par le formulaire, votre nom, votre e-mail et votre message servent uniquement à vous
-          répondre ; ils sont effacés au plus tard après douze mois. Demandez leur suppression plus tôt quand vous le
-          souhaitez à{" "}
-          <a href={`mailto:${ASSO.email}`} className="font-semibold text-navy-700 underline">
-            {ASSO.email}
-          </a>
-          .
-        </p>
-        <p className="mt-3 text-sm">
-          <Link href="/confidentialite" className="font-semibold text-navy-700 underline">
-            Voir notre politique de confidentialité (RGPD)
-          </Link>
-        </p>
-      </Card>
 
       <div className="mt-8 text-center">
         <LinkBtn href="/#analyser" variant="gold">

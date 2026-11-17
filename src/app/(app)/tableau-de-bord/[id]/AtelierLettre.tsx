@@ -25,12 +25,12 @@ import {
 
 const LETTRES: { id: TypeLettre; titre: string; quand: string; icone: string }[] = [
   { id: "contestation", titre: "Contestation", quand: "Au premier courrier ou au rappel.", icone: "lettre" },
-  { id: "relance", titre: "Relance", quand: "Votre contestation est restée sans réponse.", icone: "recommande" },
+  { id: "relance", titre: "Relance", quand: "Contestation sans réponse.", icone: "recommande" },
   { id: "reponse_huissier", titre: "Réponse à l'huissier", quand: "Contrainte ou courrier d'huissier.", icone: "huissier" },
-  { id: "demande_preuves", titre: "Demande des photos", quand: "Pour vérifier le constat, au titre du RGPD.", icone: "loupe" },
-  { id: "remboursement", titre: "Arrêt et remboursement", quand: "Vous avez déjà payé cette somme.", icone: "euro" },
-  { id: "bonne_foi", titre: "Annulation à titre gracieux", quand: "Une erreur de bonne foi : carte oubliée, première fois.", icone: "main-tendue" },
-  { id: "echelonnement", titre: "Plan de paiement", quand: "Vous devez payer, mais pas tout d'un coup.", icone: "agenda" },
+  { id: "demande_preuves", titre: "Demande des photos", quand: "Vérifier le constat (RGPD).", icone: "loupe" },
+  { id: "remboursement", titre: "Arrêt et remboursement", quand: "Déjà payé.", icone: "euro" },
+  { id: "bonne_foi", titre: "Annulation à titre gracieux", quand: "Erreur de bonne foi : carte oubliée, 1re fois.", icone: "main-tendue" },
+  { id: "echelonnement", titre: "Plan de paiement", quand: "Payer, mais en plusieurs fois.", icone: "agenda" },
 ];
 
 /** Les lettres qui reposent sur des arguments : on peut choisir lesquels. */
@@ -270,8 +270,8 @@ export function AtelierLettre({
         {langue !== langueConseillee && (
           <p className="mt-3 text-xs text-ink-soft">
             {langueConseillee === "nl"
-              ? "En Flandre, l'administration travaille en néerlandais : une lettre dans sa langue est traitée plus vite."
-              : "Le courrier reçu est en français : une réponse en français est conseillée."}
+              ? "En Flandre, l'administration travaille en néerlandais : traitée plus vite."
+              : "Courrier reçu en français : répondez en français."}
           </p>
         )}
       </section>
@@ -289,8 +289,8 @@ export function AtelierLettre({
               </span>
               <span className="block text-sm text-ink-soft">
                 {type === "remboursement"
-                  ? "Pour être remboursé, et pour expliquer en vos mots."
-                  : `${moyensChoisis.length} argument${moyensChoisis.length > 1 ? "s" : ""} retenu${moyensChoisis.length > 1 ? "s" : ""} · ajoutez votre récit si vous le souhaitez`}
+                  ? "Pour le remboursement, et votre récit."
+                  : `${moyensChoisis.length} argument${moyensChoisis.length > 1 ? "s" : ""} retenu${moyensChoisis.length > 1 ? "s" : ""} · votre récit en option`}
               </span>
             </span>
             <IconeChevron className="h-4 w-4 shrink-0 text-navy-700 transition group-open:rotate-180" />
@@ -388,7 +388,7 @@ export function AtelierLettre({
               <strong>
                 {trous.length} information{trous.length > 1 ? "s" : ""} à compléter
               </strong>{" "}
-              — surlignée{trous.length > 1 ? "s" : ""} en jaune. Touchez « Modifier » pour les remplacer.
+              — en jaune. « Modifier » pour les remplir.
             </span>
           </p>
         )}
@@ -427,7 +427,7 @@ export function AtelierLettre({
       {texteCourt && !generation && (
         <details className="group rounded-[var(--radius-carte)] border border-line/80 bg-card shadow-carte">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 text-sm font-semibold text-navy-900 sm:px-5">
-            Version courte, pour un formulaire en ligne ou un e-mail
+            Version courte (formulaire, e-mail)
             <IconeChevron className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
           </summary>
           <div className="border-t border-line p-4 sm:px-5">
@@ -569,7 +569,7 @@ function EnvoiAssiste({
         setMessage(null);
         const r = await envoyerLettreParEmail(dossierId, destinataire, accord);
         if (r.erreur) return setMessage({ ok: false, texte: r.erreur });
-        setMessage({ ok: true, texte: `Lettre envoyée à ${destinataire}. Vous êtes en copie : gardez cet e-mail, c'est votre preuve.` });
+        setMessage({ ok: true, texte: `Envoyée à ${destinataire}. Gardez la copie reçue : c'est votre preuve.` });
         router.refresh();
       }),
     );
@@ -599,8 +599,8 @@ function EnvoiAssiste({
       {canal === "formulaire" && (
         <div className="mt-4 space-y-4">
           <p className="text-sm leading-relaxed text-ink-soft">
-            parking.brussels n&apos;accepte que son formulaire en ligne (« réclamation » pour un avis ou un rappel,
-            « contestation » pour une mise en demeure). Ouvrez-le à côté : tout ce qu&apos;il demande est ici, prêt à copier.
+            Formulaire en ligne uniquement. Choisissez « réclamation » (avis, rappel) ou « contestation » (mise en
+            demeure). Chaque champ est ici, à copier.
           </p>
           <a
             href={URL_FORMULAIRE_PARKING}
@@ -636,7 +636,7 @@ function EnvoiAssiste({
             <button type="button" onClick={imprimer} className="font-semibold text-navy-700 underline underline-offset-4">
               (la télécharger)
             </button>{" "}
-            et vos pièces, puis faites une capture de la confirmation : c&apos;est votre preuve.
+            et vos pièces. Capturez la confirmation : c&apos;est votre preuve.
           </p>
         </div>
       )}
@@ -646,8 +646,8 @@ function EnvoiAssiste({
           {bruxelles && (
             <p className="flex items-start gap-2 rounded-xl bg-warn-100 p-3 text-sm text-warn-700">
               <IconeAttention className="mt-0.5 h-4 w-4 shrink-0" />
-              parking.brussels refuse les e-mails depuis le 15 mars 2026 : pour eux, utilisez le formulaire officiel. L&apos;e-mail
-              convient à une commune, une société de recouvrement ou un huissier qui l&apos;indique sur son courrier.
+              parking.brussels refuse les e-mails depuis le 15 mars 2026 : formulaire officiel. L&apos;e-mail sert pour une
+              commune, un recouvreur ou un huissier qui l&apos;accepte.
             </p>
           )}
           <label className="block">
@@ -663,7 +663,7 @@ function EnvoiAssiste({
           </label>
           <label className="flex items-start gap-2.5 text-sm leading-relaxed text-ink">
             <input type="checkbox" checked={accord} onChange={(e) => setAccord(e.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-navy-900" />
-            J&apos;autorise SOS Citizens à envoyer cette lettre en mon nom. Je suis en copie, et l&apos;organisme me répond directement.
+            J&apos;autorise SOS Citizens à envoyer cette lettre en mon nom. Je suis en copie ; l&apos;organisme me répond.
           </label>
           <Btn variant="gold" onClick={envoyer} disabled={!pret || !accord || !destinataire || envoi || dejaEnvoyee}>
             <IconeEnvoyer className="h-5 w-5" />
@@ -687,8 +687,8 @@ function EnvoiAssiste({
             </button>
             , imprimez-la et signez-la.
           </Pas>
-          <Pas n={2}>Joignez une copie du courrier reçu et vos pièces, puis envoyez-la en recommandé à l&apos;adresse de l&apos;organisme.</Pas>
-          <Pas n={3}>Gardez le récépissé : son numéro est votre preuve.</Pas>
+          <Pas n={2}>Joignez le courrier reçu et vos pièces. Envoyez en recommandé.</Pas>
+          <Pas n={3}>Gardez le récépissé : c&apos;est votre preuve.</Pas>
         </ol>
       )}
 
@@ -815,7 +815,7 @@ function CoordonneesManquantes({
         <div>
           <p className="font-bold text-navy-900">Votre nom et votre adresse manquent</p>
           <p className="text-sm text-ink-soft">
-            {manquants.join(", ")} — saisis une fois, ils s&apos;inscrivent dans toutes vos lettres.
+            {manquants.join(", ")} : une fois, pour toutes vos lettres.
           </p>
         </div>
         {!ouvert && (

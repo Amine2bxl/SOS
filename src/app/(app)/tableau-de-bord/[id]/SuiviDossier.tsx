@@ -141,7 +141,7 @@ export function SuiviDossier({
                 date: echeance,
                 type: "echeance",
                 titre: titreEcheance,
-                detail: "Dernier jour pour agir. Envoyez votre lettre au plus tard ce jour-là.",
+                detail: "Dernier jour pour envoyer votre lettre.",
                 lien: `/tableau-de-bord/${dossierId}`,
               }}
             />
@@ -190,8 +190,7 @@ export function SuiviDossier({
       <Modale ouverte={suppression} onFermer={() => setSuppression(false)} titre="Supprimer ce dossier ?" variante="alerte" largeur="max-w-md">
         <EnTeteModale titre="Supprimer ce dossier ?" onFermer={() => setSuppression(false)} />
         <p className="mt-3 text-sm leading-relaxed text-ink">
-          Le dossier, ses lettres et son historique seront effacés définitivement. Si un délai court encore, vous
-          perdrez le rappel.
+          Le dossier, ses lettres et son historique seront effacés définitivement. Plus aucun rappel pour ce délai.
         </p>
         <div className="mt-6 flex flex-col gap-2 sm:flex-row">
           <Btn variant="danger" className="flex-1" disabled={enCours} onClick={() => demarrer(() => supprimerDossier(dossierId))}>

@@ -94,8 +94,7 @@ ${corps}
                 &nbsp;·&nbsp;<a href="mailto:${ASSO.email}" style="color:${COULEURS.navy};">${ASSO.email}</a>
               </p>
               <p style="margin:8px 0 0;font-size:11px;line-height:1.5;color:${COULEURS.encreDouce};">
-                Nous sommes une association d&rsquo;information et d&rsquo;accompagnement citoyen, et non un
-                cabinet d&rsquo;avocats. Nous ne garantissons aucune annulation.
+                Pas un cabinet d&rsquo;avocats. Aucune annulation garantie.
               </p>
             </td>
           </tr>
@@ -109,9 +108,9 @@ ${corps}
 
 /** Ce que le compte débloque : c'est la raison pour laquelle on confirme. */
 const CE_QUI_ATTEND = [
-  "Scanner votre courrier : nous en extrayons la référence, le montant et surtout la date limite.",
-  "Générer votre lettre de contestation, prête à copier ou à imprimer.",
-  "Suivre vos dossiers et être prévenu avant chaque échéance.",
+  "Scanner votre courrier : référence, montant, date limite.",
+  "Recevoir votre lettre, prête à envoyer.",
+  "Être prévenu avant chaque date limite.",
 ];
 
 /**
@@ -151,9 +150,7 @@ export function emailConfirmation({
 
   const corps = `              <h1 style="margin:0 0 12px;font-size:23px;line-height:1.3;color:${COULEURS.navy};">${echapper(bonjour)}, bienvenue chez SOS&nbsp;Citizens.</h1>
               <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:${COULEURS.encreDouce};">
-                Vous venez de créer votre compte, et nous en sommes ravis. Une amende de stationnement,
-                ça se conteste rarement seul&nbsp;: à partir de maintenant, vous ne l&rsquo;êtes plus.
-                Il reste une étape, une seule&nbsp;— confirmer que cette adresse est bien la vôtre.
+                Dernière étape&nbsp;: confirmez votre adresse avec ce code.
               </p>
 
               <div style="background-color:${COULEURS.fond};border:2px dashed ${COULEURS.or};border-radius:12px;padding:22px;text-align:center;">
@@ -163,15 +160,14 @@ export function emailConfirmation({
               </div>
 
               <p style="margin:22px 0 10px;font-size:15px;line-height:1.6;color:${COULEURS.encre};">
-                Saisissez-le sur le site, et votre espace s&rsquo;ouvre&nbsp;:
+                Entrez-le sur le site. Votre espace s&rsquo;ouvre&nbsp;:
               </p>
               <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.7;color:${COULEURS.encreDouce};">
 ${CE_QUI_ATTEND.map((x) => `                <li>${x}</li>`).join("\n")}
               </ul>
 ${lienHtml}
               <p style="margin:22px 0 0;font-size:13px;line-height:1.6;color:${COULEURS.encreDouce};">
-                Une question, un doute sur votre dossier&nbsp;? Répondez simplement à cet e-mail&nbsp;:
-                c&rsquo;est une vraie personne de l&rsquo;association qui vous lira.
+                Une question&nbsp;? Répondez à cet e-mail&nbsp;: un bénévole vous lit.
               </p>
               <p style="margin:18px 0 0;font-size:14px;line-height:1.6;color:${COULEURS.encre};">
                 À très vite,<br>
@@ -184,16 +180,16 @@ ${lienHtml}
   const texte = [
     `${bonjour}, bienvenue chez SOS Citizens.`,
     "",
-    "Vous venez de créer votre compte. Il reste une étape : confirmer que cette adresse est bien la vôtre.",
+    "Dernière étape : confirmez votre adresse avec ce code.",
     "",
     `Votre code de confirmation : ${code}`,
     "Valable une heure. Ce code est personnel, ne le partagez avec personne.",
     "",
-    "Saisissez-le sur le site, et votre espace s'ouvre :",
+    "Entrez-le sur le site. Votre espace s'ouvre :",
     ...CE_QUI_ATTEND.map((x) => `- ${x}`),
     ...(lienConfirmation ? ["", `Vous préférez un simple clic : ${lienConfirmation}`] : []),
     "",
-    "Une question ? Répondez simplement à cet e-mail : c'est une vraie personne de l'association qui vous lira.",
+    "Une question ? Répondez à cet e-mail : un bénévole vous lit.",
     "",
     `À très vite,`,
     `L'équipe de ${ASSO.nom}`,
@@ -303,8 +299,7 @@ export function emailRappel({
                 <a href="${lien}" style="display:inline-block;padding:13px 26px;font-size:15px;font-weight:bold;color:${COULEURS.navy};text-decoration:none;">${echapper(libelleLien)}</a>
               </td></tr></table>
               <p style="margin:24px 0 0;font-size:12px;line-height:1.6;color:${COULEURS.encreDouce};">
-                Vous recevez ce rappel parce que ce dossier est ouvert dans votre espace SOS Citizens. Un dossier
-                réglé ? Clôturez-le dans son onglet « Suivi » : les rappels s&rsquo;arrêtent.
+                Ce dossier est ouvert dans votre espace. Réglé&nbsp;? Clôturez-le (onglet «&nbsp;Suivi&nbsp;»)&nbsp;: plus de rappel.
               </p>`;
 
   const texte = [

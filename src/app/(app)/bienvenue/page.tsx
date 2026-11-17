@@ -48,7 +48,7 @@ export default async function Bienvenue() {
       ) : (
         <>
           <p className="mt-2 text-[1.05rem] text-ink-soft">
-            Choisissez votre formule. Vous pourrez changer quand vous voulez.
+            Choisissez votre formule. Modifiable à tout moment.
           </p>
           <div className="mt-7 grid items-start gap-5 md:grid-cols-2">
             <CarteFormule plan={gratuit} href="/tableau-de-bord/nouveau" libelleAction="Commencer gratuitement" />

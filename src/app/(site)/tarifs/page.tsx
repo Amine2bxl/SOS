@@ -14,19 +14,19 @@ export const metadata: Metadata = {
 const QUESTIONS = [
   {
     q: "Qu'est-ce qui est gratuit ?",
-    r: "Vérifier une lettre, sans compte et sans limite. Vos 2 premiers dossiers, lettre comprise. Et l'aide par écrit de l'association.",
+    r: "Vérifier une lettre, sans compte ni limite. Vos 2 premiers dossiers, lettre comprise. L'aide écrite de l'association.",
   },
   {
     q: "Comment se passe le paiement ?",
-    r: "Par virement, depuis votre banque. On vous donne le montant et la référence. L'adhésion s'active dès que le virement arrive.",
+    r: "Par virement : on vous donne le montant et la référence. Active dès que le virement arrive.",
   },
   {
     q: "Que se passe-t-il après mes deux dossiers offerts ?",
-    r: "Ils restent ouverts et suivis. Seul un nouveau dossier demande une adhésion.",
+    r: "Ils restent ouverts et suivis. Un 3e dossier demande l'adhésion.",
   },
   {
     q: "L'adhésion est-elle reconduite automatiquement ?",
-    r: "Non. Pas de prélèvement automatique. L'adhésion dure 12 mois, puis vous décidez.",
+    r: "Non. Aucun prélèvement. 12 mois, puis vous décidez.",
   },
   {
     q: "Puis-je obtenir une facture ?",
@@ -39,7 +39,7 @@ export default function Tarifs() {
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:py-16">
       <PageHead
         title="Commencez gratuitement"
-        intro="Vérifier une lettre : gratuit. 2 dossiers offerts. Ensuite, une adhésion à l'association, par an."
+        intro="Vérifier : gratuit. 2 dossiers offerts. Ensuite, une adhésion par an."
       />
 
       <div className="mt-12 grid items-start gap-5 md:grid-cols-2 lg:grid-cols-4">
@@ -55,8 +55,8 @@ export default function Tarifs() {
       <div className="mx-auto mt-10 flex max-w-3xl items-start gap-4 rounded-[var(--radius-carte)] border border-gold-300 bg-gold-50 p-5">
         <IconeMainTendue className="h-9 w-9 shrink-0 text-navy-900" />
         <p className="text-sm leading-relaxed text-ink">
-          <strong className="text-navy-900">L&apos;argent ne doit pas être un obstacle.</strong> Si 70 € vous
-          posent problème, <BoutonContact variante="lien">dites-le-nous</BoutonContact> : on trouvera une solution.
+          <strong className="text-navy-900">70 €, c&apos;est trop ?</strong>{" "}
+          <BoutonContact variante="lien">Dites-le-nous</BoutonContact> : on trouve une solution.
         </p>
       </div>
 
@@ -76,9 +76,9 @@ export default function Tarifs() {
       </section>
 
       <section className="mx-auto mt-14 max-w-3xl rounded-[1.75rem] bg-navy-900 p-7 text-center text-white">
-        <p className="font-display text-xl font-bold">Un doute sur la formule adaptée ?</p>
+        <p className="font-display text-xl font-bold">Quelle formule choisir ?</p>
         <p className="mx-auto mt-2 max-w-lg text-sm text-navy-100">
-          Vérifiez d&apos;abord votre lettre : c&apos;est gratuit. On vous dira franchement ce qui suffit.
+          Vérifiez d&apos;abord votre lettre, gratuitement. On vous dira ce qui suffit.
         </p>
         <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
           <LinkBtn href="/#analyser" variant="gold">

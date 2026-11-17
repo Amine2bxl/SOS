@@ -27,7 +27,7 @@ export const MOYENS: Moyen[] = [
     id: "paiement_app",
     titre: "Ma session de stationnement était active",
     explication:
-      "Votre application a enregistré un paiement couvrant l'heure du contrôle. C'est l'argument le plus fréquent qui aboutit, à condition de joindre la capture de la session.",
+      "L'appli montre un paiement à l'heure du contrôle. L'argument qui gagne le plus souvent : joignez la capture de la session.",
     force: "solide",
     fiabilite: "etablie",
     icone: "app-mobile",
@@ -46,7 +46,7 @@ export const MOYENS: Moyen[] = [
     id: "paiement_horodateur",
     titre: "J'avais payé à l'horodateur",
     explication:
-      "Un ticket horodaté qui couvre l'heure du constat prouve que le stationnement était payé. Gardez l'original, envoyez une copie.",
+      "Le ticket couvre l'heure du constat : c'était payé. Gardez l'original, envoyez une copie.",
     force: "solide",
     fiabilite: "etablie",
     icone: "horodateur",
@@ -63,7 +63,7 @@ export const MOYENS: Moyen[] = [
     id: "carte_riverain",
     titre: "J'avais une carte de riverain valable",
     explication:
-      "La carte dispense de payer dans son secteur. Le contrôle automatique ne la reconnaît pas toujours, surtout si la plaque a changé ou si le secteur est mal encodé.",
+      "La carte dispense de payer dans son secteur. La ScanCar la rate parfois : plaque changée, secteur mal encodé.",
     force: "solide",
     fiabilite: "etablie",
     icone: "carte-riverain",
@@ -81,7 +81,7 @@ export const MOYENS: Moyen[] = [
     id: "carte_pmr",
     titre: "J'avais une carte pour personne handicapée",
     explication:
-      "Les titulaires de la carte de stationnement pour personnes handicapées bénéficient d'une exemption dans la plupart des communes. La ScanCar ne voit pas la carte posée derrière le pare-brise : c'est une erreur fréquente.",
+      "Carte PMR : exemption dans la plupart des communes. La ScanCar ne voit pas la carte derrière le pare-brise. Erreur fréquente.",
     force: "solide",
     fiabilite: "a_confirmer",
     icone: "carte-pmr",
@@ -100,7 +100,7 @@ export const MOYENS: Moyen[] = [
     id: "erreur_plaque",
     titre: "La plaque relevée n'est pas la mienne",
     explication:
-      "La lecture automatique des plaques se trompe : un 8 lu B, un 0 lu O. Vous n'avez rien à payer pour un véhicule qui n'est pas le vôtre, et vous pouvez exiger les photos du contrôle.",
+      "La ScanCar lit mal parfois : un 8 lu B, un 0 lu O. Pas votre véhicule, rien à payer. Exigez les photos.",
     force: "solide",
     fiabilite: "etablie",
     icone: "plaque",
@@ -115,7 +115,7 @@ export const MOYENS: Moyen[] = [
     id: "vehicule_vendu",
     titre: "Le véhicule ne m'appartenait plus",
     explication:
-      "Si la voiture était vendue, cédée ou louée à quelqu'un d'autre à la date du constat, la redevance ne vous concerne pas. La date de la vente et celle du transfert de plaque font foi.",
+      "Voiture vendue, cédée ou louée à la date du constat : pas votre redevance. Les dates de vente et de transfert de plaque font foi.",
     force: "solide",
     fiabilite: "etablie",
     icone: "cle-vendue",
@@ -133,7 +133,7 @@ export const MOYENS: Moyen[] = [
     id: "vehicule_vole",
     titre: "Le véhicule avait été volé",
     explication:
-      "Un véhicule volé ne vous engage plus. Le procès-verbal de plainte, daté d'avant le constat, suffit en général à clore le dossier.",
+      "Véhicule volé : rien à payer. La plainte, datée d'avant le constat, suffit en général.",
     force: "solide",
     fiabilite: "etablie",
     icone: "pv-police",
@@ -150,7 +150,7 @@ export const MOYENS: Moyen[] = [
     id: "paiement_impossible",
     titre: "Je n'ai pas pu payer : le système était en panne",
     explication:
-      "Un horodateur hors service ou une application qui refuse le paiement vous mettait dans l'impossibilité de payer. L'argument tient si vous en gardez une trace : photo, capture du message d'erreur.",
+      "Horodateur en panne, appli qui refuse : impossible de payer. Tient avec une trace : photo, capture de l'erreur.",
     force: "serieux",
     fiabilite: "etablie",
     icone: "horodateur-panne",
@@ -169,7 +169,7 @@ export const MOYENS: Moyen[] = [
     id: "signalisation",
     titre: "La signalisation était absente ou illisible",
     explication:
-      "Une obligation de payer doit être annoncée par une signalisation visible. Un panneau caché par un arbre, effacé ou absent fragilise la redevance — à condition de le photographier.",
+      "Payer doit être annoncé par un panneau visible. Caché, effacé, absent : photographiez-le.",
     force: "serieux",
     fiabilite: "etablie",
     icone: "panneau-illisible",
@@ -187,7 +187,7 @@ export const MOYENS: Moyen[] = [
     id: "arret",
     titre: "J'étais à l'arrêt, pas garé",
     explication:
-      "S'arrêter le temps de déposer quelqu'un ou de charger un colis n'est pas stationner. L'argument est recevable, mais il se prouve difficilement : un témoin ou un horodatage aide beaucoup.",
+      "Déposer quelqu'un, charger un colis : ce n'est pas stationner. Difficile à prouver : un témoin ou une heure aide.",
     force: "possible",
     fiabilite: "etablie",
     icone: "arret",
@@ -205,7 +205,7 @@ export const MOYENS: Moyen[] = [
     id: "doublon",
     titre: "On me réclame deux fois le même stationnement",
     explication:
-      "Une redevance forfaitaire couvre une période. Deux redevances pour le même stationnement, au même endroit, pendant cette période, c'est une de trop.",
+      "Un forfait couvre une période. Deux redevances, même lieu, même période : une de trop.",
     force: "serieux",
     fiabilite: "a_confirmer",
     icone: "doublon",
@@ -222,7 +222,7 @@ export const MOYENS: Moyen[] = [
     id: "jamais_recu",
     titre: "Je n'ai jamais reçu le premier courrier",
     explication:
-      "Sans la notification initiale, vous n'avez pas pu réagir à temps. Les frais de rappel qui en découlent se contestent, et l'organisme doit prouver l'envoi.",
+      "Sans premier courrier, impossible de réagir à temps. Les frais de rappel se contestent : l'organisme doit prouver l'envoi.",
     force: "serieux",
     fiabilite: "etablie",
     icone: "boite-lettres",
@@ -237,7 +237,7 @@ export const MOYENS: Moyen[] = [
     id: "deja_conteste",
     titre: "J'avais déjà contesté, sans réponse",
     explication:
-      "Une contestation restée sans réponse doit être tranchée avant tout recouvrement. On la réitère, copie à l'appui, et on demande la suspension des poursuites.",
+      "Une contestation sans réponse doit être tranchée avant tout recouvrement. On la renvoie, copie jointe, et on demande la suspension.",
     force: "serieux",
     fiabilite: "etablie",
     icone: "recommande",
@@ -252,7 +252,7 @@ export const MOYENS: Moyen[] = [
     id: "frais_ajoutes",
     titre: "Des frais ont été ajoutés au montant de départ",
     explication:
-      "Chaque frais de rappel ou de recouvrement doit reposer sur un texte. On demande lequel, et la preuve des courriers qui l'auraient justifié.",
+      "Chaque frais doit reposer sur un texte. On demande lequel, et la preuve des courriers.",
     force: "possible",
     fiabilite: "etablie",
     icone: "euros",
@@ -267,7 +267,7 @@ export const MOYENS: Moyen[] = [
     id: "deja_paye",
     titre: "J'ai déjà payé",
     explication:
-      "Si vous avez payé, toute poursuite doit cesser — et une somme payée en double se rembourse. La preuve du paiement suffit.",
+      "Payé : les poursuites cessent, un double paiement se rembourse. La preuve du paiement suffit.",
     force: "solide",
     fiabilite: "etablie",
     icone: "euro",

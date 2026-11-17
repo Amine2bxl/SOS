@@ -59,8 +59,8 @@ export function rappelDu(
         sujet: joursRestants === 0 ? "Dernier jour pour contester" : "Demain, dernier jour pour contester",
         message:
           joursRestants === 0
-            ? "C'est aujourd'hui le dernier jour du délai. Votre lettre est prête dans votre dossier : il ne reste qu'à l'envoyer, et à garder la preuve de l'envoi."
-            : "Le délai se termine demain. Votre lettre est prête dans votre dossier : envoyez-la aujourd'hui, et gardez la preuve de l'envoi.",
+            ? "Dernier jour du délai. Votre lettre est prête : envoyez-la, gardez la preuve d'envoi."
+            : "Le délai finit demain. Envoyez votre lettre aujourd'hui, gardez la preuve d'envoi.",
         libelleLien: "Envoyer ma lettre",
         ancre: "lettre",
       };
@@ -71,7 +71,7 @@ export function rappelDu(
         cle: "echeance-3",
         titre: TITRES_RAPPEL["echeance-3"],
         sujet: `Plus que ${joursRestants} jours pour contester`,
-        message: `Il reste ${joursRestants} jours pour contester. Votre lettre est prête dans votre dossier : relisez-la, complétez ce qui est surligné, et envoyez-la.`,
+        message: `Encore ${joursRestants} jours. Votre lettre est prête : relisez, complétez le jaune, envoyez.`,
         libelleLien: "Voir ma lettre",
         ancre: "lettre",
       };
@@ -86,7 +86,7 @@ export function rappelDu(
         cle: "relance",
         titre: TITRES_RAPPEL.relance,
         sujet: "Toujours pas de réponse ? Il est temps de relancer",
-        message: `Votre contestation est partie il y a ${depuis} jours, sans réponse. Une relance écrite fige votre position avant que la procédure n'avance : nous l'avons préparée dans votre dossier.`,
+        message: `Contestation envoyée il y a ${depuis} jours, sans réponse. Une relance écrite protège votre position : elle est prête dans votre dossier.`,
         libelleLien: "Préparer la relance",
         ancre: "lettre",
       };

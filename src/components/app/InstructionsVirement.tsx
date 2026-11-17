@@ -43,8 +43,7 @@ export function InstructionsVirement({
         Dernière étape : le virement
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-ink">
-        Votre adhésion {nomFormule} est réservée. Elle s&apos;active dès que le virement arrive sur
-        le compte de l&apos;association — en général un à deux jours ouvrables.
+        Adhésion {nomFormule} réservée. Active dès réception du virement : 1 à 2 jours ouvrables.
       </p>
 
       <dl className="mt-5 divide-y divide-line rounded-2xl border border-line bg-white">
@@ -80,9 +79,8 @@ export function InstructionsVirement({
           <div className="p-4">
             <dt className="text-sm text-ink-soft">Compte (IBAN)</dt>
             <dd className="mt-1 text-sm leading-relaxed text-ink">
-              Les coordonnées bancaires ne sont pas encore affichées ici.{" "}
-              <BoutonContact variante="lien">Demandez-les-nous</BoutonContact> en indiquant la
-              référence ci-dessous : nous répondons le jour même.
+              Coordonnées bancaires pas encore affichées.{" "}
+              <BoutonContact variante="lien">Demandez-les-nous</BoutonContact> avec la référence ci-dessous. Réponse le jour même.
             </dd>
           </div>
         )}
@@ -96,8 +94,7 @@ export function InstructionsVirement({
             className="shrink-0 border border-line p-1"
           />
           <p className="text-sm leading-relaxed text-ink">
-            <strong className="text-navy-900">Le plus simple :</strong> scannez ce QR code avec l&apos;application de votre
-            banque. Montant, compte et communication structurée sont déjà remplis.
+            <strong className="text-navy-900">Le plus simple :</strong> scannez ce QR code avec l&apos;appli de votre banque. Tout est prérempli.
           </p>
         </div>
       )}
@@ -106,7 +103,7 @@ export function InstructionsVirement({
           du virement que l'association ne peut pas deviner. */}
       <div className="mt-5 rounded-2xl border-l-4 border-navy-900 bg-navy-50 p-4">
         <p className="text-sm font-bold text-navy-900">
-          Communication structurée — à recopier exactement
+          Communication structurée, à recopier telle quelle
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <code className="select-all font-mono text-base font-bold tracking-wide text-navy-900">
@@ -115,16 +112,12 @@ export function InstructionsVirement({
           <CopierTexte valeur={communication} libelle="Copier la référence" />
         </div>
         <p className="mt-2 text-xs leading-relaxed text-ink-soft">
-          Votre banque propose un champ « communication structurée » : collez-la là. C&apos;est elle
-          qui rattache le paiement à votre compte. Sans elle, l&apos;activation prend plusieurs
-          jours, le temps que nous retrouvions qui a payé.
+          Collez-la dans le champ « communication structurée ». Sans elle, l&apos;activation prend plusieurs jours.
         </p>
       </div>
 
       <p className="mt-4 text-xs leading-relaxed text-ink-soft">
-        Aucune donnée bancaire ne vous est demandée sur ce site : le virement se fait depuis votre
-        banque, comme n&apos;importe quel autre. Vous recevrez un reçu une fois le paiement
-        enregistré.
+        Aucune donnée bancaire demandée ici. Reçu envoyé dès le paiement enregistré.
       </p>
     </Card>
   );

@@ -68,10 +68,10 @@ export function MandatDossier({
           <h2 className="font-display text-lg font-bold text-navy-900">L&apos;association à vos côtés</h2>
           <p className="mt-1 text-sm leading-relaxed text-ink-soft">
             {etat === "actif"
-              ? "L'association a accès à ce dossier, dans les limites que vous avez fixées."
+              ? "L'association voit ce dossier, dans les limites fixées."
               : membre
-                ? "Un bénévole relit votre dossier et vous répond par écrit. Il ne voit rien sans votre mandat."
-                : "Un bénévole peut examiner ce dossier, selon ses disponibilités — la relecture est garantie aux membres. Il ne voit rien sans votre mandat."}
+                ? "Un bénévole relit votre dossier et répond par écrit. Rien sans votre mandat."
+                : "Un bénévole peut l'examiner, selon ses disponibilités (garanti aux membres). Rien sans votre mandat."}
           </p>
         </div>
       </div>
@@ -203,8 +203,7 @@ export function MandatDossier({
 
       <p className="mt-4 flex items-start gap-2 text-xs leading-relaxed text-ink-faint">
         <IconeCadenas className="mt-0.5 h-4 w-4 shrink-0" />
-        Ni votre compte, ni vos autres dossiers : le mandat ne couvre que celui-ci. L&apos;accès s&apos;arrête dès que
-        vous le retirez ou à son échéance.
+        Ce dossier seulement. L&apos;accès s&apos;arrête au retrait ou à l&apos;échéance.
       </p>
     </section>
   );

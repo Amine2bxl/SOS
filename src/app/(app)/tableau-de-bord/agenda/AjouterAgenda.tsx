@@ -76,7 +76,7 @@ export function AbonnementAgenda({ jeton: initial, site }: { jeton: string | nul
     <section className="rounded-[var(--radius-carte)] border border-line/80 bg-card p-5 shadow-carte">
       <h2 className="font-display text-lg font-bold text-navy-900">Tout dans l&apos;agenda de votre téléphone</h2>
       <p className="mt-1 text-sm leading-relaxed text-ink-soft">
-        Abonnez-vous une fois : chaque date limite et chaque relance arrive toute seule dans votre agenda, avec un rappel.
+        Abonnez-vous une fois : dates limites et relances arrivent seules dans votre agenda, avec rappel.
       </p>
       {!url ? (
         <Btn variant="primary" taille="sm" className="mt-4" onClick={activer} disabled={enCours}>

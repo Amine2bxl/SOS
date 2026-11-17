@@ -57,7 +57,7 @@ export function FormulaireProfil(props: {
       </fieldset>
 
       {type === "organisation" && (
-        <Field label="Nom de l'organisation" required hint="Pour que l'association sache au nom de qui elle échange.">
+        <Field label="Nom de l'organisation" required hint="Le nom sous lequel vous écrivez.">
           <TextInput name="organisation" defaultValue={props.organisation} autoComplete="organization" required />
         </Field>
       )}
@@ -90,11 +90,11 @@ export function FormulaireProfil(props: {
         </Field>
       </div>
 
-      <Field label="Téléphone" hint="Facultatif. Il apparaît sous votre nom dans les lettres, pour qu'on puisse vous joindre.">
+      <Field label="Téléphone" hint="Facultatif. Sous votre nom, dans les lettres.">
         <TextInput name="telephone" type="tel" defaultValue={props.telephone} autoComplete="tel" placeholder="+32 470 00 00 00" />
       </Field>
 
-      <Field label="Langue de l'interface" hint="Les lettres, elles, partent dans la langue de l'administration.">
+      <Field label="Langue de l'interface" hint="Les lettres partent dans la langue de l'administration.">
         <select
           name="langueInterface"
           defaultValue={props.langueInterface}

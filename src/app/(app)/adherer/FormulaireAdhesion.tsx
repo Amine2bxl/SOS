@@ -40,9 +40,9 @@ export function FormulaireAdhesion({
       <h2 className="font-display text-lg font-bold text-navy-900">Comment ça se passe</h2>
       <ol className="mt-4 space-y-3 text-sm leading-relaxed text-ink">
         {[
-          "Vous confirmez ci-dessous. Rien n'est débité : aucune donnée bancaire ne vous est demandée ici.",
-          "Vous recevez le montant et la référence à indiquer sur votre virement.",
-          "Votre adhésion s'active dès réception du virement, en général sous un à deux jours ouvrables.",
+          "Vous confirmez ci-dessous. Rien n'est débité.",
+          "Vous recevez le montant et la référence du virement.",
+          "Active dès réception du virement : 1 à 2 jours ouvrables.",
         ].map((etape, i) => (
           <li key={etape} className="flex gap-3">
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-navy-900 text-xs font-bold text-gold-400">
@@ -64,7 +64,7 @@ export function FormulaireAdhesion({
       </Btn>
 
       <p className="mt-3 text-center text-xs text-ink-soft">
-        Vous pourrez renoncer avant de payer : une demande non réglée n&apos;engage à rien.
+        Pas payé = pas engagé. Vous pouvez renoncer.
       </p>
     </Card>
   );

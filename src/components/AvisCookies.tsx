@@ -86,8 +86,8 @@ export function AvisCookies() {
         </button>
       </div>
       <p className="mt-1 leading-relaxed text-ink-soft">
-        Ce site garde votre connexion et vos préférences, rien d&apos;autre : aucune mesure d&apos;audience, aucune
-        publicité, aucun réseau social. Pas besoin de votre accord, mais vous devez le savoir.
+        Votre connexion et vos préférences. Rien d&apos;autre : ni mesure d&apos;audience, ni publicité, ni réseau
+        social. Aucun accord à donner.
       </p>
 
       {details && (

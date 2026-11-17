@@ -17,18 +17,9 @@ const COMMUNICATION_DON = "Don SOS Citizens";
 
 /** Ce que l'argent finance, sans chiffre inventé. */
 const USAGES = [
-  {
-    titre: "L'outil, gratuit pour tous",
-    texte: "La vérification sans compte et les lettres en français et en néerlandais.",
-  },
-  {
-    titre: "L'accompagnement des dossiers",
-    texte: "Les réponses des bénévoles et les demandes de preuves aux administrations.",
-  },
-  {
-    titre: "L'information",
-    texte: "Les règles des 19 communes, tenues à jour.",
-  },
+  { titre: "L'outil", texte: "Vérification sans compte, lettres en français et en néerlandais." },
+  { titre: "Les dossiers", texte: "Réponses des bénévoles, demandes de preuves aux administrations." },
+  { titre: "L'information", texte: "Les règles des 19 communes, à jour." },
 ];
 
 export default function DonPage() {
@@ -40,10 +31,10 @@ export default function DonPage() {
       <div className="grid gap-10 lg:grid-cols-[1fr_minmax(0,26rem)] lg:items-start">
         <div>
           <h1 className="font-display text-[2.2rem] font-extrabold leading-[1.06] text-navy-900 text-balance sm:text-[3rem]">
-            Chaque don aide quelqu&apos;un à répondre à son courrier.
+            Votre don garde la vérification gratuite.
           </h1>
           <p className="mt-5 max-w-xl text-[1.05rem] leading-relaxed text-ink-soft">
-            {ASSO.nom} vit des adhésions et des dons. Votre don garde la vérification gratuite pour tous.
+            {ASSO.nom} vit des adhésions et des dons. Voici ce qu&apos;ils paient :
           </p>
           {/* Sur téléphone, le bloc pour donner tombe sous le texte : un raccourci y mène. */}
           <div className="mt-6 lg:hidden">
@@ -63,11 +54,18 @@ export default function DonPage() {
           </ul>
 
           <section className="mt-12 max-w-xl">
-            <h2 className="font-display text-xl font-bold text-navy-900">Don, adhésion : la différence</h2>
-            <p className="mt-2 leading-relaxed text-ink-soft">
-              Le don : un soutien, sans contrepartie. L&apos;adhésion : 70 € par an, dossiers illimités et relecture.
-              Pas d&apos;attestation fiscale pour l&apos;instant.
-            </p>
+            <h2 className="font-display text-xl font-bold text-navy-900">Don ou adhésion ?</h2>
+            <dl className="mt-4 grid grid-cols-2 gap-3">
+              <div className="rounded-2xl border border-line bg-card p-4">
+                <dt className="font-display font-bold text-navy-900">Don</dt>
+                <dd className="mt-1 text-sm leading-relaxed text-ink-soft">Montant libre. Sans contrepartie.</dd>
+              </div>
+              <div className="rounded-2xl border border-line bg-card p-4">
+                <dt className="font-display font-bold text-navy-900">Adhésion</dt>
+                <dd className="mt-1 text-sm leading-relaxed text-ink-soft">70 € par an. Dossiers illimités, relecture.</dd>
+              </div>
+            </dl>
+            <p className="mt-3 text-sm text-ink-soft">Pas d&apos;attestation fiscale pour l&apos;instant.</p>
             <div className="mt-5">
               <LinkBtn href="/tarifs" variant="secondary">
                 Voir l&apos;adhésion
@@ -83,7 +81,7 @@ export default function DonPage() {
           {carte && (
             <div className="mb-7 border-b border-white/10 pb-7">
               <h2 className="font-display text-2xl font-extrabold">Par carte</h2>
-              <p className="mt-1.5 text-sm leading-relaxed text-navy-100">Bancontact, carte bancaire ou Apple Pay. Paiement sécurisé par Stripe.</p>
+              <p className="mt-1.5 text-sm leading-relaxed text-navy-100">Bancontact, carte ou Apple Pay, via Stripe.</p>
               <a
                 href={carte}
                 target="_blank"
@@ -97,7 +95,7 @@ export default function DonPage() {
           )}
           <h2 className="font-display text-2xl font-extrabold">Par virement</h2>
           <p className="mt-1.5 text-sm leading-relaxed text-navy-100">
-            Depuis votre banque, du montant de votre choix. Aucune donnée bancaire ne vous est demandée ici.
+            Montant libre, depuis votre banque. Aucune donnée bancaire demandée ici.
           </p>
 
           <dl className="mt-6 divide-y divide-white/10 rounded-2xl bg-white/[0.06]">
@@ -114,11 +112,11 @@ export default function DonPage() {
                 </dd>
               ) : (
                 <dd className="mt-1 text-sm leading-relaxed text-navy-100">
-                  Les coordonnées du compte ne sont pas encore publiées ici.{" "}
+                  Pas encore publié ici.{" "}
                   <BoutonContact variante="lien" className="text-gold-300! decoration-gold-300/40! hover:text-white!">
-                    Demandez-les-nous
+                    Demandez-le
                   </BoutonContact>
-                  : nous répondons le jour même.
+                  , réponse le jour même.
                 </dd>
               )}
             </div>
@@ -140,9 +138,7 @@ export default function DonPage() {
           </dl>
           {banque && <DonVirement iban={banque.iban} bic={banque.bic} beneficiaire={banque.beneficiaire} />}
 
-          <p className="mt-5 text-sm leading-relaxed text-navy-100">
-            Merci : c&apos;est grâce à vous que l&apos;analyse reste gratuite.
-          </p>
+          <p className="mt-5 text-sm font-semibold text-gold-300">Merci.</p>
         </aside>
       </div>
     </div>

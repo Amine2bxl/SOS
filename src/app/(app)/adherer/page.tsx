@@ -12,9 +12,9 @@ export const metadata: Metadata = { title: "Devenir membre" };
 export const dynamic = "force-dynamic";
 
 const RAISONS = [
-  { Icone: IconeLettre, titre: "Tous vos courriers, toute l'année", texte: "Dossiers illimités : chaque redevance, chaque rappel, chaque relance." },
-  { Icone: IconeMainTendue, titre: "Une association derrière vous", texte: "Relecture de votre dossier par nos bénévoles, réponse prioritaire." },
-  { Icone: IconeBouclier, titre: "Vous défendez tout le monde", texte: "Votre cotisation fait vivre l'association et l'aide qu'elle apporte à tous." },
+  { Icone: IconeLettre, titre: "Tous vos courriers, toute l'année", texte: "Dossiers illimités : redevances, rappels, relances." },
+  { Icone: IconeMainTendue, titre: "Une association derrière vous", texte: "Un bénévole relit votre dossier. Réponse prioritaire." },
+  { Icone: IconeBouclier, titre: "Vous défendez tout le monde", texte: "Votre cotisation garde l'aide gratuite pour tous." },
 ];
 
 export default async function Adherer({ searchParams }: { searchParams: Promise<{ formule?: string }> }) {
@@ -51,8 +51,7 @@ export default async function Adherer({ searchParams }: { searchParams: Promise<
         Devenir membre
       </h1>
       <p className="mt-2 max-w-xl text-[1.05rem] text-ink-soft">
-        {formuleAffichee.prixAnnuel} € par an, sans engagement au-delà. Une redevance évitée, des frais de rappel en
-        moins : l&apos;adhésion se rembourse vite.
+        {formuleAffichee.prixAnnuel} € par an, sans engagement. Une redevance évitée et elle est remboursée.
       </p>
 
       <div className="mt-7 grid gap-5 md:grid-cols-[1fr_1.05fr] md:items-start">

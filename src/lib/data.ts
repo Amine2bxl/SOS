@@ -51,43 +51,33 @@ export type EtapeDoc = {
 
 export const DOCUMENTS: EtapeDoc[] = [
   {
-    titre: "1. La notification initiale",
-    cestQuoi:
-      "Le premier courrier après un contrôle par ScanCar, agent ou caméra. Il porte la référence, le lieu, la date, le montant et la marche à suivre pour contester.",
-    aFaire:
-      "Le meilleur moment pour agir. Ne payez pas si vous comptez contester : payer vaut reconnaissance des faits.",
+    titre: "1. La notification",
+    cestQuoi: "Le premier courrier après le contrôle (ScanCar, agent, caméra) : référence, lieu, date, montant.",
+    aFaire: "Le meilleur moment pour agir. Vous contestez ? Ne payez pas : payer vaut reconnaissance des faits.",
     gravite: "info",
   },
   {
     titre: "2. Le rappel",
-    cestQuoi:
-      "Il arrive quand vous n'avez ni payé ni répondu. Des frais s'ajoutent parfois au montant.",
-    aFaire:
-      "Répondez par écrit, avec preuve d'envoi. Si vous aviez déjà contesté, joignez votre premier courrier.",
+    cestQuoi: "Ni payé, ni répondu. Des frais s'ajoutent parfois.",
+    aFaire: "Répondez par écrit, avec preuve d'envoi. Déjà contesté ? Joignez votre premier courrier.",
     gravite: "attention",
   },
   {
     titre: "3. La mise en demeure",
-    cestQuoi:
-      "Un courrier formel qui exige le paiement dans un délai précis. Dernier stade avant le recouvrement forcé.",
-    aFaire:
-      "Ne l'ignorez pas. Répondez par écrit dans le délai indiqué et demandez la suspension du recouvrement.",
+    cestQuoi: "Paiement exigé dans un délai précis. Dernière étape avant le recouvrement forcé.",
+    aFaire: "Répondez par écrit dans le délai. Demandez la suspension du recouvrement.",
     gravite: "attention",
   },
   {
     titre: "4. La contrainte",
-    cestQuoi:
-      "Un acte qui rend la dette exécutoire : l'administration peut la récupérer de force.",
-    aFaire:
-      "Des recours existent, avec des délais courts. Appelez-nous pour voir ce qui reste possible.",
+    cestQuoi: "La dette devient exécutoire : l'administration peut la récupérer de force.",
+    aFaire: "Des recours existent, avec des délais courts. Écrivez-nous vite.",
     gravite: "urgent",
   },
   {
-    titre: "5. L'huissier de justice",
-    cestQuoi:
-      "Un huissier intervient pour récupérer la somme. Les frais grimpent : saisie, citation.",
-    aFaire:
-      "Appelez-nous. Et n'ignorez aucun courrier de l'huissier.",
+    titre: "5. L'huissier",
+    cestQuoi: "Il vient récupérer la somme. Les frais grimpent : saisie, citation.",
+    aFaire: "Écrivez-nous. N'ignorez aucun courrier de l'huissier.",
     gravite: "urgent",
   },
 ];
@@ -98,47 +88,41 @@ export const DOCUMENTS: EtapeDoc[] = [
 
 export const NOTIONS: { titre: string; texte: string }[] = [
   {
-    titre: "Une redevance n'est pas une amende de police",
-    texte:
-      "C'est une dette administrative réclamée par la commune ou son opérateur. Aucun tribunal, aucun casier. Elle suit sa propre procédure, distincte du PV de police et de la sanction administrative communale (SAC).",
+    titre: "Une redevance n'est pas une amende",
+    texte: "Une dette administrative, réclamée par la commune ou son opérateur. Pas de tribunal, pas de casier. Ni PV de police, ni sanction communale (SAC).",
   },
   {
     titre: "La ScanCar",
-    texte:
-      "Une voiture à caméras qui lit les plaques et les compare aux paiements enregistrés. Chaque contrôle laisse une photo, une heure et une position. Ces données existent, et vous avez le droit de les réclamer.",
+    texte: "Une voiture à caméras : elle lit les plaques et les compare aux paiements. Chaque contrôle laisse une photo, une heure, une position. Vous pouvez les réclamer.",
   },
   {
-    titre: "La zone compte autant que la rue",
-    texte:
-      "Chaque commune découpe son territoire en zones rouge, verte ou bleue, avec ses tarifs et ses horaires. Ce qui s'applique à votre dossier : le règlement de la zone exacte, à la date du contrôle.",
+    titre: "La zone compte",
+    texte: "Rouge, verte, bleue : chaque zone a ses tarifs et ses horaires. Ce qui compte : le règlement de votre zone, le jour du contrôle.",
   },
   {
     titre: "Arrêt ou stationnement ?",
-    texte:
-      "S'arrêter le temps de faire monter quelqu'un ou de charger ne compte pas toujours comme du stationnement. À vous de le prouver : durée, présence au volant, témoin, photo.",
+    texte: "Charger, déposer quelqu'un : pas toujours du stationnement. À prouver : durée, présence au volant, témoin, photo.",
   },
   {
-    titre: "Vous avez des droits sur vos données",
-    texte:
-      "Les photos et les journaux de contrôle vous concernent : ce sont des données personnelles. Le RGPD vous permet d'en réclamer une copie, séparément de votre contestation.",
+    titre: "Vos données",
+    texte: "Les photos et journaux du contrôle sont vos données personnelles. Le RGPD vous donne droit à une copie, à part de la contestation.",
   },
   {
-    titre: "Payer, c'est souvent reconnaître",
-    texte:
-      "Payer clôture le dossier, et revenir en arrière devient très difficile. Tranchez avant de payer, pas après.",
+    titre: "Payer, c'est reconnaître",
+    texte: "Payer clôt le dossier. Revenir en arrière devient très difficile. Décidez avant de payer.",
   },
 ];
 
 /** Les preuves qui pèsent le plus dans un dossier. */
 export const PREUVES = [
-  "Le reçu de paiement horodaté, avec la plaque et la zone",
-  "La capture d'écran de l'application montrant la session active",
-  "Le relevé bancaire correspondant",
-  "Des photos du lieu, de la signalisation et du marquage au sol",
-  "La copie de votre carte riverain, professionnelle ou PMR",
-  "La preuve que votre plaque était bien enregistrée",
-  "Les accusés de réception et copies de tous vos courriers",
-  "L'acte de vente ou le contrat de location si le véhicule n'était plus à vous",
+  "Ticket horodaté (plaque, zone)",
+  "Capture de l'appli : session active",
+  "Relevé bancaire du paiement",
+  "Photos du lieu, des panneaux, du marquage",
+  "Carte riverain, professionnelle ou PMR",
+  "Preuve que la plaque était enregistrée",
+  "Copies et accusés de réception de vos courriers",
+  "Acte de vente ou contrat de location, si le véhicule n'était plus à vous",
 ];
 
 /* -------------------------------------------------------------------------- */
@@ -499,56 +483,56 @@ export const FAQS: Faq[] = [
   {
     question: "Contester me dispense-t-il de payer ?",
     reponse:
-      "Non, et c'est le piège le plus fréquent. Introduire une contestation ne suspend pas l'obligation de payer dans le délai indiqué sur votre courrier. Si votre contestation aboutit, la procédure est annulée et les sommes déjà versées vous sont remboursées. Décidez donc en connaissance de cause, et gardez la preuve de tout ce que vous envoyez.",
+      "Non. Contester ne suspend pas le délai de paiement imprimé sur le courrier. Si vous gagnez, ce que vous avez payé est remboursé. Gardez une preuve de chaque envoi.",
   },
   {
     question: "Combien coûte votre aide ?",
     reponse:
-      "L'aide par écrit — WhatsApp ou e-mail — ne coûte rien, sans limite de dossiers ; nous vous rappelons si votre situation le demande. Sur le site, vos deux premières contestations sont gratuites ; au-delà, l'adhésion ouvre les contestations illimitées. Nous sommes une ASBL, pas un cabinet : personne ne prend de commission sur ce que vous récupérez.",
+      "L'aide écrite (WhatsApp, e-mail) : gratuite, sans limite. Sur le site : 2 dossiers offerts, puis l'adhésion. Aucune commission sur ce que vous récupérez.",
   },
   {
-    question: "Je viens de recevoir un courrier. Que dois-je faire en premier ?",
+    question: "Je viens de recevoir un courrier. Je fais quoi ?",
     reponse:
-      "Ne payez pas tout de suite si vous pensez contester : payer clôture le dossier. Relevez d'abord la date du constat, le délai pour réagir et la commune. Rassemblez vos preuves : reçu, capture de l'application, photos. Puis appelez-nous ou utilisez notre outil.",
+      "Vous voulez contester ? Ne payez pas : payer clôt le dossier. Notez la date du constat, le délai, la commune. Réunissez vos preuves : ticket, capture de l'appli, photos. Puis vérifiez la lettre ici.",
   },
   {
-    question: "Puis-je encore contester par e-mail auprès de parking.brussels ?",
+    question: "Puis-je contester par e-mail auprès de parking.brussels ?",
     reponse:
-      "Non. Depuis le 15 mars 2026, parking.brussels rejette les contestations par e-mail et impose son formulaire en ligne. Collez-y votre courrier, puis gardez une capture d'écran de l'envoi et du numéro de suivi.",
+      "Non. Depuis le 15 mars 2026 : formulaire en ligne uniquement. Collez-y votre lettre. Gardez une capture de l'envoi et du numéro de suivi.",
   },
   {
     question: "Quel est le délai pour contester ?",
     reponse:
-      "Il est plus court qu'on ne le croit. parking.brussels prévoit 10 jours calendrier à compter de la réception de l'invitation à payer ; les communes fixent leur propre délai, parfois plus long. C'est toujours la mention portée sur votre courrier qui fait foi. En cas de doute, agissez le jour même : un courrier envoyé tôt est toujours plus solide qu'un courrier tardif.",
+      "parking.brussels : 10 jours calendrier après réception. Les communes : leur propre délai, parfois plus long. Le délai imprimé sur votre courrier fait foi. Dans le doute, agissez le jour même.",
   },
   {
-    question: "Ma session d'application était active, et j'ai quand même reçu une redevance.",
+    question: "Ma session d'appli était active, et j'ai reçu une redevance.",
     reponse:
-      "C'est l'un des cas les plus fréquents. Conservez la capture d'écran montrant la date, l'heure, la plaque et la zone, ainsi que le relevé bancaire. Contestez en joignant ces pièces et demandez les photographies du contrôle pour comparer les heures.",
+      "Cas fréquent. Gardez la capture (date, heure, plaque, zone) et le relevé bancaire. Contestez avec ces pièces. Demandez les photos du contrôle pour comparer les heures.",
   },
   {
-    question: "Puis-je demander les photos prises par la ScanCar ?",
+    question: "Puis-je demander les photos de la ScanCar ?",
     reponse:
-      "Oui, et c'est souvent décisif. Vous pouvez demander les photographies originales, leurs métadonnées et les journaux horodatés du contrôle : d'une part dans le cadre de votre contestation, d'autre part au titre du RGPD en tant que données personnelles. Ce sont deux démarches distinctes et complémentaires.",
+      "Oui, souvent décisif : photos originales, métadonnées, journaux horodatés. Deux voies, complémentaires : dans la contestation, et au titre du RGPD.",
   },
   {
     question: "Que se passe-t-il si je ne réponds pas ?",
     reponse:
-      "Le dossier avance sans vous, et la note grimpe : un rappel s'ajoute au plus tôt 40 jours après le premier courrier, avec 15 € de frais administratifs. Viennent ensuite la mise en demeure, puis une contrainte 30 jours plus tard, signifiée par un huissier — à ce stade les frais dépassent largement la redevance de départ. Répondre par écrit, même pour contester, stoppe cette mécanique et laisse une trace.",
+      "Les frais montent. Rappel au plus tôt 40 jours après : +15 €. Puis mise en demeure. Puis contrainte 30 jours plus tard, par huissier. Répondre par écrit stoppe cette mécanique et laisse une trace.",
   },
   {
-    question: "Un huissier me contacte déjà. Est-ce trop tard ?",
+    question: "Un huissier me contacte. Trop tard ?",
     reponse:
-      "Ce n'est pas nécessairement trop tard, mais les délais sont courts et la situation demande un examen individuel. Appelez-nous rapidement et surtout, n'ignorez aucun courrier de l'huissier.",
+      "Pas forcément. Mais les délais sont courts : écrivez-nous vite. N'ignorez aucun courrier de l'huissier.",
   },
   {
-    question: "Garantissez-vous que ma redevance sera annulée ?",
+    question: "Garantissez-vous l'annulation ?",
     reponse:
-      "Non, et méfiez-vous de quiconque vous le promet. Nous vous aidons à comprendre votre dossier, réunir les bonnes preuves et contester dans les délais. La décision revient à l'administration, puis au juge.",
+      "Non. Méfiez-vous de qui le promet. On vous aide à comprendre, réunir les preuves, contester à temps. L'administration décide, puis le juge.",
   },
   {
     question: "Êtes-vous des avocats ?",
     reponse:
-      "Non. SOS Citizens ASBL est une association citoyenne d'information et d'accompagnement. Beaucoup de personnes sont renvoyées vers un avocat sans en avoir les moyens : notre rôle est de leur permettre de se défendre elles-mêmes. Pour les situations les plus lourdes, nous vous orientons vers un professionnel.",
+      "Non. Une association d'information et d'accompagnement, pour vous défendre vous-même. Situation lourde : on vous oriente vers un professionnel.",
   },
 ];

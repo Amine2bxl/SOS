@@ -56,8 +56,8 @@ export function SupprimerCompte({ dossiers }: { dossiers: number }) {
 
         {dossiers > 0 && (
           <p className="mt-4 text-sm leading-relaxed text-ink-soft">
-            Si une contestation est en cours, téléchargez votre lettre avant de continuer : nous
-            n&apos;en garderons aucune copie, et le délai, lui, continue de courir.
+            Contestation en cours ? Téléchargez d&apos;abord votre lettre : aucune copie n&apos;est gardée, et le délai court
+            toujours.
           </p>
         )}
 

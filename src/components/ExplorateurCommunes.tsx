@@ -346,16 +346,14 @@ export function ExplorateurCommunes({
 
           {!fiche.ouverte && (
             <p className="mt-4 rounded-2xl border-l-4 border-azur-600 bg-azur-50 p-3.5 text-sm leading-relaxed text-ink">
-              Les règles de cette commune sont en cours de vérification. En attendant, les repères
-              ci-dessous sont généraux : vérifiez le règlement officiel.
+              Règles en cours de vérification. Repères généraux ci-dessous : vérifiez le règlement officiel.
             </p>
           )}
 
           {fiche.prochaine && (
             <p className="mt-4 rounded-2xl border-l-4 border-gold-400 bg-gold-50 p-3.5 text-sm leading-relaxed text-ink">
-              <span className="font-bold text-navy-900">Nouveau règlement annoncé :</span> il entre en
-              vigueur le {dateLisible(fiche.prochaine.enVigueurDepuis)}. Pour un constat fait avant
-              cette date, ce sont les règles ci-dessous qui s&apos;appliquent.
+              <span className="font-bold text-navy-900">Nouveau règlement le {dateLisible(fiche.prochaine.enVigueurDepuis)}.</span>{" "}
+              Constat avant cette date : les règles ci-dessous s&apos;appliquent.
             </p>
           )}
 
@@ -434,8 +432,7 @@ export function ExplorateurCommunes({
           </div>
 
           <p className="mt-4 text-xs leading-relaxed text-ink-soft">
-            Les horaires, tarifs et plages de gratuité exacts figurent dans le règlement communal en
-            vigueur à la date de votre constat : vérifiez toujours la version officielle avant de
+            Horaires, tarifs et gratuité exacts : dans le règlement en vigueur le jour du constat. Vérifiez-le avant de
             contester.
           </p>
         </section>
@@ -448,7 +445,7 @@ export function ExplorateurCommunes({
             Les dernières modifications
           </h2>
           <p className="mt-1 text-sm text-ink-soft">
-            Ce qui a changé ces douze derniers mois, de la plus récente à la plus ancienne.
+            Les 12 derniers mois, du plus récent au plus ancien.
           </p>
           <ul className="mt-4 grid gap-2 md:grid-cols-2">
             {recents.map((c) => (
