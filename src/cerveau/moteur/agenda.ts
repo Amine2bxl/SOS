@@ -51,19 +51,18 @@ function plier(ligne: string): string {
   return morceaux.join("\r\n ");
 }
 
-export function genererIcs(e: EvenementAgenda, maintenant = new Date()): string {
+function horodatageIcs(maintenant: Date) {
+  return maintenant.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+}
+
+/** Les lignes d'un événement « journée entière », avec ses alarmes. */
+function lignesEvenement(e: EvenementAgenda, horodatage: string): string[] {
   const jour = e.date.replace(/-/g, "");
   const lendemain = new Date(`${e.date}T00:00:00Z`);
   lendemain.setUTCDate(lendemain.getUTCDate() + 1);
   const fin = lendemain.toISOString().slice(0, 10).replace(/-/g, "");
-  const horodatage = maintenant.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
 
   const lignes = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//SOS Citizens ASBL//Rappels//FR",
-    "CALSCALE:GREGORIAN",
-    "METHOD:PUBLISH",
     "BEGIN:VEVENT",
     `UID:${e.uid}@sos-citizens`,
     `DTSTAMP:${horodatage}`,
@@ -87,7 +86,42 @@ export function genererIcs(e: EvenementAgenda, maintenant = new Date()): string 
       "END:VALARM",
     );
   }
+  lignes.push("END:VEVENT");
+  return lignes;
+}
 
-  lignes.push("END:VEVENT", "END:VCALENDAR");
+export function genererIcs(e: EvenementAgenda, maintenant = new Date()): string {
+  const lignes = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//SOS Citizens ASBL//Rappels//FR",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    ...lignesEvenement(e, horodatageIcs(maintenant)),
+    "END:VCALENDAR",
+  ];
+  return lignes.map(plier).join("\r\n") + "\r\n";
+}
+
+/**
+ * Un calendrier complet, à s'abonner : l'agenda du téléphone le relit tout
+ * seul (toutes les quelques heures), et chaque nouvelle échéance y apparaît
+ * sans rien faire. `X-WR-CALNAME` donne son nom au calendrier dans l'appli.
+ */
+export function genererCalendrier(evenements: EvenementAgenda[], nom = "SOS Citizens", maintenant = new Date()): string {
+  const horodatage = horodatageIcs(maintenant);
+  const lignes = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//SOS Citizens ASBL//Agenda//FR",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    `X-WR-CALNAME:${echapper(nom)}`,
+    "X-WR-TIMEZONE:Europe/Brussels",
+    "REFRESH-INTERVAL;VALUE=DURATION:PT6H",
+    "X-PUBLISHED-TTL:PT6H",
+    ...evenements.flatMap((e) => lignesEvenement(e, horodatage)),
+    "END:VCALENDAR",
+  ];
   return lignes.map(plier).join("\r\n") + "\r\n";
 }

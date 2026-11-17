@@ -19,7 +19,7 @@ export type { OptionsLettre, LettreComposee } from "./moteur/lettres";
 export { questionsAPoser, QUESTIONS } from "./base/questions";
 export { REGIONS, LIBELLES_STADE } from "./base/regions";
 export { MOYENS } from "./base/moyens";
-export { genererIcs } from "./moteur/agenda";
+export { genererIcs, genererCalendrier } from "./moteur/agenda";
 export type * from "./types";
 
 /** Les fiches et le corpus, indexés une seule fois par instance de serveur. */

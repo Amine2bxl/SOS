@@ -31,6 +31,7 @@ import { AtelierLettre } from "./AtelierLettre";
 import { SuiviDossier } from "./SuiviDossier";
 import { CorrectionFaits, MontantsDossier, PiecesDossier, QuestionOuverte } from "./AnalyseInteractive";
 import { MandatDossier } from "./MandatDossier";
+import { urlDuSite } from "@/lib/url-site";
 import { ControleCourrier, SoldeExplique, TraceDelai } from "@/components/controle-ui";
 import { reconstruireSolde } from "@/cerveau/moteur/controle";
 
@@ -326,6 +327,7 @@ export default async function FicheDossier({
                   preuveEnvoi: dossier.preuve_envoi ?? null,
                   accuseLe: dossier.accuse_reception_le ?? null,
                 }}
+                site={urlDuSite()}
                 accompagnement={
                   <MandatDossier dossierId={id} mandat={mandat} membre={(profil?.plan ?? "gratuit") !== "gratuit"} />
                 }

@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { changerStatut, noterAccuseReception, supprimerDossier } from "@/lib/dossiers-actions";
 import type { Evenement } from "@/lib/dossiers-format";
 import { MODES_ENVOI, formatDate } from "@/lib/dossiers-format";
-import { genererIcs } from "@/cerveau/moteur/agenda";
 import { Btn } from "@/components/ui";
 import { Modale, EnTeteModale } from "@/components/Modale";
+import { AjouterAgenda } from "../agenda/AjouterAgenda";
 import {
   IconeAgenda,
   IconeBalance,
@@ -41,6 +41,7 @@ export function SuiviDossier({
   conseilRejet,
   preuves,
   accompagnement,
+  site,
 }: {
   dossierId: string;
   statut: string;
@@ -55,6 +56,8 @@ export function SuiviDossier({
   };
   /** La section « accompagnement » (mandat), placée avant l'historique. */
   accompagnement?: React.ReactNode;
+  /** Adresse du site, pour les liens d'agenda (Google, Outlook). */
+  site: string;
   /** La date qui compte, pour l'agenda du téléphone. */
   echeance: string | null;
   titreEcheance: string;
@@ -67,24 +70,6 @@ export function SuiviDossier({
   const envoye = statut === "contestation_envoyee" || statut === "en_attente_reponse";
   const termine = statut === "accepte" || statut === "clos";
 
-  const ajouterAgenda = () => {
-    if (!echeance) return;
-    const ics = genererIcs({
-      uid: `dossier-${dossierId}`,
-      titre: titreEcheance,
-      date: echeance,
-      description: `Dossier SOS Citizens : ${window.location.origin}/tableau-de-bord/${dossierId}`,
-      url: `${window.location.origin}/tableau-de-bord/${dossierId}`,
-      rappels: [3, 1, 0],
-    });
-    const lien = document.createElement("a");
-    lien.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar;charset=utf-8" }));
-    lien.download = "echeance-sos-citizens.ics";
-    document.body.appendChild(lien);
-    lien.click();
-    lien.remove();
-    window.setTimeout(() => URL.revokeObjectURL(lien.href), 2000);
-  };
 
   return (
     <div className="space-y-4">
@@ -149,10 +134,17 @@ export function SuiviDossier({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-display text-lg font-bold text-navy-900">Historique</h2>
           {echeance && !termine && (
-            <Btn variant="secondary" taille="sm" onClick={ajouterAgenda}>
-              <IconeAgenda className="h-5 w-5" />
-              Mettre l&apos;échéance dans mon agenda
-            </Btn>
+            <AjouterAgenda
+              site={site}
+              ev={{
+                id: `dossier-${dossierId}`,
+                date: echeance,
+                type: "echeance",
+                titre: titreEcheance,
+                detail: "Dernier jour pour agir. Envoyez votre lettre au plus tard ce jour-là.",
+                lien: `/tableau-de-bord/${dossierId}`,
+              }}
+            />
           )}
         </div>
         {evenements.length === 0 ? (

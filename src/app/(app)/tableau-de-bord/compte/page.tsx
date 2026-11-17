@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { lireAdhesionEnAttente, lireProfil, listerDossiers } from "@/lib/dossiers";
 import { contestationsRestantes, planById } from "@/lib/plans";
 import { LinkBtn } from "@/components/ui";
@@ -155,7 +156,11 @@ export default async function MonCompte() {
       </section>
 
       <p className="mt-8 text-center text-sm text-ink-soft">
-        Une question sur votre compte ? <BoutonContact variante="lien">Écrivez-nous</BoutonContact>
+        Une question ?{" "}
+        <Link href="/tableau-de-bord/aide" className="font-semibold text-navy-700 underline decoration-navy-200 underline-offset-4">
+          Aide
+        </Link>{" "}
+        · <BoutonContact variante="lien">Écrivez-nous</BoutonContact>
       </p>
     </div>
   );

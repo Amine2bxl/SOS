@@ -130,7 +130,7 @@ export function CoquilleApp({ membre, children }: { membre: InfosMembre; childre
           className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-card pb-[env(safe-area-inset-bottom)] lg:hidden"
         >
           <ul className="mx-auto grid max-w-lg grid-cols-5 items-end px-2">
-            {MODULES.map((m) => (
+            {MODULES.filter((m) => !m.horsOnglets).map((m) => (
               <li key={m.href} className="flex justify-center">
                 <OngletMobile module={m} actif={actif?.href === m.href} />
               </li>

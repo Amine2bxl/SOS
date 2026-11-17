@@ -10,8 +10,9 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const { moduleActif, MODULES } = require("../.test-build/components/app/modules.js");
 
-test("cinq entrées, pas une de plus", () => {
-  assert.equal(MODULES.length, 5);
+test("six entrées, cinq onglets sur téléphone", () => {
+  assert.equal(MODULES.length, 6);
+  assert.equal(MODULES.filter((m) => !m.horsOnglets).length, 5);
 });
 
 test("l'accueil n'avale pas les autres pages", () => {
