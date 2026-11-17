@@ -25,6 +25,13 @@ export const ASSO = {
   email: "azmo007@protonmail.com",
   /** Compte TikTok de l'association. */
   tiktok: "soscitizens",
+  /**
+   * Compte de l'ASBL pour les dons et les adhésions. Repris du site
+   * soscitizens.be, où il est publié au nom de « SOS CITIZENS asbl » avec le
+   * même numéro d'entreprise (BCE 1012.534.203) ; clé de contrôle vérifiée le
+   * 17/11/2026. La variable `IBAN_ASSOCIATION` le remplace si elle est définie.
+   */
+  iban: "BE39 0689 5382 9319",
   president: "Mohamed Azouzi",
   administrateurs: ["Mohamed Azouzi", "Mohamed Boutrika"],
 } as const;

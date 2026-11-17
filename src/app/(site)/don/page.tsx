@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ASSO } from "@/lib/data";
-import { coordonneesBancaires } from "@/lib/paiement";
+import { coordonneesBancaires, lienDonCarte } from "@/lib/paiement";
 import { CopierTexte } from "@/components/CopierTexte";
 import { BoutonContact } from "@/components/Contact";
 import { LinkBtn } from "@/components/ui";
@@ -32,6 +32,7 @@ const USAGES = [
 
 export default function DonPage() {
   const banque = coordonneesBancaires();
+  const carte = lienDonCarte();
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:py-16">
@@ -43,6 +44,13 @@ export default function DonPage() {
           <p className="mt-5 max-w-xl text-[1.05rem] leading-relaxed text-ink-soft">
             {ASSO.nom} vit des adhésions et des dons. Votre don garde la vérification gratuite pour tous.
           </p>
+          {/* Sur téléphone, le bloc pour donner tombe sous le texte : un raccourci y mène. */}
+          <div className="mt-6 lg:hidden">
+            <LinkBtn href="#donner" variant="gold">
+              Faire un don maintenant
+              <IconeFleche className="h-4 w-4 rotate-90" />
+            </LinkBtn>
+          </div>
 
           <ul className="mt-10 space-y-6">
             {USAGES.map((u) => (
@@ -70,7 +78,22 @@ export default function DonPage() {
 
         {/* Le bloc de virement suit la page au défilement sur grand écran :
             c'est lui qu'on vient chercher. */}
-        <aside className="rounded-[var(--radius-carte)] bg-navy-900 p-6 text-white shadow-flotte sm:p-7 lg:sticky lg:top-24">
+        <aside id="donner" className="scroll-mt-20 rounded-[var(--radius-carte)] bg-navy-900 p-6 text-white shadow-flotte sm:p-7 lg:sticky lg:top-24">
+          {carte && (
+            <div className="mb-7 border-b border-white/10 pb-7">
+              <h2 className="font-display text-2xl font-extrabold">Par carte</h2>
+              <p className="mt-1.5 text-sm leading-relaxed text-navy-100">Bancontact, carte bancaire ou Apple Pay. Paiement sécurisé par Stripe.</p>
+              <a
+                href={carte}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 flex h-12 items-center justify-center gap-2 rounded-full bg-gold-400 text-base font-bold text-navy-950 shadow-bouton transition hover:bg-gold-300 active:scale-[0.97]"
+              >
+                Donner par carte
+                <IconeFleche className="h-5 w-5" />
+              </a>
+            </div>
+          )}
           <h2 className="font-display text-2xl font-extrabold">Par virement</h2>
           <p className="mt-1.5 text-sm leading-relaxed text-navy-100">
             Depuis votre banque, du montant de votre choix. Aucune donnée bancaire ne vous est demandée ici.
