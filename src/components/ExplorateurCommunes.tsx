@@ -138,7 +138,16 @@ function LigneChangement({ c, nouveau, commune }: { c: Changement; nouveau: bool
  * choisie, et ce qui a changé. Les règles viennent de la base, lues à chaque
  * visite et suivies en direct ; à défaut, des repères de référence du site.
  */
-export function ExplorateurCommunes({ direct, slugInitial }: { direct: ReglesEnDirect; slugInitial?: string }) {
+export function ExplorateurCommunes({
+  direct,
+  slugInitial,
+  chemin = "/communes",
+}: {
+  direct: ReglesEnDirect;
+  slugInitial?: string;
+  /** La page qui l'accueille : le site public, ou l'espace membre. */
+  chemin?: string;
+}) {
   useSuivreLaBase();
 
   const recents = useMemo(() => changementsRecents(direct.changements, direct.aujourdhui), [direct]);
@@ -186,7 +195,7 @@ export function ExplorateurCommunes({ direct, slugInitial }: { direct: ReglesEnD
   const choisir = (nouveau: string) => {
     setSlug(nouveau);
     // L'adresse suit la commune choisie : un lien partagé rouvre la même fiche.
-    window.history.replaceState(null, "", `/communes?commune=${nouveau}`);
+    window.history.replaceState(null, "", `${chemin}?commune=${nouveau}`);
   };
 
   const chercher = (texte: string) => {

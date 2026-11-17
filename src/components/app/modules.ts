@@ -1,7 +1,9 @@
 /**
  * La navigation de l'espace membre.
  *
- * Six entrées sur ordinateur, cinq onglets sur téléphone (l'Aide reste dans la barre latérale et le compte). L'ancienne version en comptait sept, dont
+ * Sept entrées sur ordinateur, cinq onglets sur téléphone : l'Aide reste dans
+ * la barre latérale et le compte, et « Mon compte » est la pastille ronde en
+ * haut à droite de l'écran. L'ancienne version en comptait sept, dont
  * trois qui faisaient presque la même chose (« Contester », « Rédiger ma
  * lettre », « Règles de ma commune »). Tout ce qui concerne un dossier vit
  * maintenant DANS le dossier : sa lettre, son analyse, son suivi. La
@@ -18,7 +20,7 @@ export type Module = {
   court: string;
   /** Une phrase, à la deuxième personne, qui dit à quoi sert l'entrée. */
   phrase: string;
-  icone: "maison" | "dossiers" | "scan-doc" | "bouee" | "personne" | "agenda";
+  icone: "maison" | "dossiers" | "scan-doc" | "bouee" | "personne" | "agenda" | "hotel-de-ville";
   /** L'action principale : mise en avant (bouton jaune, onglet central). */
   principal?: boolean;
   /** Autres chemins qui appartiennent à cette entrée. */
@@ -58,6 +60,13 @@ export const MODULES: Module[] = [
     icone: "agenda",
   },
   {
+    href: "/tableau-de-bord/communes",
+    titre: "Communes",
+    court: "Communes",
+    phrase: "Les règles de stationnement des 19 communes : zones, horaires, gratuité, changements.",
+    icone: "hotel-de-ville",
+  },
+  {
     href: "/tableau-de-bord/aide",
     titre: "Aide",
     court: "Aide",
@@ -72,6 +81,8 @@ export const MODULES: Module[] = [
     phrase: "Vos coordonnées, votre adhésion, vos données.",
     icone: "personne",
     alias: ["/adherer"],
+    // Sur téléphone : la pastille ronde en haut à droite.
+    horsOnglets: true,
   },
 ];
 

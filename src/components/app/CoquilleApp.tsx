@@ -7,6 +7,7 @@ import { Logo, MarqueSos } from "@/components/Logo";
 import { ICONES, IconeMainTendue, IconeScanDoc, IconeSortie } from "@/components/icones";
 import { MODULES, moduleActif, type Module } from "@/components/app/modules";
 import { seDeconnecter } from "@/lib/auth-actions";
+import { RepriseBrouillon } from "@/components/app/RepriseBrouillon";
 
 export type InfosMembre = {
   prenom: string;
@@ -121,6 +122,8 @@ export function CoquilleApp({ membre, children }: { membre: InfosMembre; childre
         </header>
 
         <main id="contenu" className="flex-1 pb-28 lg:pb-12">
+          {/* Sur la page de scan, la reprise se fait d'elle-même. */}
+          {!chemin.startsWith("/tableau-de-bord/nouveau") && <RepriseBrouillon />}
           {children}
         </main>
 

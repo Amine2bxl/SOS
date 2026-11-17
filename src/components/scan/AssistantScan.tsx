@@ -310,11 +310,21 @@ export function AssistantScan({ mode }: { mode: "membre" | "visiteur" }) {
     [extrait],
   );
 
+  // Visiteur : dès que les informations sont confirmées, l'analyse est gardée
+  // dans le navigateur. S'il crée son compte par un autre chemin que le bouton
+  // final, son espace la lui proposera quand même.
+  useEffect(() => {
+    if (mode === "visiteur" && (etape === "questions" || etape === "verdict")) enregistrerBrouillon({ form, reponses, ocrConfiance });
+  }, [mode, etape, form, reponses, ocrConfiance]);
+
+
   const creer = () => {
     setErreur(null);
     if (mode === "visiteur") {
       enregistrerBrouillon({ form, reponses, ocrConfiance });
-      router.push(`/connexion?suite=${encodeURIComponent("/tableau-de-bord/nouveau?reprise=1")}`);
+      // L'onglet « Créer un compte » s'ouvre d'office ; un membre qui a déjà
+      // un compte passe sur « Se connecter » d'un geste.
+      router.push(`/connexion?compte=nouveau&suite=${encodeURIComponent("/tableau-de-bord/nouveau?reprise=1")}`);
       return;
     }
     demarrerCreation(async () => {

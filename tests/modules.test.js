@@ -10,8 +10,8 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const { moduleActif, MODULES } = require("../.test-build/components/app/modules.js");
 
-test("six entrées, cinq onglets sur téléphone", () => {
-  assert.equal(MODULES.length, 6);
+test("sept entrées, cinq onglets sur téléphone", () => {
+  assert.equal(MODULES.length, 7);
   assert.equal(MODULES.filter((m) => !m.horsOnglets).length, 5);
 });
 
@@ -20,6 +20,7 @@ test("l'accueil n'avale pas les autres pages", () => {
   assert.equal(moduleActif("/tableau-de-bord/aide").titre, "Aide");
   assert.equal(moduleActif("/tableau-de-bord/compte").titre, "Mon compte");
   assert.equal(moduleActif("/tableau-de-bord/nouveau").titre, "Nouveau courrier");
+  assert.equal(moduleActif("/tableau-de-bord/communes").titre, "Communes");
 });
 
 test("une fiche de dossier reste rattachée à Mes dossiers", () => {
