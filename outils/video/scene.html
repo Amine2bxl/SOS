@@ -2,260 +2,722 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
+<title>Comprendre en 1 minute</title>
 <style>
-  @font-face { font-family: "Main"; src: url("node_modules/@fontsource/patrick-hand/files/patrick-hand-latin-400-normal.woff2") format("woff2"); }
-  @font-face { font-family: "Main"; src: url("node_modules/@fontsource/patrick-hand/files/patrick-hand-latin-ext-400-normal.woff2") format("woff2"); unicode-range: U+0100-024F; }
-  html, body { margin: 0; background: #fbf8f1; }
-  #cadre { width: 1280px; height: 720px; position: relative; overflow: hidden;
-    background:
-      radial-gradient(ellipse at 20% 10%, rgba(255,255,255,.9), transparent 60%),
-      repeating-linear-gradient(0deg, rgba(27,42,74,.035) 0 1px, transparent 1px 34px),
-      #fbf8f1; }
-  svg { position: absolute; inset: 0; }
-  text { font-family: "Main", cursive; }
+  @font-face { font-family: "Bricolage"; font-weight: 200 800; src: url("node_modules/@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-standard-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Bricolage"; font-weight: 200 800; src: url("node_modules/@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-ext-standard-normal.woff2") format("woff2"); unicode-range: U+0100-024F; }
+  @font-face { font-family: "DM Sans"; font-weight: 100 1000; src: url("node_modules/@fontsource-variable/dm-sans/files/dm-sans-latin-standard-normal.woff2") format("woff2"); }
+  :root {
+    --paper: #f5f7fb; --card: #fff; --ink: #0f1e3d; --soft: #55607a; --faint: #8a93a8; --line: #e2e7f0;
+    --navy950: #08122a; --navy900: #0f1e3d; --navy800: #172b53; --navy700: #22396b; --navy200: #c7d1e6; --navy100: #e3e9f4; --navy50: #f1f4fa;
+    --gold700: #a86f00; --gold500: #f2ab00; --gold400: #ffc629; --gold300: #ffd866; --gold100: #fff2c7;
+    --azur600: #1f5bd6; --azur100: #e2ebfc; --plaque: #c8102e;
+    --ok600: #12895a; --ok100: #dbf3e7; --ok50: #effaf4; --warn600: #b26b00; --danger600: #c2261e; --danger100: #fce4e2; --danger50: #fef3f2;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #000; }
+  #cadre { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--paper); font-family: "DM Sans", sans-serif; color: var(--ink); }
+  #teinte { position: absolute; inset: 0; opacity: 0; }
+  #grain { position: absolute; inset: 0; background: radial-gradient(1200px 800px at 78% 40%, #fff 0%, rgba(255,255,255,0) 70%); }
+  .scene { position: absolute; inset: 0; opacity: 0; will-change: transform, opacity; }
+  .texte { position: absolute; left: 150px; top: 0; bottom: 0; width: 820px; display: flex; flex-direction: column; justify-content: center; }
+  .titre { margin: 0; font-family: "Bricolage", sans-serif; font-weight: 800; font-size: 104px; line-height: 1.0; letter-spacing: -0.03em; word-spacing: 0.04em; color: var(--navy900); }
+  .titre.moyen { font-size: 92px; }
+  .ligne { display: block; overflow: hidden; padding: 0.06em 0 0.16em; margin-bottom: -0.16em; }
+  .m { display: inline-block; position: relative; will-change: transform; }
+  .avant { margin-bottom: 14px; font-size: 40px; font-weight: 700; color: var(--gold700); letter-spacing: -0.01em; }
+  .avant .ligne { padding: 0.02em 0 0.12em; margin-bottom: -0.1em; }
+  .sous { margin-top: 34px; font-size: 40px; font-weight: 500; line-height: 1.3; color: var(--soft); letter-spacing: -0.01em; }
+  .sous .ligne { padding: 0.02em 0 0.12em; margin-bottom: -0.1em; }
+  .sous .ligne.large { padding: 18px 40px 34px 4px; margin: -18px -40px -34px -4px; }
+  .azur { color: var(--azur600); }
+  .rouge { color: var(--danger600); }
+  .vert { color: var(--ok600); }
+  .or { color: var(--gold500); }
+  .marque-txt { position: relative; z-index: 1; }
+  .marqueur { position: absolute; left: -0.08em; right: -0.08em; bottom: 0.12em; height: 0.34em; border-radius: 0.08em; transform-origin: left center; transform: scaleX(0); z-index: 0; }
+  .barre { position: absolute; left: -0.04em; right: -0.04em; top: 52%; height: 0.1em; background: var(--danger600); border-radius: 0.05em; transform-origin: left center; transform: scaleX(0); }
+  .puce { display: inline-flex; align-items: center; gap: 14px; height: 68px; padding: 0 28px 0 18px; border-radius: 999px; background: var(--card); box-shadow: 0 12px 30px -12px rgba(15,30,61,.25), 0 0 0 1px var(--line); font-family: "Bricolage", sans-serif; font-weight: 700; font-size: 34px; color: var(--navy900); }
+  .illu { position: absolute; left: 990px; top: 140px; width: 860px; height: 800px; overflow: visible; }
+  svg text { font-family: "DM Sans", sans-serif; }
+  svg .gras { font-family: "Bricolage", sans-serif; font-weight: 800; }
+  #entete { position: absolute; left: 150px; top: 64px; display: flex; align-items: center; gap: 16px; font-family: "Bricolage", sans-serif; font-weight: 800; font-size: 32px; letter-spacing: -0.02em; color: var(--navy900); opacity: 0; }
+  #progres { position: absolute; left: 0; bottom: 0; height: 8px; width: 1920px; background: var(--gold400); transform-origin: left center; transform: scaleX(0); }
+  #flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+  #fin { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; }
+  #fin .nom { margin-top: 34px; font-family: "Bricolage", sans-serif; font-weight: 800; font-size: 112px; letter-spacing: -0.04em; color: var(--navy900); }
+  #fin .url { margin-top: 26px; }
+  #credit { position: absolute; right: 48px; bottom: 34px; font-size: 22px; color: var(--faint); opacity: 0; }
 </style>
 </head>
 <body>
-<div id="cadre"><svg id="toile" width="1280" height="720" viewBox="0 0 1280 720"></svg></div>
-<script src="node_modules/roughjs/bundled/rough.js"></script>
-<script>
-const NS = "http://www.w3.org/2000/svg";
-const svg = document.getElementById("toile");
-const rc = rough.svg(svg);
-const ENCRE = "#1b2a4a", OR = "#f2ab00", ROUGE = "#c2261e", VERT = "#12895a", BLEU = "#1f5bd6", GRIS = "#8a93a8";
-let graine = 3;
-const o = (x = {}) => Object.assign({ roughness: 1.3, bowing: 1.1, stroke: ENCRE, strokeWidth: 3.4, seed: graine++, hachureGap: 9, fillWeight: 2.2 }, x);
+<div id="cadre">
+  <div id="teinte"></div>
+  <div id="grain"></div>
 
-/* ------------------------------------------------------------------ formes */
-let items = null;
-const ajout = (node, poids = 1) => { items.push({ node, kind: "trait", poids }); return node; };
-const R = (x, y, w, h, x2) => ajout(rc.rectangle(x, y, w, h, o(x2)));
-const C = (cx, cy, d, x2) => ajout(rc.circle(cx, cy, d, o(x2)));
-const E = (cx, cy, w, h, x2) => ajout(rc.ellipse(cx, cy, w, h, o(x2)));
-const L = (a, b, c, d, x2) => ajout(rc.line(a, b, c, d, o(x2)), 0.5);
-const P = (pts, x2) => ajout(rc.linearPath(pts, o(x2)));
-const Poly = (pts, x2) => ajout(rc.polygon(pts, o(x2)));
-const D = (d, x2) => ajout(rc.path(d, o(x2)));
-function Fleche(x1, y1, x2, y2, x3 = {}) {
-  const g = document.createElementNS(NS, "g");
-  const a = Math.atan2(y2 - y1, x2 - x1), t = 22;
-  g.appendChild(rc.line(x1, y1, x2, y2, o(x3)));
-  g.appendChild(rc.linearPath([[x2 - t * Math.cos(a - 0.45), y2 - t * Math.sin(a - 0.45)], [x2, y2], [x2 - t * Math.cos(a + 0.45), y2 - t * Math.sin(a + 0.45)]], o(x3)));
-  return ajout(g);
+  <!-- Définitions partagées -->
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <filter id="ombre" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="22" stdDeviation="24" flood-color="#0f1e3d" flood-opacity=".16"/></filter>
+      <filter id="ombreDouce" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#0f1e3d" flood-opacity=".14"/></filter>
+      <linearGradient id="faisceau" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#1f5bd6" stop-opacity=".0"/><stop offset="1" stop-color="#1f5bd6" stop-opacity=".28"/></linearGradient>
+      <linearGradient id="balayage" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffc629" stop-opacity="0"/><stop offset=".85" stop-color="#ffc629" stop-opacity=".55"/><stop offset="1" stop-color="#f2ab00" stop-opacity="1"/></linearGradient>
+      <symbol id="logo" viewBox="0 0 48 48">
+        <path d="M24 2.5 42 8.6v14c0 11.7-7.6 19.9-18 23.4C13.6 42.5 6 34.3 6 22.6v-14L24 2.5Z" fill="#0f1e3d"/>
+        <circle cx="26.6" cy="20" r="7" fill="none" stroke="#fff" stroke-width="5.4"/>
+        <circle cx="26.6" cy="20" r="7" fill="none" stroke="#ffc629" stroke-width="5.4" stroke-dasharray="5.4978 5.4978" stroke-dashoffset="2.7489"/>
+        <rect x="14.8" y="12.2" width="6.2" height="24.6" rx="2.4" fill="#fff"/>
+        <path d="M17 41.2h14" stroke="#ffc629" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="3.4 3.2"/>
+      </symbol>
+      <symbol id="coche" viewBox="0 0 48 48">
+        <circle cx="24" cy="24" r="24" fill="#12895a"/>
+        <path d="M13.5 24.5 21 32 35 17" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      </symbol>
+      <symbol id="enveloppe" viewBox="0 0 300 200">
+        <rect x="0" y="0" width="300" height="200" rx="16" fill="#fff"/>
+        <rect x="0.75" y="0.75" width="298.5" height="198.5" rx="15.5" fill="none" stroke="#e2e7f0" stroke-width="1.5"/>
+        <path d="M14 18 150 112 286 18" fill="none" stroke="#c7d1e6" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="226" y="132" width="50" height="50" rx="8" fill="#ffd866"/>
+        <rect x="236" y="142" width="30" height="30" rx="4" fill="none" stroke="#f2ab00" stroke-width="3"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <div id="entete"><svg width="52" height="52"><use href="#logo"/></svg>SOS Citizens</div>
+
+  <!-- 1. La lettre -->
+  <section class="scene" data-i="1" id="s1">
+    <div class="texte">
+      <h1 class="titre">
+        <span class="ligne"><span class="m" data-w="une">Une</span> <span class="m" data-w="lettre">lettre</span> <span class="m" data-w="de">de</span></span>
+        <span class="ligne"><span class="m azur" data-w="parking.brussels">parking.brussels</span><span class="m azur" data-w="parking.brussels" data-d=".12">&#8239;?</span></span>
+      </h1>
+      <div class="sous">
+        <span class="ligne"><span class="m" data-w="respirez">Respirez.</span> <span class="m" data-w="en">En</span> <span class="m" data-w="une" data-n="2">une</span> <span class="m" data-w="minute">minute,</span></span>
+        <span class="ligne"><span class="m" data-w="on">on</span> <span class="m" data-w="vous">vous</span> <span class="m" data-w="explique">explique</span> <span class="m" data-w="tout">tout.</span></span>
+      </div>
+    </div>
+    <svg class="illu" viewBox="0 0 860 800">
+      <ellipse cx="430" cy="738" rx="250" ry="22" fill="#0f1e3d" opacity=".08"/>
+      <g id="s1-respire"><circle cx="430" cy="236" r="250" fill="#ffc629" opacity=".14"/><circle cx="430" cy="236" r="185" fill="#ffc629" opacity=".16"/></g>
+      <g id="s1-enveloppe"><use href="#enveloppe" x="280" y="430" width="300" height="200"/></g>
+      <g id="s1-boite">
+        <rect x="402" y="600" width="56" height="140" rx="10" fill="#22396b"/>
+        <path d="M230 650 V530 C230 460 280 416 350 416 H510 C580 416 630 460 630 530 V650 Z" fill="#0f1e3d"/>
+        <rect x="320" y="498" width="220" height="22" rx="11" fill="#08122a"/>
+        <rect x="270" y="570" width="320" height="10" rx="5" fill="#172b53"/>
+      </g>
+      <g id="s1-drapeau"><rect x="636" y="450" width="14" height="150" rx="7" fill="#a86f00"/><path d="M650 452 h84 a10 10 0 0 1 10 10 v40 a10 10 0 0 1 -10 10 h-84 Z" fill="#f2ab00"/></g>
+      <g id="s1-lettre" filter="url(#ombre)">
+        <rect x="245" y="40" width="370" height="470" rx="22" fill="#fff"/>
+        <rect x="245" y="40" width="370" height="96" rx="22" fill="#1f5bd6"/>
+        <rect x="245" y="110" width="370" height="26" fill="#1f5bd6"/>
+        <text x="282" y="102" fill="#fff" class="gras" font-size="34" letter-spacing="-.5">parking.brussels</text>
+        <rect x="282" y="176" width="210" height="16" rx="8" fill="#c7d1e6"/>
+        <rect x="282" y="214" width="290" height="12" rx="6" fill="#e3e9f4"/>
+        <rect x="282" y="240" width="260" height="12" rx="6" fill="#e3e9f4"/>
+        <rect x="282" y="266" width="280" height="12" rx="6" fill="#e3e9f4"/>
+        <rect x="282" y="318" width="296" height="96" rx="16" fill="#f1f4fa"/>
+        <rect x="306" y="342" width="120" height="12" rx="6" fill="#c7d1e6"/>
+        <text x="306" y="396" class="gras" font-size="40" fill="#0f1e3d">À payer</text>
+        <rect x="282" y="446" width="140" height="12" rx="6" fill="#e3e9f4"/>
+      </g>
+    </svg>
+  </section>
+
+  <!-- 2. Pas une amende : une redevance -->
+  <section class="scene" data-i="2" id="s2">
+    <div class="texte">
+      <div class="avant"><span class="ligne"><span class="m" data-w="premier">Premier</span> <span class="m" data-w="réflexe">réflexe</span></span></div>
+      <h1 class="titre moyen">
+        <span class="ligne"><span class="m" data-w="ce">Ce</span> <span class="m" data-w="n'est">n’est</span> <span class="m" data-w="pas">pas</span> <span class="m" data-w="une">une</span></span>
+        <span class="ligne"><span class="m" data-w="amende"><span class="marque-txt">amende.</span><span class="barre" id="s2-barre"></span></span></span>
+        <span class="ligne"><span class="m" data-w="c'est">C’est</span> <span class="m" data-w="une" data-n="2">une</span></span>
+        <span class="ligne"><span class="m" data-w="redevance"><span class="marqueur" id="s2-marq" style="background:var(--gold300)"></span><span class="marque-txt">redevance.</span></span></span>
+      </h1>
+      <div class="sous">
+        <span class="ligne"><span class="m" data-w="une" data-n="3">Une</span> <span class="m" data-w="facture">facture</span> <span class="m" data-w="pour">pour</span> <span class="m" data-w="une" data-n="4">une</span> <span class="m" data-w="place">place</span> <span class="m" data-w="de" data-n="2">de</span> <span class="m" data-w="parking">parking.</span></span>
+      </div>
+    </div>
+    <svg class="illu" viewBox="0 0 860 800">
+      <g id="s2-amende" filter="url(#ombreDouce)">
+        <rect x="60" y="70" width="470" height="270" rx="24" fill="#fff"/>
+        <path d="M60 94 a24 24 0 0 1 24 -24 h422 a24 24 0 0 1 24 24 v56 h-470 Z" fill="#0f1e3d"/>
+        <text x="98" y="122" fill="#fff" class="gras" font-size="28" letter-spacing="1">AMENDE DE POLICE</text>
+        <g transform="translate(110 240)"><path d="M0 -58 50 -40 v38 c0 32 -22 54 -50 64 c-28 -10 -50 -32 -50 -64 v-38 Z" fill="#34508f"/><path d="M0 -26 8 -8 28 -6 13 7 17 26 0 16 -17 26 -13 7 -28 -6 -8 -8 Z" fill="#ffd866"/></g>
+        <rect x="200" y="200" width="270" height="14" rx="7" fill="#c7d1e6"/>
+        <rect x="200" y="232" width="220" height="12" rx="6" fill="#e3e9f4"/>
+        <rect x="200" y="258" width="240" height="12" rx="6" fill="#e3e9f4"/>
+      </g>
+      <g id="s2-croix"><path id="s2-croix1" d="M90 100 500 316" stroke="#c2261e" stroke-width="16" stroke-linecap="round" fill="none"/><path id="s2-croix2" d="M500 100 90 316" stroke="#c2261e" stroke-width="16" stroke-linecap="round" fill="none"/></g>
+      <g id="s2-redevance" filter="url(#ombre)">
+        <rect x="270" y="300" width="520" height="420" rx="26" fill="#fff"/>
+        <rect x="270" y="300" width="520" height="12" rx="6" fill="#f2ab00"/>
+        <rect x="306" y="352" width="110" height="110" rx="22" fill="#1f5bd6"/>
+        <text x="361" y="440" text-anchor="middle" fill="#fff" class="gras" font-size="84">P</text>
+        <text x="442" y="392" class="gras" font-size="34" fill="#0f1e3d">Redevance</text>
+        <text x="442" y="434" font-size="26" fill="#55607a">de stationnement</text>
+        <g id="s2-l1"><rect x="306" y="500" width="300" height="14" rx="7" fill="#e3e9f4"/><rect x="666" y="500" width="88" height="14" rx="7" fill="#c7d1e6"/></g>
+        <g id="s2-l2"><rect x="306" y="540" width="260" height="14" rx="7" fill="#e3e9f4"/><rect x="666" y="540" width="88" height="14" rx="7" fill="#c7d1e6"/></g>
+        <g id="s2-total"><rect x="306" y="600" width="448" height="80" rx="18" fill="#fff9e5"/><text x="334" y="652" class="gras" font-size="32" fill="#a86f00">Facture</text><rect x="616" y="628" width="112" height="22" rx="11" fill="#f2ab00"/></g>
+      </g>
+    </svg>
+  </section>
+
+  <!-- 3. La scan-car -->
+  <section class="scene" data-i="3" id="s3">
+    <div class="texte">
+      <div class="avant"><span class="ligne"><span class="m" data-w="qui">Qui</span> <span class="m" data-w="l'envoie">l’envoie&#8239;?</span></span></div>
+      <h1 class="titre moyen">
+        <span class="ligne"><span class="m" data-w="la">La</span> <span class="m azur" data-w="scan-car.">scan-car</span></span>
+        <span class="ligne"><span class="m" data-w="lit">lit</span> <span class="m" data-w="les">les</span> <span class="m" data-w="plaques.">plaques.</span></span>
+      </h1>
+      <div class="sous">
+        <span class="ligne"><span class="m" data-w="pas">Pas</span> <span class="m" data-w="de" data-n="2">de</span> <span class="m" data-w="paiement">paiement&#8239;?</span></span>
+        <span class="ligne"><span class="m" data-w="une" data-n="2">Une</span> <span class="m" data-w="lettre">lettre</span> <span class="m" data-w="part">part</span> <span class="m" data-w="chez">chez</span> <span class="m" data-w="vous.">vous.</span></span>
+      </div>
+    </div>
+    <svg class="illu" viewBox="0 0 860 800">
+      <g opacity=".7"><rect x="20" y="250" width="110" height="260" rx="8" fill="#e3e9f4"/><rect x="140" y="190" width="90" height="320" rx="8" fill="#e3e9f4"/><rect x="240" y="280" width="140" height="230" rx="8" fill="#e3e9f4"/><rect x="390" y="220" width="100" height="290" rx="8" fill="#e3e9f4"/><rect x="500" y="300" width="120" height="210" rx="8" fill="#e3e9f4"/></g>
+      <g id="s3-maison"><path d="M640 330 730 250 820 330 V510 H640 Z" fill="#c7d1e6"/><path d="M620 340 730 240 840 340" fill="none" stroke="#22396b" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/><rect x="700" y="420" width="60" height="90" rx="8" fill="#22396b"/><rect id="s3-fenetre" x="668" y="350" width="44" height="44" rx="6" fill="#fff"/><rect id="s3-fenetre2" x="748" y="350" width="44" height="44" rx="6" fill="#fff"/></g>
+      <rect x="0" y="510" width="860" height="200" fill="#dfe5ef"/>
+      <rect x="0" y="510" width="860" height="10" fill="#c7d1e6"/>
+      <g id="s3-tirets"><rect x="0" y="612" width="70" height="10" rx="5" fill="#fff"/><rect x="130" y="612" width="70" height="10" rx="5" fill="#fff"/><rect x="260" y="612" width="70" height="10" rx="5" fill="#fff"/><rect x="390" y="612" width="70" height="10" rx="5" fill="#fff"/><rect x="520" y="612" width="70" height="10" rx="5" fill="#fff"/><rect x="650" y="612" width="70" height="10" rx="5" fill="#fff"/><rect x="780" y="612" width="70" height="10" rx="5" fill="#fff"/></g>
+      <!-- voitures garées -->
+      <g transform="translate(40 438)"><path d="M10 70 C10 50 20 44 44 40 L74 12 C82 4 92 2 104 2 H160 C174 2 184 8 192 18 L212 40 C232 44 240 52 240 70 V84 H10 Z" fill="#c7d1e6"/><path d="M84 18 H118 V40 H66 Z M128 18 H160 L182 40 H128 Z" fill="#fff" opacity=".8"/><circle cx="62" cy="86" r="20" fill="#22396b"/><circle cx="192" cy="86" r="20" fill="#22396b"/></g>
+      <g transform="translate(310 438)" id="s3-cible"><path d="M10 70 C10 50 20 44 44 40 L74 12 C82 4 92 2 104 2 H160 C174 2 184 8 192 18 L212 40 C232 44 240 52 240 70 V84 H10 Z" fill="#ffd866"/><path d="M84 18 H118 V40 H66 Z M128 18 H160 L182 40 H128 Z" fill="#fff" opacity=".8"/><rect x="196" y="56" width="40" height="16" rx="3" fill="#fff" stroke="#c8102e" stroke-width="2"/><circle cx="62" cy="86" r="20" fill="#22396b"/><circle cx="192" cy="86" r="20" fill="#22396b"/></g>
+      
+      <polygon id="s3-faisceau" points="560,470 520,600 470,600" fill="url(#faisceau)"/>
+      <!-- la scan-car -->
+      <g id="s3-scancar">
+        <rect x="140" y="560" width="26" height="62" rx="6" fill="#0f1e3d"/>
+        <rect x="118" y="540" width="70" height="30" rx="10" fill="#0f1e3d"/>
+        <circle cx="132" cy="555" r="8" fill="#ffc629"/><circle cx="174" cy="555" r="8" fill="#ffc629"/>
+        <path d="M20 690 C20 668 30 660 56 656 L92 622 C102 612 114 610 128 610 H210 C226 610 238 616 248 628 L276 656 C300 660 310 668 310 690 V706 H20 Z" fill="#fff" stroke="#c7d1e6" stroke-width="3"/>
+        <rect x="22" y="672" width="286" height="14" fill="#1f5bd6"/>
+        <path d="M104 624 H150 V652 H80 Z M160 624 H206 L232 652 H160 Z" fill="#e2ebfc"/>
+        <g id="s3-roue1"><circle cx="80" cy="708" r="25" fill="#0f1e3d"/><circle cx="80" cy="708" r="10" fill="#8a93a8"/><rect x="77" y="686" width="6" height="16" rx="3" fill="#8a93a8"/></g>
+        <g id="s3-roue2"><circle cx="250" cy="708" r="25" fill="#0f1e3d"/><circle cx="250" cy="708" r="10" fill="#8a93a8"/><rect x="247" y="686" width="6" height="16" rx="3" fill="#8a93a8"/></g>
+      </g>
+      <!-- la plaque, vue de près -->
+      <g id="s3-bulle" filter="url(#ombre)">
+        <rect x="280" y="150" width="380" height="150" rx="26" fill="#fff"/>
+        <path d="M440 298 470 340 500 298 Z" fill="#fff"/>
+        <rect x="310" y="182" width="320" height="86" rx="12" fill="#fff" stroke="#c8102e" stroke-width="5"/>
+        <text x="470" y="245" text-anchor="middle" class="gras" font-size="56" fill="#c8102e" letter-spacing="2">1-ABC-123</text>
+        <rect id="s3-scan" x="306" y="176" width="10" height="98" rx="5" fill="#f2ab00"/>
+      </g>
+      <g id="s3-aucun"><rect x="470" y="96" width="290" height="64" rx="32" fill="#c2261e"/><text x="615" y="138" text-anchor="middle" fill="#fff" class="gras" font-size="30">Aucun paiement</text></g>
+      <g id="s3-vol"><use href="#enveloppe" x="0" y="0" width="120" height="80"/></g>
+    </svg>
+  </section>
+
+  <!-- 4. Dix jours -->
+  <section class="scene" data-i="4" id="s4">
+    <div class="texte">
+      <h1 class="titre">
+        <span class="ligne"><span class="m or" data-w="dix">10</span> <span class="m" data-w="jours">jours</span></span>
+        <span class="ligne"><span class="m" data-w="pour">pour</span> <span class="m" data-w="contester.">contester.</span></span>
+      </h1>
+      <div class="sous"><span class="ligne"><span class="m" data-w="par">Par</span> <span class="m" data-w="écrit."><span class="marqueur" id="s4-marq" style="background:var(--gold300)"></span><span class="marque-txt">écrit.</span></span></span></div>
+    </div>
+    <svg class="illu" viewBox="0 0 860 800">
+      <g id="s4-cadran">
+        <circle cx="430" cy="380" r="300" fill="#fff" filter="url(#ombre)"/>
+        <circle cx="430" cy="380" r="240" fill="none" stroke="#e3e9f4" stroke-width="40"/>
+        <circle id="s4-arc" cx="430" cy="380" r="240" fill="none" stroke="#f2ab00" stroke-width="40" stroke-linecap="round" style="transform-box: fill-box; transform-origin: center; transform: rotate(-90deg)" stroke-dasharray="1508 1508" stroke-dashoffset="1508"/>
+        <g id="s4-graduations"></g>
+        <text id="s4-nombre" x="430" y="420" text-anchor="middle" class="gras" font-size="190" fill="#0f1e3d" letter-spacing="-6">10</text>
+        <text id="s4-jours" x="430" y="490" text-anchor="middle" font-size="40" font-weight="600" fill="#55607a">jours</text>
+      </g>
+      <g id="s4-bouton"><rect x="400" y="40" width="60" height="50" rx="12" fill="#0f1e3d"/></g>
+      <path id="s4-stylo-trait" d="M210 740 C 250 700, 290 760, 330 724 S 400 700, 440 736 S 520 760, 560 716 S 630 726, 660 730" fill="none" stroke="#0f1e3d" stroke-width="9" stroke-linecap="round" stroke-dasharray="560 560" stroke-dashoffset="560"/>
+      <g id="s4-stylo"><path d="M0 0 L22 -10 L96 -84 C102 -90 112 -90 118 -84 L126 -76 C132 -70 132 -60 126 -54 L52 20 Z" fill="#1f5bd6"/><path d="M0 0 L22 -10 L52 20 Z" fill="#ffd866"/><circle cx="0" cy="0" r="5" fill="#0f1e3d"/></g>
+    </svg>
+  </section>
+
+  <!-- 5. La note grimpe -->
+  <section class="scene" data-i="5" id="s5">
+    <div class="texte">
+      <h1 class="titre moyen">
+        <span class="ligne"><span class="m" data-w="vous">Vous</span> <span class="m" data-w="ne">ne</span> <span class="m" data-w="faites">faites</span></span>
+        <span class="ligne"><span class="m" data-w="rien">rien&#8239;?</span></span>
+      </h1>
+      <div class="sous"><span class="ligne"><span class="m" data-w="la">La</span> <span class="m" data-w="note">note</span> <span class="m rouge" data-w="grimpe." id="s5-grimpe">grimpe.</span></span></div>
+    </div>
+    <svg class="illu" viewBox="0 0 860 800">
+      <rect x="20" y="690" width="820" height="10" rx="5" fill="#c7d1e6"/>
+      <g id="s5-b0"><rect x="40" y="580" width="170" height="110" rx="18" fill="#c7d1e6"/><text x="125" y="644" text-anchor="middle" class="gras" font-size="28" fill="#0f1e3d">Redevance</text></g>
+      <g id="s5-b1"><rect x="240" y="490" width="170" height="200" rx="18" fill="#ffd866"/><text x="325" y="544" text-anchor="middle" class="gras" font-size="30" fill="#0f1e3d">Rappel</text><text x="325" y="640" text-anchor="middle" class="gras" font-size="28" fill="#a86f00">+ frais</text></g>
+      <g id="s5-b2"><rect x="440" y="360" width="170" height="330" rx="18" fill="#f2ab00"/><text x="525" y="414" text-anchor="middle" class="gras" font-size="30" fill="#0f1e3d">Mise en</text><text x="525" y="450" text-anchor="middle" class="gras" font-size="30" fill="#0f1e3d">demeure</text><text x="525" y="580" text-anchor="middle" class="gras" font-size="28" fill="#fff">+ frais</text></g>
+      <g id="s5-b3"><rect x="640" y="200" width="170" height="490" rx="18" fill="#c2261e"/><text x="725" y="254" text-anchor="middle" class="gras" font-size="30" fill="#fff">Huissier</text><text x="725" y="470" text-anchor="middle" class="gras" font-size="28" fill="#fff">+ frais</text></g>
+      <path id="s5-fleche" d="M100 545 C 200 520, 260 470, 325 448 S 460 350, 525 318 S 660 200, 725 158 S 770 110, 790 88" fill="none" stroke="#0f1e3d" stroke-width="8" stroke-linecap="round"/>
+      <path id="s5-pointe" d="M755 96 790 88 786 124" fill="none" stroke="#0f1e3d" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </section>
+
+  <!-- 6. La bonne nouvelle -->
+  <section class="scene" data-i="6" id="s6">
+    <div class="texte">
+      <h1 class="titre moyen">
+        <span class="ligne"><span class="m vert" data-w="bonne">Bonne</span> <span class="m vert" data-w="nouvelle">nouvelle&#8239;:</span></span>
+        <span class="ligne"><span class="m" data-w="les">les</span> <span class="m" data-w="erreurs">erreurs</span> <span class="m" data-w="sont">sont</span></span>
+        <span class="ligne"><span class="m" data-w="fréquentes."><span class="marqueur" id="s6-marq" style="background:#bfe9d2"></span><span class="marque-txt">fréquentes.</span></span></span>
+      </h1>
+    </div>
+    <svg class="illu" viewBox="0 0 860 800">
+      <g id="s6-c1" filter="url(#ombreDouce)">
+        <rect x="80" y="110" width="700" height="160" rx="26" fill="#fff"/>
+        <circle cx="170" cy="190" r="50" fill="#e2ebfc"/>
+        <rect x="148" y="154" width="44" height="72" rx="10" fill="none" stroke="#1f5bd6" stroke-width="6"/><rect x="162" y="214" width="16" height="5" rx="2.5" fill="#1f5bd6"/>
+        <text x="250" y="182" class="gras" font-size="36" fill="#0f1e3d">Payé avec l’appli</text>
+        <text x="250" y="226" font-size="27" fill="#55607a">La preuve est dans l’historique</text>
+        <use id="s6-k1" href="#coche" x="682" y="160" width="60" height="60"/>
+      </g>
+      <g id="s6-c2" filter="url(#ombreDouce)">
+        <rect x="80" y="320" width="700" height="160" rx="26" fill="#fff"/>
+        <circle cx="170" cy="400" r="50" fill="#fff2c7"/>
+        <rect x="138" y="376" width="64" height="46" rx="8" fill="none" stroke="#a86f00" stroke-width="6"/><path d="M152 410 170 394 188 410" fill="none" stroke="#a86f00" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="250" y="392" class="gras" font-size="36" fill="#0f1e3d">Carte de riverain</text>
+        <text x="250" y="436" font-size="27" fill="#55607a">Valable dans la zone</text>
+        <use id="s6-k2" href="#coche" x="682" y="370" width="60" height="60"/>
+      </g>
+      <g id="s6-c3" filter="url(#ombreDouce)">
+        <rect x="80" y="530" width="700" height="160" rx="26" fill="#fff"/>
+        <circle cx="170" cy="610" r="50" fill="#fce4e2"/>
+        <rect x="136" y="584" width="68" height="52" rx="8" fill="none" stroke="#c2261e" stroke-width="6"/><text x="170" y="626" text-anchor="middle" class="gras" font-size="34" fill="#c2261e">?</text>
+        <text x="250" y="602" class="gras" font-size="36" fill="#0f1e3d">Photo sans preuve</text>
+        <text x="250" y="646" font-size="27" fill="#55607a">Elle ne montre rien</text>
+        <use id="s6-k3" href="#coche" x="682" y="580" width="60" height="60"/>
+      </g>
+    </svg>
+  </section>
+
+  <!-- 7. SOS Citizens travaille -->
+  <section class="scene" data-i="7" id="s7">
+    <div class="texte">
+      <h1 class="titre moyen">
+        <span class="ligne"><span class="m" data-w="lit">On</span> <span class="m" data-w="lit" data-d=".08">lit.</span></span>
+        <span class="ligne"><span class="m" data-w="vérifie">On</span> <span class="m" data-w="vérifie" data-d=".08">vérifie.</span></span>
+        <span class="ligne"><span class="m" data-w="prépare">On</span> <span class="m" data-w="prépare" data-d=".08">répond.</span></span>
+      </h1>
+      <div class="sous"><span class="ligne large"><span class="m" data-w="gratuitement."><span class="puce"><svg width="44" height="44"><use href="#coche"/></svg>Gratuitement</span></span></span></div>
+    </div>
+    <svg class="illu" viewBox="0 0 860 800">
+      <g id="s7-reponse" filter="url(#ombre)">
+        <rect x="420" y="160" width="380" height="500" rx="24" fill="#fff"/>
+        <rect x="420" y="160" width="380" height="14" rx="7" fill="#12895a"/>
+        <text x="456" y="236" class="gras" font-size="34" fill="#0f1e3d">Contestation</text>
+        <rect id="s7-r1" x="456" y="276" width="300" height="12" rx="6" fill="#c7d1e6"/>
+        <rect id="s7-r2" x="456" y="304" width="270" height="12" rx="6" fill="#c7d1e6"/>
+        <rect id="s7-r3" x="456" y="332" width="290" height="12" rx="6" fill="#c7d1e6"/>
+        <rect id="s7-r4" x="456" y="380" width="250" height="12" rx="6" fill="#c7d1e6"/>
+        <rect id="s7-r5" x="456" y="408" width="300" height="12" rx="6" fill="#c7d1e6"/>
+        <rect id="s7-r6" x="456" y="436" width="200" height="12" rx="6" fill="#c7d1e6"/>
+        <path d="M456 560 c20 -30 40 10 60 -10 s30 -20 50 4" fill="none" stroke="#0f1e3d" stroke-width="5" stroke-linecap="round"/>
+      </g>
+      <g id="s7-tampon"><rect x="510" y="470" width="250" height="84" rx="14" fill="none" stroke="#12895a" stroke-width="7"/><text x="635" y="526" text-anchor="middle" class="gras" font-size="40" fill="#12895a" letter-spacing="3">GRATUIT</text></g>
+      <g id="s7-lettre" filter="url(#ombre)">
+        <rect x="60" y="120" width="400" height="560" rx="24" fill="#fff"/>
+        <rect x="60" y="120" width="400" height="80" rx="24" fill="#1f5bd6"/><rect x="60" y="176" width="400" height="24" fill="#1f5bd6"/>
+        <text x="150" y="174" class="gras" font-size="30" fill="#fff">parking.brussels</text>
+        <g id="s7-champ1"><rect x="92" y="236" width="336" height="76" rx="14" fill="#f1f4fa"/><text x="114" y="268" font-size="22" fill="#55607a">Référence</text><rect x="114" y="282" width="170" height="14" rx="7" fill="#0f1e3d"/></g>
+        <g id="s7-champ2"><rect x="92" y="330" width="336" height="76" rx="14" fill="#f1f4fa"/><text x="114" y="362" font-size="22" fill="#55607a">Date et heure</text><rect x="114" y="376" width="200" height="14" rx="7" fill="#0f1e3d"/></g>
+        <g id="s7-champ3"><rect x="92" y="424" width="336" height="76" rx="14" fill="#f1f4fa"/><text x="114" y="456" font-size="22" fill="#55607a">Plaque</text><rect x="114" y="470" width="140" height="14" rx="7" fill="#c8102e"/></g>
+        <rect x="92" y="536" width="300" height="12" rx="6" fill="#e3e9f4"/><rect x="92" y="562" width="260" height="12" rx="6" fill="#e3e9f4"/><rect x="92" y="588" width="280" height="12" rx="6" fill="#e3e9f4"/>
+        <use id="s7-k1" href="#coche" x="388" y="252" width="46" height="46"/>
+        <use id="s7-k2" href="#coche" x="388" y="346" width="46" height="46"/>
+        <use id="s7-k3" href="#coche" x="388" y="440" width="46" height="46"/>
+      </g>
+      <rect id="s7-scan" x="40" y="120" width="440" height="90" fill="url(#balayage)"/>
+      <g id="s7-logo"><circle cx="70" cy="122" r="66" fill="#fff" filter="url(#ombreDouce)"/><use href="#logo" x="22" y="74" width="96" height="96"/></g>
+    </svg>
+  </section>
+
+  <!-- 8. Une photo, et c'est parti -->
+  <section class="scene" data-i="8" id="s8">
+    <div class="texte">
+      <h1 class="titre">
+        <span class="ligne"><span class="m" data-w="une">Une</span> <span class="m" data-w="photo,">photo.</span></span>
+        <span class="ligne"><span class="m" data-w="on">On</span> <span class="m" data-w="s'occupe">s’occupe</span></span>
+        <span class="ligne"><span class="m" data-w="du">du</span> <span class="m" data-w="reste.">reste.</span></span>
+      </h1>
+      <div class="sous"><span class="ligne large"><span class="m" data-w="site"><span class="puce"><svg width="44" height="44"><use href="#logo"/></svg>sos-citizens.be</span></span></span></div>
+    </div>
+    <svg class="illu" viewBox="0 0 860 800">
+      <g id="s8-tel" filter="url(#ombre)">
+        <rect x="270" y="40" width="330" height="680" rx="56" fill="#0f1e3d"/>
+        <rect x="286" y="56" width="298" height="648" rx="44" fill="#f1f4fa"/>
+        <rect x="390" y="72" width="90" height="24" rx="12" fill="#0f1e3d"/>
+        <g id="s8-viseur">
+          <g transform="rotate(-4 435 360)"><rect x="330" y="200" width="210" height="290" rx="12" fill="#fff"/><rect x="330" y="200" width="210" height="50" rx="12" fill="#1f5bd6"/><rect x="330" y="232" width="210" height="18" fill="#1f5bd6"/><rect x="350" y="272" width="140" height="10" rx="5" fill="#c7d1e6"/><rect x="350" y="294" width="170" height="10" rx="5" fill="#e3e9f4"/><rect x="350" y="316" width="150" height="10" rx="5" fill="#e3e9f4"/><rect x="350" y="370" width="170" height="60" rx="10" fill="#f1f4fa"/></g>
+          <path d="M318 180 v-28 h28 M552 180 v-28 h-28 M318 520 v28 h28 M552 520 v28 h-28" fill="none" stroke="#f2ab00" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="435" cy="630" r="36" fill="#fff" stroke="#0f1e3d" stroke-width="6"/>
+        </g>
+        <g id="s8-lu"><circle cx="435" cy="330" r="80" fill="#12895a"/><path d="M398 332 424 358 474 306" fill="none" stroke="#fff" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/><text x="435" y="470" text-anchor="middle" class="gras" font-size="40" fill="#0f1e3d">Lettre lue</text><rect x="345" y="500" width="180" height="14" rx="7" fill="#c7d1e6"/><rect x="365" y="528" width="140" height="14" rx="7" fill="#e3e9f4"/></g>
+      </g>
+    </svg>
+  </section>
+
+  <div id="fin">
+    <svg width="220" height="220" id="fin-logo"><use href="#logo"/></svg>
+    <div class="nom" id="fin-nom">SOS Citizens</div>
+    <div class="url" id="fin-url"><span class="puce">sos-citizens.be</span></div>
+  </div>
+  <div id="credit">Voix&#8239;: ElevenLabs</div>
+  <div id="flash"></div>
+  <div id="progres"></div>
+</div>
+
+<script src="donnees.js"></script>
+<script>
+const D = window.DONNEES;
+const S = D.scenes;
+const $ = (s) => document.querySelector(s);
+
+/* --------------------------------------------------------------- temps */
+const norm = (s) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[’]/g, "'").replace(/[^a-z0-9'\-.]/g, "").replace(/[.]+$/, "");
+/** Instant où la voix prononce ce mot (n-ième occurrence) dans la scène i. */
+function mot(i, cible, n = 1) {
+  const c = norm(cible);
+  let k = 0;
+  for (const m of S[i - 1].mots) if (norm(m.mot) === c && ++k === n) return m.t;
+  throw new Error(`mot introuvable : « ${cible} » (${n}) scène ${i}`);
 }
-function Coche(x, y, s = 1, couleur = VERT) {
-  return P([[x, y], [x + 14 * s, y + 16 * s], [x + 42 * s, y - 20 * s]], { stroke: couleur, strokeWidth: 5, roughness: 0.9 });
+const fin = (i) => S[i - 1].debut + S[i - 1].parle;
+
+/* --------------------------------------------------------------- courbes */
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const pr = (t, t0, d) => clamp((t - t0) / d);
+const eo = (p) => 1 - Math.pow(1 - p, 5);          // sortie franche, arrivée douce
+const eo3 = (p) => 1 - Math.pow(1 - p, 3);
+const back = (p, s = 1.7) => (p <= 0 ? 0 : p >= 1 ? 1 : 1 + (s + 1) * Math.pow(p - 1, 3) + s * Math.pow(p - 1, 2));
+const eio = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
+const lerp = (a, b, p) => a + (b - a) * p;
+
+function boite(el, origine = "center", type = "fill-box") {
+  if (el instanceof SVGElement && !el.style.transformBox) { el.style.transformBox = type; el.style.transformOrigin = origine; }
 }
-function Croix(x, y, s, couleur = ROUGE) {
-  const g = document.createElementNS(NS, "g");
-  g.appendChild(rc.line(x - s, y - s, x + s, y + s, o({ stroke: couleur, strokeWidth: 6 })));
-  g.appendChild(rc.line(x + s, y - s, x - s, y + s, o({ stroke: couleur, strokeWidth: 6 })));
-  return ajout(g, 0.7);
+function pose(el, { o = 1, x = 0, y = 0, s = 1, sx = null, sy = null, r = 0 } = {}) {
+  boite(el);
+  el.style.opacity = o;
+  el.style.transform = `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) rotate(${r.toFixed(3)}deg) scale(${(sx ?? s).toFixed(4)}, ${(sy ?? s).toFixed(4)})`;
 }
-/** Texte écrit à la main : il se révèle de gauche à droite. */
-function T(texte, x, y, taille = 44, couleur = ENCRE, ancre = "middle") {
-  const g = document.createElementNS(NS, "g");
-  const clip = document.createElementNS(NS, "clipPath");
-  const id = "c" + Math.random().toString(36).slice(2);
-  clip.setAttribute("id", id);
-  const rect = document.createElementNS(NS, "rect");
-  clip.appendChild(rect);
-  const t = document.createElementNS(NS, "text");
-  t.setAttribute("x", x); t.setAttribute("y", y); t.setAttribute("font-size", taille);
-  t.setAttribute("fill", couleur); t.setAttribute("text-anchor", ancre);
-  t.textContent = texte;
-  g.appendChild(clip); g.appendChild(t); t.setAttribute("clip-path", `url(#${id})`);
-  items.push({ node: g, kind: "texte", t, rect, poids: Math.max(0.6, texte.length / 14) });
-  return g;
+/** Entrée standard : apparaît en glissant (vers le haut par défaut). */
+function entree(el, t, t0, { d = 0.6, dx = 0, dy = 34, s0 = 1, r0 = 0, fondu = 0.3 } = {}) {
+  const e = eo(pr(t, t0, d));
+  pose(el, { o: clamp((t - t0) / (d * fondu)), x: dx * (1 - e), y: dy * (1 - e), s: lerp(s0, 1, e), r: r0 * (1 - e) });
+  return e;
 }
-/** Un bonhomme simple, façon carnet. */
-function Bonhomme(x, y, s = 1, x2 = {}) {
-  C(x, y, 70 * s, x2);
-  C(x - 12 * s, y - 4 * s, 6 * s, { fill: ENCRE, fillStyle: "solid", strokeWidth: 2 });
-  C(x + 12 * s, y - 4 * s, 6 * s, { fill: ENCRE, fillStyle: "solid", strokeWidth: 2 });
-  D(`M ${x - 14 * s} ${y + 16 * s} Q ${x} ${y + 8 * s} ${x + 14 * s} ${y + 16 * s}`, { strokeWidth: 3 });
-  L(x, y + 35 * s, x, y + 130 * s);
-  L(x, y + 60 * s, x - 45 * s, y + 100 * s);
-  L(x, y + 60 * s, x + 45 * s, y + 95 * s);
-  L(x, y + 130 * s, x - 35 * s, y + 200 * s);
-  L(x, y + 130 * s, x + 35 * s, y + 200 * s);
+/** Apparition avec un léger rebond : pour ce qui « tombe » à l'écran. */
+function pop(el, t, t0, { d = 0.55, s0 = 0.55, r0 = 0, x = 0, y = 0 } = {}) {
+  const p = pr(t, t0, d);
+  pose(el, { o: clamp((t - t0) / 0.1), s: lerp(s0, 1, back(p, 1.9)), r: r0 * (1 - eo(p)), x, y });
 }
-function Enveloppe(x, y, w, h, x2 = {}) {
-  R(x, y, w, h, Object.assign({ fill: "#fff", fillStyle: "solid" }, x2));
-  P([[x, y], [x + w / 2, y + h * 0.55], [x + w, y]]);
-}
-function Telephone(x, y, w, h) {
-  R(x, y, w, h, { strokeWidth: 4 });
-  R(x + 10, y + 26, w - 20, h - 64, { fill: "#e3e9f4", fillStyle: "solid", strokeWidth: 2 });
-  C(x + w / 2, y + h - 20, 18, { strokeWidth: 2 });
-}
+const cache = (el) => { el.style.opacity = 0; };
+
+/* ------------------------------------------------------- titres cinétiques */
+// Chaque mot du titre monte de sous sa ligne à l'instant où la voix le dit.
+const MOTS = [];
+document.querySelectorAll(".scene").forEach((sc) => {
+  const i = Number(sc.dataset.i);
+  let precedent = null;
+  sc.querySelectorAll(".m").forEach((el) => {
+    const t = el.dataset.w ? mot(i, el.dataset.w, Number(el.dataset.n || 1)) + Number(el.dataset.d || 0) : precedent + 0.07;
+    MOTS.push({ el, t: t - 0.06, extra: el.closest(".large") ? 70 : 0 });
+    precedent = t;
+  });
+});
 
 /* ----------------------------------------------------------------- scènes */
-const SCENES = [
-  { duree: 7.08, construire() {
-    T("Une lettre ?", 640, 110, 76);
-    Enveloppe(250, 260, 300, 190);
-    C(480, 300, 60, { stroke: ROUGE, strokeWidth: 3 });
-    T("P", 480, 316, 44, ROUGE);
-    Bonhomme(860, 280, 1.1);
-    T("?", 960, 260, 120, OR);
-    T("Pas de panique.", 640, 640, 56, BLEU);
-  } },
-  { duree: 7.87, construire() {
-    T("Ce n'est pas une amende de police", 640, 90, 52);
-    E(320, 330, 230, 150);
-    R(235, 360, 170, 30, { fill: ENCRE, fillStyle: "hachure" });
-    T("Amende", 320, 490, 46, GRIS);
-    Croix(320, 340, 110);
-    R(760, 210, 260, 330, { fill: "#fff", fillStyle: "solid" });
-    L(790, 280, 990, 280); L(790, 320, 960, 320); L(790, 360, 980, 360);
-    T("Redevance", 890, 255, 40, BLEU);
-    T("37 €", 890, 470, 64, ENCRE);
-    T("= une facture pour la place", 890, 610, 42, BLEU);
-  } },
-  { duree: 8.27, construire() {
-    T("La scan-car lit les plaques", 640, 90, 56);
-    R(130, 330, 380, 110, { fill: "#cfe0ff", fillStyle: "hachure" });
-    P([[190, 330], [240, 260], [420, 260], [470, 330]]);
-    C(210, 450, 70, { fill: ENCRE, fillStyle: "solid" });
-    C(430, 450, 70, { fill: ENCRE, fillStyle: "solid" });
-    R(300, 215, 60, 45, { fill: OR, fillStyle: "solid" });
-    C(330, 238, 22, { fill: ENCRE, fillStyle: "solid", strokeWidth: 2 });
-    L(360, 230, 560, 180, { stroke: OR }); L(360, 245, 560, 260, { stroke: OR });
-    R(560, 520, 170, 50, { fill: "#fff", fillStyle: "solid", stroke: ROUGE });
-    T("1-ABC-123", 645, 556, 34, ROUGE);
-    Fleche(760, 360, 880, 360, { strokeWidth: 4 });
-    Poly([[920, 330], [1040, 240], [1160, 330]]);
-    R(940, 330, 200, 170);
-    R(1015, 420, 50, 80, { fill: OR, fillStyle: "hachure" });
-    Enveloppe(1080, 520, 110, 70);
-    T("Une lettre arrive", 1040, 650, 40, BLEU);
-  } },
-  { duree: 4.54, construire() {
-    T("10 jours pour contester", 640, 100, 64);
-    R(330, 170, 420, 380, { fill: "#fff", fillStyle: "solid" });
-    R(330, 170, 420, 70, { fill: ROUGE, fillStyle: "hachure", stroke: ROUGE });
-    for (let r = 0; r < 4; r++) for (let c = 0; c < 5; c++) L(360 + c * 80, 285 + r * 70, 400 + c * 80, 285 + r * 70, { strokeWidth: 2, stroke: GRIS });
-    T("10", 540, 430, 120, ROUGE);
-    C(540, 395, 190, { stroke: ROUGE, strokeWidth: 5 });
-    D("M 860 470 l 160 -160 l 30 30 l -160 160 z", { fill: OR, fillStyle: "solid" });
-    T("par écrit", 960, 600, 54, BLEU);
-  } },
-  { duree: 7.66, construire() {
-    T("Sans réponse, la note grimpe", 640, 90, 56);
-    P([[120, 620], [330, 620], [330, 520], [540, 520], [540, 420], [750, 420], [750, 320], [960, 320], [960, 220], [1160, 220]], { strokeWidth: 4.5 });
-    T("Lettre", 225, 600, 38); T("37 €", 225, 560, 34, BLEU);
-    T("Rappel", 435, 500, 38); T("+ frais", 435, 460, 34, ROUGE);
-    T("Mise en demeure", 645, 400, 34); T("+ frais", 645, 360, 34, ROUGE);
-    T("Huissier", 855, 300, 38, ROUGE); T("€€€", 855, 260, 40, ROUGE);
-    Fleche(1050, 640, 1150, 300, { stroke: ROUGE, strokeWidth: 5 });
-  } },
-  { duree: 8.43, construire() {
-    T("Souvent, il y a une erreur", 640, 90, 58);
-    Telephone(160, 190, 150, 250);
-    T("J'avais payé", 235, 520, 40);
-    Coche(195, 300, 1.6);
-    R(520, 250, 240, 150, { fill: "#e2ebfc", fillStyle: "hachure" });
-    T("Riverain", 640, 335, 36, BLEU);
-    T("J'avais ma carte", 640, 520, 40);
-    Coche(600, 440, 1.2);
-    R(940, 210, 220, 180, { fill: "#fff", fillStyle: "solid" });
-    C(1050, 300, 90, { stroke: GRIS });
-    T("?", 1050, 318, 60, GRIS);
-    T("La photo ne prouve rien", 1050, 520, 38);
-    Coche(1010, 440, 1.2);
-  } },
-  { duree: 6.13, construire() {
-    T("SOS Citizens vérifie tout", 640, 90, 58);
-    Telephone(130, 180, 170, 290);
-    Enveloppe(165, 250, 100, 70);
-    Fleche(340, 330, 450, 330, { strokeWidth: 4 });
-    R(480, 190, 300, 280, { fill: "#fff", fillStyle: "solid" });
-    Coche(510, 250, 0.9); L(570, 262, 740, 262, { strokeWidth: 2 });
-    Coche(510, 320, 0.9); L(570, 332, 740, 332, { strokeWidth: 2 });
-    Coche(510, 390, 0.9); L(570, 402, 740, 402, { strokeWidth: 2 });
-    Fleche(810, 330, 920, 330, { strokeWidth: 4 });
-    R(950, 190, 220, 280, { fill: "#fff", fillStyle: "solid" });
-    L(980, 250, 1140, 250, { strokeWidth: 2 }); L(980, 290, 1120, 290, { strokeWidth: 2 }); L(980, 330, 1140, 330, { strokeWidth: 2 });
-    T("Prête !", 1060, 420, 46, VERT);
-    T("Gratuit", 640, 620, 80, OR);
-  } },
-  { duree: 6.0, construire() {
-    D("M 640 150 L 760 195 L 760 300 C 760 380 705 430 640 455 C 575 430 520 380 520 300 L 520 195 Z", { fill: ENCRE, fillStyle: "solid", strokeWidth: 4 });
-    T("P", 640, 345, 120, OR);
-    T("SOS Citizens", 640, 545, 92);
-    T("Prenez votre lettre en photo.", 640, 620, 46, BLEU);
-    T("On s'occupe du reste.", 640, 680, 46, BLEU);
-  } },
-];
+// Fenêtre d'une scène : elle entre un peu avant sa phrase et sort quand la
+// suivante entre. Sortie plus courte que l'entrée, vers la gauche : on avance.
+const ENTREE = 0.5, SORTIE = 0.38;
+const fenetre = (i) => ({ a: S[i - 1].debut - 0.42, b: i < S.length ? S[i].debut - 0.42 : D.total - 1.9 });
 
-/* ------------------------------------------------------------- animation */
-let debuts = [], total = 0;
-const PAUSE = 0.7, FONDU = 0.35, CRAYON = document.createElementNS(NS, "g");
-
-function preparer() {
-  for (const s of SCENES) {
-    items = [];
-    const g = document.createElementNS(NS, "g");
-    svg.appendChild(g);
-    const avant = svg.childNodes.length;
-    s.construire();
-    // Les formes ont été ajoutées à la racine : on les range dans la scène.
-    for (const it of items) g.appendChild(it.node);
-    s.groupe = g; s.items = items; s.duree += PAUSE;
-    for (const it of items) {
-      if (it.kind === "trait") {
-        it.chemins = [...it.node.querySelectorAll("path")].map((p) => ({ p, l: p.getTotalLength() || 1 }));
-        it.longueur = it.chemins.reduce((a, c) => a + c.l, 0);
-        it.chemins.forEach(({ p, l }) => { p.style.strokeDasharray = `${l} ${l}`; p.style.strokeDashoffset = l; });
-        it.node.querySelectorAll("path").forEach((p) => { if (p.getAttribute("fill") && p.getAttribute("fill") !== "none") p.dataset.remplissage = p.getAttribute("fill"); });
-      } else {
-        const b = it.t.getBBox();
-        it.box = b;
-        it.rect.setAttribute("x", b.x - 4); it.rect.setAttribute("y", b.y - 10); it.rect.setAttribute("height", b.height + 20);
-        it.rect.setAttribute("width", 0);
-      }
-    }
-    // Calendrier du tracé : tout est dessiné à 82 % de la voix.
-    const somme = items.reduce((a, it) => a + it.poids, 0);
-    let t0 = 0.15; const fenetre = (s.duree - PAUSE) * 0.82;
-    for (const it of items) { it.debut = t0; it.duree = (it.poids / somme) * fenetre; t0 += it.duree; }
-    debuts.push(total); total += s.duree;
-    g.style.display = "none";
-  }
-  CRAYON.innerHTML = `<g transform="rotate(35)"><rect x="-7" y="-92" width="14" height="76" rx="3" fill="#ffc629" stroke="${ENCRE}" stroke-width="2.5"/><rect x="-7" y="-104" width="14" height="13" rx="3" fill="#f6a5b4" stroke="${ENCRE}" stroke-width="2.5"/><path d="M -7 -16 L 0 0 L 7 -16 Z" fill="#f3d9a4" stroke="${ENCRE}" stroke-width="2.5"/><path d="M -2.4 -5.5 L 0 0 L 2.4 -5.5 Z" fill="${ENCRE}"/></g>`;
-  svg.appendChild(CRAYON);
+function scene(i, t) {
+  const el = $(`#s${i}`);
+  const { a, b } = fenetre(i);
+  if (t < a || t > b + SORTIE) { el.style.opacity = 0; el.style.visibility = "hidden"; return false; }
+  el.style.visibility = "visible";
+  const e = eo(pr(t, a, ENTREE));
+  const s = eo3(pr(t, b, SORTIE));
+  el.style.opacity = Math.min(clamp((t - a) / 0.25), 1 - s);
+  el.style.transform = `translateX(${(90 * (1 - e) - 120 * s).toFixed(2)}px)`;
+  // Caméra : une poussée lente sur l'illustration pendant toute la scène.
+  const illu = el.querySelector(".illu");
+  const p = pr(t, a, b - a + SORTIE);
+  illu.style.transform = `scale(${(1 + 0.035 * eio(p)).toFixed(4)})`;
+  return true;
 }
+
+function longueur(el) { return el.getTotalLength ? el.getTotalLength() : 0; }
+function trace(el, p) {
+  const L = Number(el.dataset.l || (el.dataset.l = longueur(el)));
+  el.style.strokeDasharray = `${L} ${L}`;
+  el.style.strokeDashoffset = (L * (1 - p)).toFixed(2);
+  el.style.visibility = p > 0.002 ? "visible" : "hidden";
+}
+
+const R = {
+  1(t) {
+    const tl = mot(1, "lettre"), tp = mot(1, "parking.brussels"), tr = mot(1, "respirez"), tm = mot(1, "minute");
+    entree($("#s1-boite"), t, S[0].debut - 0.3, { dy: 60, d: 0.7 });
+    // Le drapeau se lève : du courrier est arrivé.
+    const pd = back(pr(t, tl - 0.05, 0.5), 2.2);
+    boite($("#s1-drapeau"), "643px 600px", "view-box");
+    pose($("#s1-drapeau"), { o: clamp((t - (S[0].debut - 0.3)) / 0.3), r: lerp(90, 0, pd) });
+    // L'enveloppe sort de la boîte, puis devient la lettre.
+    const ue = eo(pr(t, tl, 0.7));
+    const ve = clamp(1 - pr(t, tp - 0.1, 0.25));
+    pose($("#s1-enveloppe"), { o: ve * clamp((t - tl) / 0.1), y: lerp(40, -170, ue), s: lerp(0.8, 1.08, ue), r: lerp(-8, 0, ue) });
+    const lp = pr(t, tp - 0.12, 0.6);
+    pose($("#s1-lettre"), { o: clamp((t - (tp - 0.12)) / 0.15), y: lerp(110, -40, eo(lp)), s: lerp(0.52, 0.82, back(lp, 1.4)) });
+    // Respirez : un halo qui inspire, puis se pose.
+    const rp = pr(t, tr - 0.1, 1.8);
+    const souffle = rp <= 0 ? 0 : Math.sin(Math.PI * Math.min(1, rp * 1.6)) * (1 - rp) + rp;
+    pose($("#s1-respire"), { o: clamp((t - tr) / 0.3) * 0.9, s: lerp(0.7, 1, souffle) });
+  },
+  2(t) {
+    const ta = mot(2, "amende"), tpo = mot(2, "police."), tr = mot(2, "redevance."), tf = mot(2, "facture…") ;
+    entree($("#s2-amende"), t, S[1].debut - 0.25, { dy: 50, d: 0.7, r0: -3 });
+    // Barré : sur « police », le titre et la carte se barrent ensemble.
+    const pb = eo(pr(t, tpo, 0.45));
+    $("#s2-barre").style.transform = `scaleX(${pb})`;
+    trace($("#s2-croix1"), eo(pr(t, tpo, 0.32)));
+    trace($("#s2-croix2"), eo(pr(t, tpo + 0.14, 0.32)));
+    const dim = eo(pr(t, tr - 0.2, 0.5));
+    $("#s2-amende").style.opacity = lerp(1, 0.4, dim) * clamp((t - S[1].debut + 0.25) / 0.2);
+    $("#s2-croix").style.opacity = lerp(1, 0.4, dim);
+    // La redevance arrive devant.
+    entree($("#s2-redevance"), t, tr - 0.15, { dx: 70, dy: 40, s0: 0.92, d: 0.7 });
+    $("#s2-marq").style.transform = `scaleX(${eo(pr(t, tr + 0.1, 0.5))})`;
+    // « Une facture » : les lignes de la facture se remplissent.
+    entree($("#s2-l1"), t, tf - 0.1, { dx: -24, dy: 0, d: 0.45 });
+    entree($("#s2-l2"), t, tf + 0.02, { dx: -24, dy: 0, d: 0.45 });
+    pop($("#s2-total"), t, mot(2, "parking.") - 0.2, { s0: 0.85 });
+  },
+  3(t) {
+    const tsc = mot(3, "scan-car."), tca = mot(3, "caméras,"), tpl = mot(3, "plaques."), tpa = mot(3, "paiement"), tle = mot(3, "lettre");
+    // La scan-car entre par la gauche et s'arrête à hauteur de la voiture visée.
+    const pc = eo3(pr(t, tsc - 0.35, 1.5));
+    const x = lerp(-330, 250, pc);
+    pose($("#s3-scancar"), { x, o: clamp((t - (tsc - 0.35)) / 0.25) });
+    const rot = (x + 330) * 2.2;
+    boite($("#s3-roue1")); boite($("#s3-roue2"));
+    $("#s3-roue1").style.transform = `rotate(${rot}deg)`;
+    $("#s3-roue2").style.transform = `rotate(${rot}deg)`;
+    // Les caméras balaient.
+    const f = pr(t, tca, 0.3);
+    $("#s3-faisceau").style.opacity = f * (0.75 + 0.25 * Math.sin((t - tca) * 18));
+    // La plaque, vue de près, et le trait de lecture qui la parcourt.
+    pop($("#s3-bulle"), t, tpl - 0.25, { s0: 0.6 });
+    const sp = pr(t, tpl, 0.75);
+    $("#s3-scan").style.transform = `translateX(${(316 * eio(sp)).toFixed(1)}px)`;
+    $("#s3-scan").style.opacity = sp > 0 && sp < 1 ? 1 : 0;
+    pop($("#s3-aucun"), t, tpa - 0.1, { s0: 0.6, r0: 6 });
+    // La lettre part vers la maison, en arc.
+    const vp = pr(t, tle - 0.05, 1.0), ve = eio(vp);
+    const ax = 410, ay = 160, cx = 600, cy = -40, bx = 700, by = 340;
+    const bxv = (1 - ve) * (1 - ve) * ax + 2 * (1 - ve) * ve * cx + ve * ve * bx;
+    const byv = (1 - ve) * (1 - ve) * ay + 2 * (1 - ve) * ve * cy + ve * ve * by;
+    pose($("#s3-vol"), { o: vp > 0 && vp < 0.97 ? 1 : 0, x: bxv - 60, y: byv - 40, r: lerp(-20, 12, ve), s: lerp(1, 0.55, ve) });
+    const allume = eo(pr(t, tle + 0.95, 0.3));
+    $("#s3-fenetre").style.fill = allume > 0 ? `rgb(255, ${Math.round(lerp(255, 198, allume))}, ${Math.round(lerp(255, 41, allume))})` : "#fff";
+    $("#s3-fenetre2").style.fill = $("#s3-fenetre").style.fill;
+  },
+  4(t) {
+    const tc = mot(4, "chrono"), td = mot(4, "dix"), te = mot(4, "écrit.");
+    pop($("#s4-cadran"), t, S[3].debut - 0.3, { s0: 0.8 });
+    pop($("#s4-bouton"), t, S[3].debut - 0.2, { s0: 0.6 });
+    // Le chrono démarre : l'anneau se remplit, la couronne s'enfonce au départ.
+    const press = pr(t, tc - 0.05, 0.22);
+    $("#s4-bouton").style.translate = `0 ${(Math.sin(Math.PI * press) * 12).toFixed(1)}px`;
+    const a = eio(pr(t, tc, 2.2));
+    $("#s4-arc").style.strokeDashoffset = (1508 * (1 - a)).toFixed(1);
+    const n = pr(t, td - 0.1, 0.5);
+    pose($("#s4-nombre"), { o: clamp(n * 5), s: lerp(0.6, 1, back(n, 1.8)) });
+    entree($("#s4-jours"), t, td + 0.1, { dy: 16, d: 0.45 });
+    // « Par écrit » : le stylo trace une signature.
+    const sp = pr(t, te - 0.15, 0.9);
+    const chemin = $("#s4-stylo-trait");
+    trace(chemin, eio(sp));
+    const L = Number(chemin.dataset.l);
+    const pt = chemin.getPointAtLength(L * eio(sp));
+    boite($("#s4-stylo"), "0 0", "view-box");
+    pose($("#s4-stylo"), { o: sp > 0 ? clamp((t - te + 0.15) / 0.12) : 0, x: pt.x, y: pt.y });
+    $("#s4-marq").style.transform = `scaleX(${eo(pr(t, te, 0.45))})`;
+  },
+  5(t) {
+    const tr = mot(5, "rappel."), tm = mot(5, "demeure."), th = mot(5, "l'huissier."), tg = mot(5, "grimpe.");
+    // La redevance de départ est là dès l'entrée ; chaque étape pousse une
+    // barre plus haute, sur le mot qui la nomme.
+    const barre = (id, t0) => {
+      const p = pr(t, t0, 0.6);
+      const el = $(id);
+      boite(el, "center bottom");
+      pose(el, { o: clamp(p * 6), sx: 1, sy: lerp(0.08, 1, back(p, 1.3)) });
+    };
+    barre("#s5-b0", S[4].debut - 0.2);
+    barre("#s5-b1", tr - 0.12);
+    barre("#s5-b2", tm - 0.25);
+    barre("#s5-b3", th - 0.2);
+    // La flèche grimpe avec la note.
+    trace($("#s5-fleche"), eio(pr(t, tg - 0.1, 3.1)));
+    $("#s5-pointe").style.opacity = clamp((t - (tg + 2.9)) / 0.15);
+    // L'huissier : la scène encaisse le choc.
+    const c = pr(t, th, 0.45);
+    const choc = c > 0 && c < 1 ? Math.sin(c * 40) * 9 * (1 - c) : 0;
+    $("#s5 .illu").style.translate = `${choc.toFixed(1)}px 0`;
+    $("#s5-grimpe").style.translate = `0 ${(-10 * eo(pr(t, tg + 0.25, 0.5))).toFixed(1)}px`;
+  },
+  6(t) {
+    const t1 = mot(6, "l'appli."), t2 = mot(6, "riverain."), t3 = mot(6, "photo");
+    const tb = mot(6, "bonne");
+    $("#s6-marq").style.transform = `scaleX(${eo(pr(t, mot(6, "fréquentes.") + 0.1, 0.5))})`;
+    // La liste arrive avec « erreurs » ; chaque carte s'allume quand elle est
+    // dite, et reçoit sa coche à la fin de sa phrase.
+    const te = mot(6, "erreurs");
+    [[1, mot(6, "payé") - 0.15, t1], [2, mot(6, "carte") - 0.15, t2], [3, t3 - 0.1, mot(6, "tout.")]].forEach(([k, ton, tk], i) => {
+      const c = $(`#s6-c${k}`);
+      entree(c, t, te - 0.1 + [0, 0.1, 0.18][i], { dx: 70, dy: 0, d: 0.6 });
+      const allume = eo(pr(t, ton, 0.35));
+      c.style.opacity = Number(c.style.opacity) * lerp(0.42, 1, allume);
+      c.style.translate = `${(-14 * allume).toFixed(1)}px 0`;
+      pop($(`#s6-k${k}`), t, tk - 0.05, { s0: 0.4 });
+    });
+    return tb;
+  },
+  7(t) {
+    const ts = S[6].debut, tl = mot(7, "lit"), tv = mot(7, "vérifie"), td = mot(7, "détail,"), tp = mot(7, "prépare"), tg = mot(7, "gratuitement.");
+    entree($("#s7-lettre"), t, ts - 0.3, { dy: 50, d: 0.7 });
+    pop($("#s7-logo"), t, ts - 0.05, { s0: 0.5 });
+    // Lecture : le faisceau descend le long de la lettre.
+    const sp = pr(t, tl - 0.05, 1.1);
+    $("#s7-scan").style.transform = `translateY(${(470 * eio(sp)).toFixed(1)}px)`;
+    $("#s7-scan").style.opacity = sp > 0 && sp < 1 ? 1 : 0;
+    // Vérification : une coche par champ, en vague (écarts qui raccourcissent).
+    [0, 0.16, 0.28].forEach((dt, k) => pop($(`#s7-k${k + 1}`), t, tv + 0.15 + dt, { s0: 0.4 }));
+    // La réponse sort de derrière la lettre, ses lignes s'écrivent.
+    const rp = pr(t, tp - 0.2, 0.75);
+    pose($("#s7-reponse"), { o: clamp(rp * 4), x: lerp(-300, 0, eo(rp)), r: lerp(-4, 3, eo(rp)) });
+    for (let k = 1; k <= 6; k++) {
+      const lp = pr(t, tp + 0.25 + k * 0.11, 0.3);
+      const el = $(`#s7-r${k}`);
+      boite(el, "left center");
+      el.style.transform = `scaleX(${eo(lp)})`;
+    }
+    // Gratuit : le tampon tombe.
+    const g = pr(t, tg - 0.1, 0.35);
+    pose($("#s7-tampon"), { o: clamp(g * 4), s: lerp(1.7, 1, eo3(g)), r: lerp(-22, -9, eo3(g)) });
+  },
+  8(t) {
+    const tp = mot(8, "photo,");
+    entree($("#s8-tel"), t, S[7].debut - 0.35, { dy: 80, d: 0.8 });
+    const lu = pr(t, tp + 0.2, 0.55);
+    $("#s8-viseur").style.opacity = 1 - clamp(lu * 3);
+    pop($("#s8-lu"), t, tp + 0.2, { s0: 0.6 });
+    if (t < tp + 0.2) $("#s8-lu").style.opacity = 0;
+    const f = pr(t, tp + 0.05, 0.35);
+    $("#flash").style.opacity = f > 0 && f < 1 ? (f < 0.2 ? f / 0.2 : 1 - (f - 0.2) / 0.8) * 0.85 : 0;
+  },
+};
 
 function rendre(t) {
-  let i = SCENES.length - 1;
-  for (let k = 0; k < SCENES.length; k++) if (t < debuts[k] + SCENES[k].duree) { i = k; break; }
-  SCENES.forEach((s, k) => (s.groupe.style.display = k === i ? "" : "none"));
-  const s = SCENES[i], u = t - debuts[i];
-  let pointe = null;
-  for (const it of s.items) {
-    const p = Math.max(0, Math.min(1, (u - it.debut) / it.duree));
-    if (it.kind === "trait") {
-      let reste = p * it.longueur;
-      for (const { p: chemin, l } of it.chemins) {
-        const fait = Math.max(0, Math.min(l, reste)); reste -= l;
-        chemin.style.strokeDashoffset = l - fait;
-        if (chemin.dataset.remplissage) chemin.style.fillOpacity = p >= 1 ? 1 : 0;
-        if (p > 0 && p < 1 && fait > 0 && fait < l) { const pt = chemin.getPointAtLength(fait); pointe = pt; }
-      }
-    } else {
-      it.rect.setAttribute("width", (it.box.width + 8) * p);
-      if (p > 0 && p < 1) pointe = { x: it.box.x + it.box.width * p, y: it.box.y + it.box.height * 0.75 };
-    }
+  for (const { el, t: t0, extra } of MOTS) {
+    const e = eo(pr(t, t0, 0.6));
+    el.style.transform = `translateY(calc(${(112 * (1 - e)).toFixed(2)}% + ${(extra * (1 - e)).toFixed(1)}px))`;
   }
-  CRAYON.style.display = pointe ? "" : "none";
-  if (pointe) CRAYON.setAttribute("transform", `translate(${pointe.x} ${pointe.y})`);
-  const finale = i === SCENES.length - 1;
-  s.groupe.style.opacity = !finale && u > s.duree - FONDU ? Math.max(0, (s.duree - u) / FONDU) : 1;
+  // En-tête et progression : décor, en fondu seulement.
+  $("#entete").style.opacity = clamp((t - 0.1) / 0.5) * (1 - clamp((t - (D.total - 2.4)) / 0.4));
+  $("#progres").style.transform = `scaleX(${clamp(t / D.total).toFixed(4)})`;
+  // Teinte de fond : rouge quand la note grimpe, vert pour la bonne nouvelle.
+  const t5 = mot(5, "l'huissier."), t6 = mot(6, "bonne");
+  const rouge = clamp((t - t5) / 0.6) * (1 - clamp((t - (S[5].debut - 0.42)) / 0.5));
+  const vert = clamp((t - t6) / 0.6) * (1 - clamp((t - (S[6].debut - 0.42)) / 0.5));
+  $("#teinte").style.background = rouge > 0 ? "#fef3f2" : "#effaf4";
+  $("#teinte").style.opacity = Math.max(rouge, vert);
+  $("#flash").style.opacity = 0;
+  for (let i = 1; i <= S.length; i++) if (scene(i, t)) R[i](t);
+  // Écran de fin.
+  const tf = D.total - 2.15;
+  const pf = pr(t, tf, 0.6);
+  $("#fin").style.opacity = clamp((t - tf) / 0.2);
+  pose($("#fin-logo"), { o: clamp((t - tf) / 0.12), s: lerp(0.55, 1, back(pf, 1.6)) });
+  entree($("#fin-nom"), t, tf + 0.14, { dy: 40, d: 0.6 });
+  entree($("#fin-url"), t, tf + 0.28, { dy: 30, d: 0.6 });
+  $("#credit").style.opacity = clamp((t - tf - 0.4) / 0.4);
 }
 
-window.pret = document.fonts.ready.then(() => { preparer(); window.TOTAL = total; window.DEBUTS = debuts; window.DUREES = SCENES.map((s) => s.duree); rendre(0); return total; });
+/* ------------------------------------------------------------------ sons */
+// Les bruitages suivent les mêmes instants que l'image : une seule ligne de temps.
+function sons() {
+  const L = [];
+  const s = (t, nom, gain = 1, pan = 0) => L.push({ t: Math.max(0, t), nom, gain, pan });
+  for (let i = 2; i <= S.length; i++) s(S[i - 1].debut - 0.5, "whoosh", 0.55, 0.3);
+  s(D.total - 2.25, "whoosh", 0.5, 0);
+  // 1
+  s(S[0].debut - 0.3, "pop", 0.35);
+  s(mot(1, "lettre") - 0.05, "clic", 0.6, 0.3);
+  s(mot(1, "lettre"), "whooshCourt", 0.5, 0.2);
+  s(mot(1, "parking.brussels") - 0.12, "papier", 0.7, 0.2);
+  s(mot(1, "respirez") - 0.1, "souffle", 0.45);
+  s(mot(1, "minute,"), "tic", 0.4);
+  // 2
+  s(mot(2, "police."), "trait", 0.55, 0.2);
+  s(mot(2, "police.") + 0.14, "trait", 0.45, 0.3);
+  s(mot(2, "redevance.") - 0.15, "whooshCourt", 0.45, 0.3);
+  s(mot(2, "facture…") - 0.1, "pop", 0.35, 0.2);
+  s(mot(2, "parking.") - 0.2, "ding", 0.35, 0.2);
+  // 3
+  s(mot(3, "scan-car.") - 0.4, "voiture", 0.6, -0.4);
+  s(mot(3, "caméras,"), "scan", 0.35, 0.2);
+  s(mot(3, "plaques.") - 0.25, "pop", 0.5, 0.2);
+  s(mot(3, "plaques."), "bip", 0.45, 0.2);
+  s(mot(3, "plaques.") + 0.4, "bip", 0.45, 0.2);
+  s(mot(3, "paiement") - 0.1, "erreur", 0.45, 0.3);
+  s(mot(3, "lettre") - 0.05, "whooshCourt", 0.5, 0.4);
+  s(mot(3, "lettre") + 0.95, "ding", 0.35, 0.5);
+  // 4
+  s(S[3].debut - 0.3, "pop", 0.4);
+  s(mot(4, "chrono") - 0.05, "clic", 0.7);
+  for (let k = 0; k < 9; k++) s(mot(4, "chrono") + 0.05 + k * 0.25, "tic", 0.3 - k * 0.015);
+  s(mot(4, "dix") - 0.1, "pop", 0.5);
+  s(mot(4, "écrit.") - 0.15, "stylo", 0.55, 0.1);
+  // 5
+  s(mot(5, "rappel.") - 0.12, "monte", 0.4, -0.2);
+  s(mot(5, "demeure.") - 0.25, "monte", 0.45, 0.1);
+  s(mot(5, "l'huissier.") - 0.2, "monte", 0.45, 0.3);
+  s(mot(5, "l'huissier."), "choc", 0.8);
+  // 6
+  s(mot(6, "bonne") - 0.05, "carillon", 0.35);
+  s(mot(6, "erreurs") - 0.1, "whooshCourt", 0.4, 0.3);
+  s(mot(6, "payé") - 0.15, "pop", 0.25, 0.3);
+  s(mot(6, "l'appli.") - 0.05, "ding", 0.4, 0.3);
+  s(mot(6, "carte") - 0.15, "pop", 0.25, 0.3);
+  s(mot(6, "riverain.") - 0.05, "ding2", 0.4, 0.3);
+  s(mot(6, "photo") - 0.1, "pop", 0.25, 0.3);
+  s(mot(6, "tout.") - 0.05, "ding3", 0.45, 0.3);
+  // 7
+  s(S[6].debut - 0.05, "pop", 0.5, 0.2);
+  s(mot(7, "lit") - 0.05, "scan", 0.45, 0.1);
+  [0, 0.16, 0.28].forEach((dt, k) => s(mot(7, "vérifie") + 0.15 + dt, k === 2 ? "ding2" : "tic", 0.4, 0.1));
+  s(mot(7, "prépare") - 0.2, "whooshCourt", 0.45, 0.4);
+  for (let k = 1; k <= 6; k++) s(mot(7, "prépare") + 0.25 + k * 0.11, "frappe", 0.25, 0.4);
+  s(mot(7, "gratuitement.") + 0.15, "tampon", 0.8, 0.3);
+  // 8
+  s(S[7].debut - 0.35, "whooshCourt", 0.35, 0.2);
+  s(mot(8, "photo,") + 0.05, "declencheur", 0.7, 0.2);
+  s(mot(8, "photo,") + 0.25, "ding", 0.4, 0.2);
+  s(mot(8, "site") - 0.1, "pop", 0.4, -0.2);
+  s(D.total - 2.15, "final", 0.6);
+  return L.sort((a, b) => a.t - b.t);
+}
+
+window.SONS = sons();
+window.pret = D.total;
 window.rendre = rendre;
+document.fonts.ready.then(() => { window.policesPretes = true; });
 </script>
 </body>
 </html>

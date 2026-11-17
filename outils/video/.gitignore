@@ -1,0 +1,12 @@
+node_modules/
+images/
+apercu/
+voix/
+mix.wav
+sons.json
+donnees.json
+donnees.js
+video.vtt
+*.mp4
+*.jpg
+package-lock.json

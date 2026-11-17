@@ -1,14 +1,14 @@
 /**
- * « Comprendre en 1 minute » : la vidéo dessinée qui explique le système belge.
+ * « Comprendre en 1 minute » : la vidéo animée qui explique le système belge.
  *
- * Elle ne se charge qu'au clic (`preload="none"`) : 2 Mo de moins pour ceux qui
+ * Elle ne se charge qu'au clic (`preload="none"`) : 5 Mo de moins pour ceux qui
  * ne la regardent pas. Sous-titres activés par défaut — beaucoup la regardent
  * sans le son, dans le tram.
  */
 export function VideoExplication({ className = "" }: { className?: string }) {
   return (
     <figure className={className}>
-      <div className="overflow-hidden rounded-[var(--radius-carte)] border border-line/80 bg-[#fbf8f1] shadow-flotte">
+      <div className="overflow-hidden rounded-[var(--radius-carte)] border border-line/80 bg-paper shadow-flotte">
         <video
           controls
           playsInline
@@ -24,6 +24,7 @@ export function VideoExplication({ className = "" }: { className?: string }) {
       </div>
       <figcaption className="mt-2 text-sm text-ink-soft">
         1 minute pour tout comprendre : redevance, délai, frais, erreurs fréquentes.
+        <span className="ml-1 text-ink-faint">Voix : ElevenLabs.</span>
       </figcaption>
     </figure>
   );
