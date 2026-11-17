@@ -1,9 +1,8 @@
 import { redirect } from "next/navigation";
 
 /**
- * Il n'y a plus de page d'inscription distincte : le même écran crée le
- * compte la première fois et l'ouvre les fois suivantes. L'adresse reste
- * valable pour les anciens liens et les favoris.
+ * L'inscription vit sur l'écran de connexion, onglet « Créer un compte ».
+ * L'adresse reste valable pour les anciens liens et les favoris.
  */
 export default async function InscriptionPage({
   searchParams,
@@ -11,5 +10,5 @@ export default async function InscriptionPage({
   searchParams: Promise<{ suite?: string }>;
 }) {
   const { suite } = await searchParams;
-  redirect(suite ? `/connexion?suite=${encodeURIComponent(suite)}` : "/connexion");
+  redirect(suite ? `/connexion?compte=nouveau&suite=${encodeURIComponent(suite)}` : "/connexion?compte=nouveau");
 }

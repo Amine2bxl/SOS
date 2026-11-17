@@ -16,7 +16,7 @@ import {
 import { analyser, type Faits } from "@/cerveau";
 import { faitsDepuisDossier, nettoyerFaits, nettoyerReponses, REGIONS_VALIDES } from "@/lib/faits";
 import { messageHorsPerimetre, regionOuverte } from "@/lib/perimetre";
-import type { Dossier } from "@/lib/dossiers-format";
+import { MODES_ENVOI, type Dossier } from "@/lib/dossiers-format";
 
 export type EtatDossier = { erreur?: string; quotaAtteint?: boolean };
 
@@ -174,7 +174,16 @@ export async function creerDossier(saisie: NouveauDossier): Promise<EtatDossier 
  */
 export async function corrigerDossier(
   dossierId: string,
-  modifications: { reponses?: Record<string, string>; region?: string; dateEnvoi?: string; dateEcheance?: string },
+  modifications: {
+    reponses?: Record<string, string>;
+    region?: string;
+    dateEnvoi?: string;
+    dateEcheance?: string;
+    /** Montant du premier courrier, pour reconstruire le solde d'un rappel. */
+    montantInitial?: string | number | null;
+    /** Somme déjà versée. */
+    dejaPaye?: string | number | null;
+  },
 ): Promise<{ erreur?: string; ok?: boolean }> {
   const supabase = await creerClientServeur();
   if (!supabase) return { erreur: "Service indisponible." };
@@ -200,7 +209,12 @@ export async function corrigerDossier(
   const dateEcheance =
     modifications.dateEcheance !== undefined ? dateIso(modifications.dateEcheance) : faits.dateEcheance;
 
-  const analyse = analyser({ ...faits, reponses, region, dateEnvoi, dateEcheance });
+  const somme = (v: string | number | null | undefined, actuelle: number | null | undefined) =>
+    v === undefined ? (actuelle ?? null) : v === "" ? null : nombreOuNull(v, { min: 0, max: 100000 });
+  const montantInitial = somme(modifications.montantInitial, faits.montantInitial);
+  const dejaPaye = somme(modifications.dejaPaye, faits.dejaPaye);
+
+  const analyse = analyser({ ...faits, reponses, region, dateEnvoi, dateEcheance, montantInitial, dejaPaye });
 
   const { error } = await supabase
     .from("dossiers")
@@ -209,6 +223,10 @@ export async function corrigerDossier(
       region,
       date_envoi: dateEnvoi,
       date_echeance: dateEcheance,
+      // Écrits seulement quand on les modifie : une réponse à une question ne
+      // touche pas à ces colonnes.
+      ...(modifications.montantInitial !== undefined ? { montant_initial: montantInitial } : {}),
+      ...(modifications.dejaPaye !== undefined ? { deja_paye: dejaPaye } : {}),
       moyens_retenus: analyse.moyens.map((m) => m.id),
       analyse_moteur: analyse,
     })
@@ -301,6 +319,7 @@ export async function enregistrerLettreDossier({
 export async function marquerContestationEnvoyee(
   dossierId: string,
   date: string,
+  preuve?: { mode?: string; reference?: string },
 ): Promise<{ erreur?: string; ok?: boolean }> {
   const supabase = await creerClientServeur();
   if (!supabase) return { erreur: "Service indisponible." };
@@ -315,23 +334,76 @@ export async function marquerContestationEnvoyee(
   const t = Date.parse(`${jour}T00:00:00Z`);
   if (t > Date.now() + 86_400_000) return { erreur: "La date d'envoi ne peut pas être dans le futur." };
 
-  const { error } = await supabase
+  const mode = preuve?.mode && MODES_ENVOI[preuve.mode] ? preuve.mode : null;
+  const reference = texte(preuve?.reference, 80);
+  const base = { statut: "contestation_envoyee", date_envoi_contestation: jour };
+
+  let { error } = await supabase
     .from("dossiers")
-    .update({ statut: "contestation_envoyee", date_envoi_contestation: jour })
+    .update(mode || reference ? { ...base, mode_envoi: mode, preuve_envoi: reference } : base)
     .eq("id", dossierId)
     .eq("user_id", user.id);
+  // Base pas encore migrée (colonnes absentes) : l'envoi compte plus que sa preuve.
+  if (error && (mode || reference) && /column|schema cache/i.test(error.message)) {
+    ({ error } = await supabase.from("dossiers").update(base).eq("id", dossierId).eq("user_id", user.id));
+  }
   if (error) return { erreur: "L'envoi n'a pas pu être noté. Réessayez." };
 
+  const canal = mode ? MODES_ENVOI[mode].libelle.toLowerCase() : null;
   await supabase.from("evenements").insert({
     dossier_id: dossierId,
     user_id: user.id,
     type: "statut",
     titre: "Contestation envoyée",
-    note: "Gardez la preuve de l'envoi. Sans réponse dans un mois, nous préparons la relance.",
+    note: [
+      canal ? `Par ${canal}${reference ? ` — preuve : ${reference}` : ""}.` : null,
+      "Gardez la preuve de l'envoi. Sans réponse dans un mois, nous préparons la relance.",
+    ]
+      .filter(Boolean)
+      .join(" "),
     date_evenement: `${jour}T12:00:00Z`,
   });
 
   revalidatePath("/tableau-de-bord");
+  revalidatePath(`/tableau-de-bord/${dossierId}`);
+  return { ok: true };
+}
+
+/**
+ * « L'accusé de réception est arrivé. »
+ *
+ * Une preuve d'expédition ne prouve pas la réception : l'accusé, si. Sa date
+ * rejoint le dossier et la chronologie.
+ */
+export async function noterAccuseReception(dossierId: string, date: string): Promise<{ erreur?: string; ok?: boolean }> {
+  const supabase = await creerClientServeur();
+  if (!supabase) return { erreur: "Service indisponible." };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { erreur: "Vous devez être connecté." };
+  if (!estUuid(dossierId)) return { erreur: "Ce dossier est introuvable." };
+
+  const jour = dateIso(date);
+  if (!jour) return { erreur: "Indiquez la date de l'accusé de réception." };
+  if (Date.parse(`${jour}T00:00:00Z`) > Date.now() + 86_400_000) return { erreur: "Cette date est dans le futur." };
+
+  const { error } = await supabase
+    .from("dossiers")
+    .update({ accuse_reception_le: jour, statut: "en_attente_reponse" })
+    .eq("id", dossierId)
+    .eq("user_id", user.id);
+  if (error) return { erreur: "L'accusé de réception n'a pas pu être noté. Réessayez." };
+
+  await supabase.from("evenements").insert({
+    dossier_id: dossierId,
+    user_id: user.id,
+    type: "statut",
+    titre: "Accusé de réception reçu",
+    note: "L'organisme a bien reçu votre courrier. Gardez l'accusé avec le dossier.",
+    date_evenement: `${jour}T12:00:00Z`,
+  });
+
   revalidatePath(`/tableau-de-bord/${dossierId}`);
   return { ok: true };
 }

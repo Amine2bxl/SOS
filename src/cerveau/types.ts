@@ -87,6 +87,10 @@ export type Faits = {
   reponses?: Reponses;
   /** Date de référence (ISO) : « aujourd'hui », injectable pour les tests. */
   aujourdhui?: string;
+  /** Montant de la toute première redevance, quand le courrier est un rappel. */
+  montantInitial?: number | null;
+  /** Somme déjà versée pour cette redevance, quand il y en a une. */
+  dejaPaye?: number | null;
 };
 
 /* -------------------------------------------------------------------------- */
@@ -179,6 +183,62 @@ export type Delai = {
   /** D'où vient la date : lue sur le courrier, calculée, ou inconnue. */
   origine: "document" | "calcule" | "inconnu";
   explication: string;
+  /**
+   * Le calcul pas à pas : date de départ, durée, date limite, et ce que le
+   * calendrier en dit (week-end, jour férié). Vide quand rien n'est calculé.
+   * Une date qu'on ne peut pas retracer n'est pas présentée comme calculée.
+   */
+  trace: EtapeCalcul[];
+};
+
+export type EtapeCalcul = { libelle: string; valeur: string };
+
+/* -------------------------------------------------------------------------- */
+/*  Le contrôle du courrier                                                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Le verdict d'un point contrôlé. Trois valeurs, jamais deux :
+ *
+ * - `etabli` : le point satisfait le critère vérifié. Ce n'est pas une
+ *   certification de la redevance entière, seulement de ce point.
+ * - `anomalie` : une discordance, ou un élément qui mérite un examen. Ce
+ *   n'est pas une illégalité constatée : c'est une question à poser.
+ * - `indetermine` : les données ne permettent pas de conclure. Le moteur le
+ *   dit plutôt que de deviner.
+ */
+export type StatutControle = "etabli" | "anomalie" | "indetermine";
+
+export type PointControle = {
+  id: string;
+  /** Ce qui est vérifié, en quelques mots. */
+  titre: string;
+  statut: StatutControle;
+  /** Ce que le moteur a constaté, et ce qu'il en conclut. */
+  detail: string;
+  /** Le critère appliqué, quand il a une source. */
+  source?: string;
+};
+
+/** Une ligne du solde reconstruit. */
+export type LigneSolde = {
+  libelle: string;
+  /** Positif : ajouté au solde ; négatif : déduit. Null : inconnu. */
+  montant: number | null;
+  statut: StatutControle;
+  detail?: string;
+};
+
+export type SoldeReconstruit = {
+  lignes: LigneSolde[];
+  /** Ce que le courrier réclame. */
+  reclame: number | null;
+  /** Ce que les pièces justifient, quand on peut le calculer. */
+  reconstruit: number | null;
+  /** Réclamé moins reconstruit ; null si l'un des deux manque. */
+  ecart: number | null;
+  statut: StatutControle;
+  conclusion: string;
 };
 
 export type CodeStrategie =
@@ -235,6 +295,8 @@ export type Analyse = {
   langueLettre: Langue;
   /** Combien de vérifications le moteur a effectuées. */
   verifications: number;
+  /** Chaque élément du courrier, contrôlé : établi, anomalie ou indéterminé. */
+  controles: PointControle[];
 };
 
 export type TypeLettre =
@@ -242,7 +304,9 @@ export type TypeLettre =
   | "relance"
   | "reponse_huissier"
   | "demande_preuves"
-  | "remboursement";
+  | "remboursement"
+  | "echelonnement"
+  | "bonne_foi";
 
 export type Identite = {
   prenom: string;

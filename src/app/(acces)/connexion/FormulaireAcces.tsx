@@ -1,11 +1,14 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { AntiRobot } from "./AntiRobot";
+import { ConnexionSms } from "./ConnexionSms";
+import { entrerAvecAppareil, oublierCetAppareil } from "@/lib/connexion-actions";
 import { useRouter, useSearchParams } from "next/navigation";
 import { envoyerCode, verifierCode, verifierSession, type EtatAuth, type ModeConfirmation } from "@/lib/auth-actions";
 import { creerClientNavigateur } from "@/lib/supabase/client";
 import { Btn } from "@/components/ui";
-import { IconeFlecheGauche, IconeMail } from "@/components/icones";
+import { IconeFlecheGauche, IconeMail, IconeOk } from "@/components/icones";
 import { MarqueSos } from "@/components/Logo";
 import { cheminSur } from "@/lib/chemin-sur";
 import {
@@ -56,53 +59,6 @@ const ERREURS_URL: Record<string, string> = {
   "service-indisponible": "Le service est momentanément indisponible. Réessayez dans un instant.",
 };
 
-declare global {
-  interface Window {
-    turnstile?: {
-      render: (el: HTMLElement, options: Record<string, unknown>) => string;
-      reset: (id?: string) => void;
-      remove: (id: string) => void;
-    };
-  }
-}
-
-/** Le widget anti-robot de Cloudflare, chargé seulement s'il est configuré. */
-function AntiRobot({ cle, surJeton }: { cle: string; surJeton: (jeton: string) => void }) {
-  const zone = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    let id: string | null = null;
-    const afficher = () => {
-      if (id || !zone.current || !window.turnstile) return;
-      id = window.turnstile.render(zone.current, {
-        sitekey: cle,
-        callback: surJeton,
-        "expired-callback": () => surJeton(""),
-        "error-callback": () => surJeton(""),
-        "refresh-expired": "auto",
-        language: "fr",
-        appearance: "interaction-only",
-      });
-    };
-    const existant = document.querySelector<HTMLScriptElement>("script[data-turnstile]");
-    const script = existant ?? document.createElement("script");
-    if (!existant) {
-      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-      script.async = true;
-      script.dataset.turnstile = "1";
-      document.head.appendChild(script);
-    }
-    script.addEventListener("load", afficher);
-    afficher();
-    return () => {
-      script.removeEventListener("load", afficher);
-      if (id) window.turnstile?.remove(id);
-    };
-  }, [cle, surJeton]);
-
-  return <div ref={zone} className="flex justify-center empty:hidden" />;
-}
-
 function IconeGoogle() {
   return (
     <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
@@ -119,17 +75,28 @@ export function FormulaireAcces({
   googleActif,
   cleTurnstile,
   emailVerifie = null,
+  telephoneActif = false,
+  appareil = null,
 }: {
   mode: ModeConfirmation;
   googleActif: boolean;
   cleTurnstile: string | null;
   emailVerifie?: string | null;
+  /** La connexion par SMS est branchée (voir `lib/sms.ts`). */
+  telephoneActif?: boolean;
+  /** Cet appareil est reconnu : on propose d'entrer d'une touche. */
+  appareil?: { indice: string } | null;
 }) {
   const routeur = useRouter();
   const parametres = useSearchParams();
   const brute = parametres.get("suite") ?? "/tableau-de-bord";
   const suite = cheminSur(brute);
   const erreurUrl = ERREURS_URL[parametres.get("erreur") ?? ""] ?? null;
+  // « Se connecter » ou « Créer un compte » : deux portes, un seul compte par personne.
+  const [intention, setIntention] = useState<"connexion" | "inscription">(
+    parametres.get("compte") === "nouveau" ? "inscription" : "connexion",
+  );
+  const formulaireEmail = useRef<HTMLFormElement>(null);
 
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -141,6 +108,11 @@ export function FormulaireAcces({
   const [erreurVerification, setErreurVerification] = useState<string | null>(null);
   const [googleEnCours, setGoogleEnCours] = useState(false);
   const [erreurGoogle, setErreurGoogle] = useState<string | null>(null);
+  const [canal, setCanal] = useState<"email" | "sms">("email");
+  const [telephoneVerifie, setTelephoneVerifie] = useState<string | null>(null);
+  const [autreCompte, setAutreCompte] = useState(false);
+  const [retourEnCours, setRetourEnCours] = useState(false);
+  const [erreurRetour, setErreurRetour] = useState<string | null>(null);
   const formulaireCode = useRef<HTMLFormElement>(null);
   const derniereSoumission = useRef("");
   const stockage = useSyncExternalStore(abonnerStockage, lireStockage, stockageServeur);
@@ -233,21 +205,21 @@ export function FormulaireAcces({
     }
   };
 
-  if (verif.verifie || sessionVerifiee || emailVerifie) {
+  if (verif.verifie || sessionVerifiee || emailVerifie || telephoneVerifie) {
     // L'adresse du compte ouvert, en clair : après un lien reçu par e-mail,
     // c'est ce qui permet de voir qu'on n'est pas dans le compte de quelqu'un d'autre.
-    const compte = (verif.verifie ? verif.email : null) ?? sessionVerifiee ?? emailVerifie;
+    const compte = (verif.verifie ? verif.email : null) ?? sessionVerifiee ?? emailVerifie ?? telephoneVerifie;
     return (
       <div role="status" className="flex flex-col items-center gap-4 text-center animate-rise">
         <MarqueSos className="h-16 w-16 animate-pop" />
-        <h1 className="font-display text-2xl font-bold text-navy-900">Votre adresse est vérifiée</h1>
+        <h1 className="font-display text-2xl font-bold text-navy-900">C&apos;est bon, vous êtes connecté</h1>
         <p className="text-ink-soft">
           {compte && (
             <>
               Connecté avec <strong className="break-all text-ink">{compte}</strong>.{" "}
             </>
           )}
-          Vous pouvez maintenant accéder à vos dossiers.
+          La prochaine fois, sur cet appareil, plus besoin de code.
         </p>
         <Btn variant="gold" taille="lg" onClick={() => {
           stockerAttente(null);
@@ -283,6 +255,11 @@ export function FormulaireAcces({
           Entrez votre code
         </h1>
         <p className="mt-2 leading-relaxed text-ink-soft">
+          {envoi.dejaInscrit && (
+            <span className="mb-2 block rounded-xl bg-ok-50 p-3 text-sm font-medium text-ok-700">
+              Vous aviez déjà un compte avec cette adresse : on vous connecte, sans en créer un deuxième.
+            </span>
+          )}
           Un e-mail de vérification vient de partir vers{" "}
           <strong className="text-ink">{adresse}</strong>.
           {" "}Saisissez son code ici pour continuer sur cette page.
@@ -346,6 +323,7 @@ export function FormulaireAcces({
         >
           <input type="hidden" name="email" value={adresse} />
           <input type="hidden" name="suite" value={suite} />
+          <input type="hidden" name="intention" value={intention} />
           {jetonHumain && <input type="hidden" name="cf-turnstile-response" value={jetonHumain} />}
           {cleTurnstile && <AntiRobot key={cycleHumain} cle={cleTurnstile} surJeton={setJetonHumain} />}
           <button
@@ -369,13 +347,111 @@ export function FormulaireAcces({
   /* -------------------------------------------------------- étape 1 : e-mail */
   return (
     <div className="w-full max-w-sm animate-rise">
-      <h1 className="font-display text-[2rem] font-extrabold leading-[1.08] text-navy-900">
-        Entrer dans mon espace
+      <div role="tablist" aria-label="Se connecter ou créer un compte" className="grid grid-cols-2 border-b border-line">
+        {(
+          [
+            ["connexion", "Se connecter"],
+            ["inscription", "Créer un compte"],
+          ] as const
+        ).map(([id, libelle]) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={intention === id}
+            onClick={() => setIntention(id)}
+            className={`-mb-px border-b-2 pb-3 text-[0.95rem] font-semibold transition-colors ${
+              intention === id ? "border-navy-900 text-navy-900" : "border-transparent text-ink-soft hover:text-navy-900"
+            }`}
+          >
+            {libelle}
+          </button>
+        ))}
+      </div>
+      <h1 className="mt-6 font-display text-[2rem] font-extrabold leading-[1.08] text-navy-900">
+        {intention === "inscription" ? "Créer mon compte" : "Bon retour"}
       </h1>
       <p className="mt-2.5 leading-relaxed text-ink-soft">
-        Votre adresse e-mail, un code, et vous y êtes. Pas de mot de passe — et si c&apos;est votre
-        première visite, votre compte se crée tout seul.
+        {intention === "inscription"
+          ? "Gratuit. Un code par e-mail ou SMS, pas de mot de passe. Déjà inscrit ? On vous connecte, sans doublon."
+          : "Recevez un code et entrez. Pas de mot de passe."}
       </p>
+
+      {appareil && !autreCompte && (
+        <div className="mt-6 rounded-2xl border-2 border-gold-300 bg-gold-50 p-4">
+          <p className="flex items-center gap-2 font-semibold text-navy-900">
+            <IconeOk className="h-5 w-5 text-ok-600" />
+            Cet appareil vous connaît
+          </p>
+          <p className="mt-1 text-sm text-ink-soft">
+            Compte <strong className="text-ink">{appareil.indice}</strong>
+          </p>
+          <Btn
+            variant="primary"
+            taille="lg"
+            className="mt-3 w-full"
+            disabled={retourEnCours}
+            onClick={async () => {
+              setRetourEnCours(true);
+              setErreurRetour(null);
+              const r = await entrerAvecAppareil(suite);
+              if (r?.erreur) setErreurRetour(r.erreur);
+              setRetourEnCours(false);
+            }}
+          >
+            {retourEnCours ? "Ouverture…" : "Entrer sans code"}
+          </Btn>
+          {erreurRetour && <p role="alert" className="mt-2 text-sm text-danger-700">{erreurRetour}</p>}
+          <button
+            type="button"
+            onClick={async () => {
+              setAutreCompte(true);
+              await oublierCetAppareil();
+            }}
+            className="mt-3 text-sm font-semibold text-navy-700 underline decoration-navy-200 underline-offset-4"
+          >
+            Ce n&apos;est pas moi
+          </button>
+        </div>
+      )}
+
+      {telephoneActif && (
+        <div role="tablist" aria-label="Recevoir le code par" className="mt-6 grid grid-cols-2 rounded-full border border-line bg-white p-1">
+          {(
+            [
+              ["email", "Par e-mail"],
+              ["sms", "Par SMS"],
+            ] as const
+          ).map(([id, libelle]) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={canal === id}
+              onClick={() => setCanal(id)}
+              className={`h-10 rounded-full text-sm font-semibold transition-colors ${
+                canal === id ? "bg-navy-900 text-white" : "text-navy-800 hover:bg-navy-50"
+              }`}
+            >
+              {libelle}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {canal === "sms" && (
+        <div className="mt-6">
+          <ConnexionSms
+            suite={suite}
+            intention={intention}
+            surVerifie={setTelephoneVerifie}
+            surPasDeCompte={() => setIntention("inscription")}
+            cleTurnstile={cleTurnstile}
+          />
+        </div>
+      )}
+
+      {canal === "email" && (<>
 
       {erreurUrl && (
         <p role="alert" className="mt-5 rounded-xl bg-warn-100 p-3 text-sm font-medium text-warn-700">
@@ -389,7 +465,7 @@ export function FormulaireAcces({
             type="button"
             onClick={continuerAvecGoogle}
             disabled={googleEnCours}
-            className="mt-7 flex h-12 w-full items-center justify-center gap-3 rounded-full border border-line bg-white font-semibold text-navy-900 shadow-sm transition hover:bg-navy-50 disabled:opacity-60"
+            className="mt-6 flex h-12 w-full items-center justify-center gap-3 rounded-full border border-line bg-white font-semibold text-navy-900 shadow-sm transition hover:bg-navy-50 disabled:opacity-60"
           >
             <IconeGoogle />
             {googleEnCours ? "Ouverture de Google…" : "Continuer avec Google"}
@@ -401,10 +477,12 @@ export function FormulaireAcces({
       )}
 
       <form
+        ref={formulaireEmail}
         action={envoyer}
-        className={googleActif ? "" : "mt-7"}
+        className={googleActif ? "" : "mt-6"}
       >
         <input type="hidden" name="suite" value={suite} />
+        <input type="hidden" name="intention" value={intention} />
         {jetonHumain && <input type="hidden" name="cf-turnstile-response" value={jetonHumain} />}
         <label className="block">
           <span className="mb-1.5 block text-sm font-semibold text-navy-900">Adresse e-mail</span>
@@ -428,10 +506,25 @@ export function FormulaireAcces({
           </div>
         )}
 
-        {envoi.erreur && (
+        {envoi.erreur && !envoi.pasDeCompte && (
           <p role="alert" className="mt-4 rounded-xl bg-danger-50 p-3 text-sm font-medium text-danger-700">
             {envoi.erreur}
           </p>
+        )}
+        {envoi.pasDeCompte && intention === "connexion" && (
+          <div role="alert" className="mt-4 rounded-xl bg-gold-50 p-3 text-sm text-ink">
+            <p className="font-semibold text-navy-900">Aucun compte avec cette adresse.</p>
+            <button
+              type="button"
+              onClick={() => {
+                setIntention("inscription");
+                setTimeout(() => formulaireEmail.current?.requestSubmit(), 0);
+              }}
+              className="mt-1 font-semibold text-navy-700 underline decoration-navy-200 underline-offset-4 hover:text-navy-900"
+            >
+              Créer mon compte avec cette adresse
+            </button>
+          </div>
         )}
 
         <Btn
@@ -441,18 +534,19 @@ export function FormulaireAcces({
           className="mt-5 w-full"
           disabled={envoiEnCours || (!!cleTurnstile && !jetonHumain)}
         >
-          {envoiEnCours ? "Envoi du code…" : "Recevoir mon code"}
+          {envoiEnCours ? "Envoi du code…" : intention === "inscription" ? "Créer mon compte" : "Recevoir mon code"}
         </Btn>
       </form>
       {erreurGoogle && <p role="alert" className="mt-3 text-sm text-danger-700">{erreurGoogle}</p>}
+      </>)}
 
       <p className="mt-6 text-xs leading-relaxed text-ink-soft">
         En continuant, vous acceptez les{" "}
         <a href="/conditions-utilisation" className="underline hover:text-ink">
           conditions d&apos;utilisation
         </a>
-        . Votre adresse sert à vous envoyer votre code et les rappels de vos dossiers — à rien
-        d&apos;autre.
+        . Votre adresse ou votre numéro sert à vous envoyer votre code et les rappels de vos dossiers,
+        rien d&apos;autre.
       </p>
     </div>
   );

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { analyserDossier, lireDossier, lireProfil, listerEvenements, listerLettres } from "@/lib/dossiers";
+import { analyserDossier, lireDossier, lireMandat, lireProfil, listerEvenements, listerLettres } from "@/lib/dossiers";
 import {
   JOURS_AVANT_RELANCE,
   TYPES_DOCUMENT,
@@ -29,7 +29,11 @@ import { IconeAttention, IconeFleche, IconeFlecheGauche, IconeLibre, IconeOk } f
 import { OngletsDossier } from "./OngletsDossier";
 import { AtelierLettre } from "./AtelierLettre";
 import { SuiviDossier } from "./SuiviDossier";
-import { CorrectionFaits, PiecesDossier, QuestionOuverte } from "./AnalyseInteractive";
+import { CorrectionFaits, MontantsDossier, PiecesDossier, QuestionOuverte } from "./AnalyseInteractive";
+import { MandatDossier } from "./MandatDossier";
+import { urlDuSite } from "@/lib/url-site";
+import { ControleCourrier, SoldeExplique, TraceDelai } from "@/components/controle-ui";
+import { reconstruireSolde } from "@/cerveau/moteur/controle";
 
 export const metadata: Metadata = { title: "Mon dossier" };
 export const dynamic = "force-dynamic";
@@ -54,11 +58,18 @@ export default async function FicheDossier({
   const dossier = await lireDossier(id);
   if (!dossier) notFound();
 
-  const [evenements, lettres, profil] = await Promise.all([listerEvenements(id), listerLettres(id), lireProfil()]);
+  const [evenements, lettres, profil, mandat] = await Promise.all([
+    listerEvenements(id),
+    listerLettres(id),
+    lireProfil(),
+    lireMandat(id),
+  ]);
 
   const analyse = analyserDossier(dossier);
   const action = prochaineAction(dossier, analyse.delai);
   const faits = faitsDepuisDossier(dossier);
+  const solde = reconstruireSolde(faits);
+  const anomalies = analyse.controles.filter((c) => c.statut === "anomalie").length;
 
   const envoyeDepuis = joursDepuis(dossier.date_envoi_contestation);
   const envoye = dossier.statut === "contestation_envoyee" || dossier.statut === "en_attente_reponse";
@@ -198,12 +209,14 @@ export default async function FicheDossier({
                 region={dossier.region}
                 crediteur={dossier.crediteur ?? dossier.autorite}
                 statut={dossier.statut}
+                dossierInfos={{ reference: dossier.reference ?? "", plaque: dossier.plaque ?? "", email: profil?.email ?? "" }}
               />
             ),
           },
           {
             id: "analyse",
             libelle: "Analyse",
+            signal: anomalies > 0,
             contenu: (
               <div className="space-y-4">
                 {!termine && analyse.questions[0] && <QuestionOuverte dossierId={id} question={analyse.questions[0]} />}
@@ -228,6 +241,19 @@ export default async function FicheDossier({
                     ))}
                   </ul>
                 )}
+
+                <ControleCourrier points={analyse.controles} />
+
+                <SoldeExplique solde={solde}>
+                  {!termine && (
+                    <MontantsDossier
+                      dossierId={id}
+                      rappel={dossier.type_document !== "notification"}
+                      montantInitial={dossier.montant_initial ?? null}
+                      dejaPaye={dossier.deja_paye ?? null}
+                    />
+                  )}
+                </SoldeExplique>
 
                 {analyse.moyens.length > 0 && (
                   <section className="rounded-[var(--radius-carte)] border border-line/80 bg-card p-5 shadow-carte sm:p-6">
@@ -267,6 +293,7 @@ export default async function FicheDossier({
                     {analyse.delai.limite ? `Jusqu'au ${formatDate(analyse.delai.limite)}` : "Date à vérifier sur votre courrier"}
                   </p>
                   <p className="mt-1 text-sm leading-relaxed text-ink-soft">{analyse.delai.explication}</p>
+                  <TraceDelai trace={analyse.delai.trace} />
                   {analyse.inaction && (
                     <p className="mt-3 rounded-2xl bg-danger-50 p-3 text-sm leading-relaxed text-ink">
                       <strong className="text-danger-700">Sans réaction :</strong> {analyse.inaction.etape} —{" "}
@@ -294,6 +321,17 @@ export default async function FicheDossier({
                 echeance={analyse.delai.limite}
                 titreEcheance={`${action.action} — ${nomDossier(dossier)}`}
                 conseilRejet={conseilRejet ? { reponse: conseilRejet.reponse, texte: conseilRejet.texte } : null}
+                preuves={{
+                  lettrePrete: lettres.length > 0 || !!dossier.lettre,
+                  dateEnvoi: dossier.date_envoi_contestation,
+                  modeEnvoi: dossier.mode_envoi ?? null,
+                  preuveEnvoi: dossier.preuve_envoi ?? null,
+                  accuseLe: dossier.accuse_reception_le ?? null,
+                }}
+                site={urlDuSite()}
+                accompagnement={
+                  <MandatDossier dossierId={id} mandat={mandat} membre={(profil?.plan ?? "gratuit") !== "gratuit"} />
+                }
               />
             ),
           },

@@ -18,6 +18,7 @@
 
 import { COMMUNES } from "./data";
 import { ibanValide, formaterIban } from "./iban";
+import { reparerCommunication, reparerIbanBelge } from "./ocr-reparation";
 
 export type Confiance = "haute" | "moyenne" | "faible";
 
@@ -48,6 +49,8 @@ export type DonneesExtraites = {
   iban: Champ<string>;
   /** Zone de stationnement mentionnée sur le document (rouge, verte, bleue…). */
   zone: Champ<string>;
+  /** À qui le courrier est adressé (nom et adresse), tel qu'imprimé. */
+  destinataire: Champ<string>;
 };
 
 const champVide = <T,>(): Champ<T> => ({ valeur: null, confiance: "faible" });
@@ -99,7 +102,14 @@ function versISO(jour: number, mois: number, annee: number): string | null {
   return d.toISOString().slice(0, 10);
 }
 
-type DateTrouvee = { iso: string; index: number };
+type DateTrouvee = { iso: string; index: number; reparee?: boolean };
+
+/** Lettres que l'OCR lit à la place d'un chiffre, dans une date. */
+const SOSIES_CHIFFRES: Record<string, string> = {
+  O: "0", o: "0", D: "0", Q: "0", I: "1", l: "1", "|": "1", i: "1", Z: "2", S: "5", s: "5", G: "6", b: "6", B: "8", g: "9", q: "9",
+};
+const SOSIE = "[\\dOoDQIl|iZSsGbBgq]";
+const enChiffres = (x: string) => [...x].map((c) => SOSIES_CHIFFRES[c] ?? c).join("");
 
 /** Toutes les dates du texte, sous forme numérique, ISO ou littérale. */
 function trouverDates(texte: string): DateTrouvee[] {
@@ -109,6 +119,15 @@ function trouverDates(texte: string): DateTrouvee[] {
   for (const m of texte.matchAll(/\b(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})\b/g)) {
     const iso = versISO(Number(m[1]), Number(m[2]), Number(m[3]));
     if (iso) dates.push({ iso, index: m.index ?? 0 });
+  }
+
+  // 05/11/202G : une date dont un chiffre a été lu comme une lettre. On la
+  // répare, mais elle reste « à vérifier » (et l'extrait de la photo est montré).
+  const sosie = new RegExp(`(?<![\\w])(${SOSIE}{1,2})[\\/.\\-](${SOSIE}{1,2})[\\/.\\-](${SOSIE}{4}|${SOSIE}{2})(?![\\w])`, "g");
+  for (const m of texte.matchAll(sosie)) {
+    if ((m[0].match(/\d/g) ?? []).length < 4 || dates.some((d) => d.index === m.index)) continue;
+    const iso = versISO(Number(enChiffres(m[1])), Number(enChiffres(m[2])), Number(enChiffres(m[3])));
+    if (iso) dates.push({ iso, index: m.index ?? 0, reparee: true });
   }
 
   // 2026-03-12 (format ISO, fréquent sur les documents générés)
@@ -145,7 +164,7 @@ function dateApresLibelle(
 
   return {
     valeur: candidate.iso,
-    confiance: "haute",
+    confiance: candidate.reparee ? "moyenne" : "haute",
     contexte: contexteAutour(texte, m.index),
   };
 }
@@ -153,16 +172,31 @@ function dateApresLibelle(
 /** Heure du constat : 14h10, 14:10, 14.10 u. */
 function extraireHeure(texte: string): Champ<string> {
   const libelle =
-    /(heure|à\s+|om\s+|uur|tijdstip|constat[ée]?\s+(?:à|le)?[^0-9]{0,20})(\d{1,2})\s*[h:.]\s*(\d{2})\b/i;
+    /(heure|à\s+|om\s+|uur|tijdstip|constat[ée]?\s+(?:à|le)?[^0-9]{0,20})(\d{1,2})\s*[h:.]\s*(\d{2})(?:\s*:\s*(\d{2}))?\b/i;
   const m = texte.match(libelle);
   if (m) {
     const h = Number(m[2]);
     const min = Number(m[3]);
+    const sec = m[4] !== undefined ? Number(m[4]) : null;
+    if (h < 24 && min < 60 && (sec === null || sec < 60)) {
+      return {
+        valeur: `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}${sec !== null ? `:${String(sec).padStart(2, "0")}` : ""}`,
+        confiance: "haute",
+        contexte: contexteAutour(texte, m.index ?? 0),
+      };
+    }
+  }
+
+  // « 03/11/2026 à 14 10 » : le deux-points s'est perdu à la lecture.
+  const apresDate = texte.match(/\d{1,2}[\/.]\d{1,2}[\/.]\d{2,4}\s*(?:à|a|om)\s*(\d{1,2})\s+(\d{2})\b/i);
+  if (apresDate) {
+    const h = Number(apresDate[1]);
+    const min = Number(apresDate[2]);
     if (h < 24 && min < 60) {
       return {
         valeur: `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`,
-        confiance: "haute",
-        contexte: contexteAutour(texte, m.index ?? 0),
+        confiance: "moyenne",
+        contexte: contexteAutour(texte, apresDate.index ?? 0),
       };
     }
   }
@@ -194,7 +228,7 @@ function extraireMontant(texte: string): Champ<number> {
   // référence qui suit. Le négatif final protège du même piège : un montant
   // n'est jamais suivi d'un chiffre ni d'une barre oblique.
   const libelle =
-    /(montant\s+(?:total|d[ûu]|r[ée]clam[ée])?|total\s+[àa]\s+payer|[àa]\s+payer|somme\s+due|bedrag|te\s+betalen|totaal|verschuldigd)[^0-9€]{0,40}(\d{1,3}(?:[ .]\d{3})*(?:[.,]\d{2})?)(?![\d/])/i;
+    /(montant\s+(?:total|d[ûu]|r[ée]clam[ée])?|total\s+[àa]\s+payer|[àa]\s+payer|somme\s+due|bedrag|te\s+betalen|totaal|verschuldigd)[^0-9€]{0,40}(\d{1,3}(?:[ .]\d{3})*[.,]\d{2}|\d{1,4}(?=\s*(?:€|EUR)))(?![\d/])/i;
   const m = texte.match(libelle);
   if (m) {
     const valeur = parseFloat(m[2].replace(/[ .](?=\d{3})/g, "").replace(",", "."));
@@ -211,9 +245,11 @@ function extraireMontant(texte: string): Champ<number> {
 
   if (tous.length === 0) return champVide<number>();
   const max = tous.reduce((a, b) => (b.valeur > a.valeur ? b : a));
+  // Un seul montant en euros sur tout le courrier : c'est lui.
+  const enEuros = [...texte.matchAll(/\d{1,4}[.,]\d{2}\s*(?:€|EUR)/gi)].length;
   return {
     valeur: max.valeur,
-    confiance: tous.length === 1 ? "moyenne" : "faible",
+    confiance: enEuros === 1 ? "haute" : tous.length === 1 ? "moyenne" : "faible",
     contexte: contexteAutour(texte, max.index),
   };
 }
@@ -251,6 +287,12 @@ function extrairePlaque(texte: string): Champ<string> {
 }
 
 function extraireReference(texte: string): Champ<string> {
+  // parking.brussels : « Redevance forfaitaire de stationnement 530329628051 »,
+  // le numéro de la redevance, en titre du courrier.
+  const redevance = texte.match(/redevance\s+(?:forfaitaire\s+)?(?:de\s+stationnement\s+)?(?:n[°o]\s*)?[:.]?\s*(\d{8,15})\b/i);
+  if (redevance) {
+    return { valeur: redevance[1], confiance: "haute", contexte: contexteAutour(texte, redevance.index ?? 0) };
+  }
   const libelle =
     /(r[ée]f[ée]rence|dossier|n[°o]\s*de\s*dossier|kenmerk|dossiernummer|referentie|notre\s+r[ée]f)\s*[:.\-]?\s*([A-Z0-9][A-Z0-9\/\-.]{4,24})/i;
   const m = texte.match(libelle);
@@ -279,23 +321,33 @@ function extraireReference(texte: string): Champ<string> {
  * recopiée à la main. Le service de contestation le reconnaît immédiatement.
  */
 function extraireCommunication(texte: string): Champ<string> {
-  const m = texte.match(/\+{0,3}\s*(\d{3})\s*\/\s*(\d{4})\s*\/\s*(\d{5})\s*\+{0,3}/);
-  if (!m) return champVide<string>();
+  // Les positions de chiffres acceptent les lettres que l'OCR lit à leur place
+  // (O pour 0, I ou l pour 1, S pour 5, B pour 8) : la clé de contrôle dira
+  // ensuite ce qu'il fallait lire.
+  const C = "[\\dOoQIlSsBZzGg]";
+  const motif = new RegExp(`\\+{0,3}\\s*(${C}{3})\\s*/\\s*(${C}{4})\\s*/\\s*(${C}{5})\\s*\\+{0,3}`, "g");
+  let repli: Champ<string> | null = null;
 
-  // Contrôle de validité : le nombre formé par les 10 premiers chiffres doit
-  // être congruent au reste modulo 97 (97 quand le reste vaut 0). Le calcul se
-  // fait chiffre par chiffre pour rester exact sans dépendre de BigInt.
-  const chiffres = `${m[1]}${m[2]}${m[3]}`;
-  let reste = 0;
-  for (const c of chiffres.slice(0, 10)) reste = (reste * 10 + Number(c)) % 97;
-  const controle = Number(chiffres.slice(10, 12));
-  const attendu = reste || 97;
-
-  return {
-    valeur: `+++${m[1]}/${m[2]}/${m[3]}+++`,
-    confiance: controle === attendu ? "haute" : "moyenne",
-    contexte: contexteAutour(texte, m.index ?? 0),
-  };
+  for (const m of texte.matchAll(motif)) {
+    const brut = `${m[1]}${m[2]}${m[3]}`;
+    // Au moins huit vrais chiffres : sinon c'est un mot, pas une communication.
+    if ((brut.match(/\d/g) ?? []).length < 8) continue;
+    const contexte = contexteAutour(texte, m.index ?? 0);
+    const reparee = reparerCommunication(brut);
+    if (reparee) {
+      const v = reparee.valeur;
+      return {
+        valeur: `+++${v.slice(0, 3)}/${v.slice(3, 7)}/${v.slice(7)}+++`,
+        // Lue juste du premier coup : sûre. Corrigée par la clé : à confirmer d'un regard.
+        confiance: reparee.repare ? "moyenne" : "haute",
+        contexte,
+      };
+    }
+    if (/^\d{12}$/.test(brut)) {
+      repli ??= { valeur: `+++${m[1]}/${m[2]}/${m[3]}+++`, confiance: "faible", contexte };
+    }
+  }
+  return repli ?? champVide<string>();
 }
 
 /**
@@ -312,6 +364,9 @@ function extraireIban(texte: string): Champ<string> {
   const candidats = [
     ...texte.matchAll(/\b(BE\s?\d{2}(?:[\s.]?\d{4}){3})\b/gi),
     ...texte.matchAll(/\b([A-Z]{2}\s?\d{2}(?:[\s.]?[A-Z0-9]{4}){2,7})\b/g),
+    // Un IBAN belge mal lu : des lettres à la place de chiffres (« BESS 5390… »).
+    // Seule la réparation par les clés peut le retenir.
+    ...texte.matchAll(/\b([B8G][E3][\dOoQDIl|ZzSsGgbBq]{2}(?:[\s.]?[\dOoQDIl|ZzSsGgbBq]{4}){3})(?![\dA-Za-z])/g),
   ];
 
   let repli: Champ<string> | null = null;
@@ -327,11 +382,23 @@ function extraireIban(texte: string): Champ<string> {
       };
     }
 
-    repli ??= {
-      valeur: formaterIban(compact),
-      confiance: "faible",
-      contexte: contexteAutour(texte, m.index ?? 0),
-    };
+    // La clé ne tombe pas juste : une seule correction possible la répare-t-elle ?
+    const repare = reparerIbanBelge(compact);
+    if (repare && ibanValide(repare.valeur)) {
+      return {
+        valeur: formaterIban(repare.valeur),
+        confiance: "moyenne",
+        contexte: contexteAutour(texte, m.index ?? 0),
+      };
+    }
+
+    if (/^[A-Z]{2}\d{2}[A-Z0-9]+$/.test(compact)) {
+      repli ??= {
+        valeur: formaterIban(compact),
+        confiance: "faible",
+        contexte: contexteAutour(texte, m.index ?? 0),
+      };
+    }
   }
 
   return repli ?? champVide<string>();
@@ -355,7 +422,29 @@ const NOMS_COMMUNES = COMMUNES.flatMap((c) => {
 
 const majusculesSansAccents = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
 
+/**
+ * La commune du lieu du constat, par son code postal : le nom peut être mal lu
+ * (« 1050 helios »), le code postal l'est rarement. On ne regarde que la ligne
+ * du lieu : l'adresse du destinataire, elle aussi, porte un code postal.
+ */
+function communeDuLieu(texte: string): { commune: string; index: number } | null {
+  for (const ligne of texte.matchAll(/^.*(?:lieu|plaats|adresse du constat|locatie)[^\n]*$/gim)) {
+    for (const m of ligne[0].matchAll(/\b(1\d{3})\b/g)) {
+      const commune = COMMUNES.find((c) => c.codesPostaux.includes(m[1]));
+      if (commune) return { commune: commune.nom, index: (ligne.index ?? 0) + (m.index ?? 0) };
+    }
+  }
+  return null;
+}
+
 function extraireCommune(texte: string): Champ<string> {
+  const precis = lieuAvecCommune(texte);
+  if (precis) {
+    const nom = majusculesSansAccents(precis.commune);
+    const trouvee = NOMS_COMMUNES.find((c) => majusculesSansAccents(c.nom) === nom || nom.startsWith(majusculesSansAccents(c.nom)));
+    if (trouvee) return { valeur: trouvee.commune, confiance: "haute", contexte: contexteAutour(texte, precis.index) };
+  }
+  const lieu = communeDuLieu(texte);
   const normalise = majusculesSansAccents(texte);
   // En mots entiers : « Evere » ne doit pas surgir de « sévère », ni « Jette »
   // de « projette ». Les tirets et les espaces s'équivalent.
@@ -366,7 +455,12 @@ function extraireCommune(texte: string): Champ<string> {
     const m = new RegExp(`(^|[^A-Z])(${motif})(?![A-Z])`).exec(normalise);
     return m ? [{ commune, nom, index: m.index + m[1].length }] : [];
   });
-  if (trouvees.length === 0) return champVide<string>();
+  if (trouvees.length === 0) {
+    return lieu ? { valeur: lieu.commune, confiance: "moyenne", contexte: contexteAutour(texte, lieu.index) } : champVide<string>();
+  }
+  // Le nom lu et le code postal du lieu concordent : aucun doute.
+  const confirmee = lieu && trouvees.find((t) => t.commune === lieu.commune);
+  if (confirmee) return { valeur: confirmee.commune, confiance: "haute", contexte: contexteAutour(texte, confirmee.index) };
 
   // Le nom le plus long d'abord, pour qu'un nom court ne masque pas un nom
   // composé (« Woluwe-Saint-Pierre » vs « Woluwe »).
@@ -385,7 +479,42 @@ function extraireCommune(texte: string): Champ<string> {
  * Le formulaire de contestation le réclame, et c'est souvent la seule donnée
  * qui permet de rattacher le constat à une zone tarifaire précise.
  */
+const PARTICULES = new Set(["de", "du", "des", "la", "le", "les", "d'", "l'", "van", "der", "den", "het", "aux", "au", "et"]);
+/** « RUE ADOLPHE DE BRANDT » → « Rue Adolphe de Brandt ». */
+function casseNom(s: string): string {
+  return s
+    .toLowerCase()
+    .split(/(\s+|-)/)
+    .map((m, i) => (i > 0 && PARTICULES.has(m) ? m : m.replace(/^(d'|l')?(\p{L})/u, (_, a: string | undefined, l: string) => `${a ?? ""}${l.toUpperCase()}`)))
+    .join("");
+}
+
+const ODONYMES = "rue|avenue|av\\.|boulevard|bd|chauss[ée]e|place|square|quai|all[ée]e|dr[èe]ve|impasse|chemin|clos|parvis|straat|laan|steenweg|plein|lei|dreef";
+
+/**
+ * Le lieu du constat sur un courrier de parking.brussels : « RUE ADOLPHE DE
+ * BRANDT à EVERE », puis « à la hauteur du numéro 58 ». La commune vient
+ * après « à » ; l'adresse du destinataire, elle, a un code postal.
+ */
+function lieuAvecCommune(texte: string): { rue: string; commune: string; numero: string | null; index: number } | null {
+  const motif = new RegExp(`(?:^|\\n)[^\\n]*?\\b((?:${ODONYMES})\\b[^\\n]{2,60}?)\\s+(?:à|a|te)\\s+([A-ZÀ-Ÿ][A-ZÀ-Ÿa-zà-ÿ'\\- ]{2,30}?)\\s*(?=\\d{1,3}[.,]\\d{2}|\\n|$)`, "gi");
+  for (const m of texte.matchAll(motif)) {
+    const apres = texte.slice((m.index ?? 0) + m[0].length, (m.index ?? 0) + m[0].length + 120);
+    const numero = apres.match(/hauteur\s+du\s+(?:n[°o]|num[ée]ro)\s*(\d{1,4}[A-Za-z]?)/i)?.[1] ?? m[1].match(/\s(\d{1,4}[A-Za-z]?)$/)?.[1] ?? null;
+    return { rue: casseNom(m[1].replace(/\s+\d{1,4}[A-Za-z]?$/, "").trim()), commune: m[2].trim(), numero, index: m.index ?? 0 };
+  }
+  return null;
+}
+
 function extraireLieuConstat(texte: string): Champ<string> {
+  const precis = lieuAvecCommune(texte);
+  if (precis) {
+    return {
+      valeur: precis.numero ? `${precis.rue} ${precis.numero}` : precis.rue,
+      confiance: "haute",
+      contexte: contexteAutour(texte, precis.index),
+    };
+  }
   const libelle =
     /(lieu\s+du\s+constat|lieu|adresse\s+du\s+constat|stationn[ée]\s+(?:à|au|rue)|plaats|locatie|straat)\s*[:.\-]?\s*([A-ZÀ-Ÿ][^\n,;]{4,60})/i;
   const m = texte.match(libelle);
@@ -409,6 +538,30 @@ function extraireLieuConstat(texte: string): Champ<string> {
     };
   }
 
+  return champVide<string>();
+}
+
+/**
+ * Le destinataire imprimé sur le courrier : un nom, une rue, un code postal et
+ * une ville, sur trois lignes qui se suivent (le bloc d'adresse de la fenêtre
+ * de l'enveloppe). La boîte postale de l'expéditeur est écartée.
+ */
+function extraireDestinataire(texte: string): Champ<string> {
+  const lignes = texte.split("\n").map((l) => l.replace(/^[^A-Za-zÀ-ÿ0-9]+/, "").trim());
+  for (let i = 2; i < lignes.length; i++) {
+    const cp = lignes[i].match(/^([1-9]\d{3})\s+([A-ZÀ-Ÿ][A-Za-zÀ-ÿ'\- ]{2,40})$/);
+    if (!cp || /\bbox\b|brussel\s+1\b/i.test(lignes[i])) continue;
+    const rue = lignes[i - 1];
+    const nom = lignes[i - 2];
+    if (!/\d/.test(rue) || !/[A-Za-zÀ-ÿ]{3}/.test(nom) || /box|exp[.:]/i.test(rue + nom) || nom.length > 60) continue;
+    // Les débris d'un QR code imprimé à côté (« 0 Euro Ambulance ») sont retirés.
+    const propre = (x: string) => x.replace(/^(?:\S{1,2}\s+)+(?=[A-ZÀ-Ÿ])/, "").replace(/\s+bte\s+À$/i, " bte A").replace(/\s{2,}/g, " ");
+    return {
+      valeur: `${propre(nom)}, ${propre(rue)}, ${cp[1]} ${cp[2].trim()}`,
+      confiance: "moyenne",
+      contexte: contexteAutour(texte, Math.max(0, texte.indexOf(nom))),
+    };
+  }
   return champVide<string>();
 }
 
@@ -447,6 +600,25 @@ function extraireAutorite(texte: string): Champ<string> {
 
 /** Détermine le stade de la procédure : c'est lui qui dicte l'urgence. */
 function extraireTypeDocument(texte: string): Champ<string> {
+  // Le titre du courrier, en capitales (« PREMIER RAPPEL »), fait foi.
+  const titres: [RegExp, string][] = [
+    [/\b(?:DEUXI[ÈE]ME|SECOND|2E|2ÈME)\s+RAPPEL\b|\bTWEEDE\s+HERINNERING\b/, "deuxieme_rappel"],
+    [/\bPREMIER\s+RAPPEL\b|\bEERSTE\s+HERINNERING\b/, "premier_rappel"],
+    [/\bMISE\s+EN\s+DEMEURE\b|\bINGEBREKESTELLING\b/, "mise_en_demeure"],
+    [/\bCONTRAINTE\b|\bDWANGBEVEL\b/, "contrainte"],
+    [/\bNOTIFICATION\b|\bKENNISGEVING\b/, "notification"],
+  ];
+  for (const [motif, type] of titres) {
+    const m = texte.match(motif);
+    if (m) return { valeur: type, confiance: "haute", contexte: contexteAutour(texte, m.index ?? 0) };
+  }
+  // La frise de la procédure (« Notification · 1er rappel · … · Contrainte »)
+  // cite toutes les étapes : on la retire avant de chercher le stade.
+  const etapes = /notification|rappel|mise\s+en\s+demeure|contrainte|huissier|ex[ée]cution|herinnering|ingebrekestelling|dwangbevel|deurwaarder/gi;
+  texte = texte
+    .split("\n")
+    .filter((ligne) => (ligne.match(etapes) ?? []).length < 3 && !/\(\s*\+?\s*(?:frais|indemnit)/i.test(ligne))
+    .join("\n");
   // L'ordre est délibéré : du plus grave au plus doux, car un courrier
   // d'huissier mentionne aussi le mot « redevance ».
   const stades: [RegExp, string][] = [
@@ -482,18 +654,40 @@ export function extraireDonnees(texteBrut: string): DonneesExtraites {
     /([ée]ch[ée]ance|avant\s+le|payer\s+avant|au\s+plus\s+tard|date\s+limite|vervaldatum|uiterlijk|betaal\s+voor|laatste\s+datum|moet\s+betaald|deadline)/i,
   );
 
-  const dateEnvoi = dateApresLibelle(
+  const dateEnvoiLibellee = dateApresLibelle(
     texte,
     dates,
     /(date\s+d'envoi|envoy[ée]\s+le|fait\s+[àa]\s+\w+,?\s+le|verzonden\s+op|datum\s+verzending)/i,
   );
+  // L'en-tête habituel d'une lettre : « Bruxelles, le 05/11/2026 » ou
+  // « Brussel, 5 november 2026 ». Le lieu est un nom propre suivi d'une
+  // virgule ; la date doit suivre immédiatement, sinon ce n'est pas un en-tête.
+  const dateEnvoi =
+    dateEnvoiLibellee.valeur !== null
+      ? dateEnvoiLibellee
+      : dateApresLibelle(
+          texte,
+          dates,
+          // Un nom de ville (chaque mot en capitale : « Bruxelles », « Sint-Jans-Molenbeek »),
+          // puis « , le » ou « le » : jamais « À payer avant le ».
+          /(?:^|\n)\s*[A-ZÀ-Ý][a-zà-ÿ'\-]+(?:[\s\-][A-ZÀ-Ý][a-zà-ÿ'\-]+){0,3}(?:,\s+(?:le\s+)?|\s+le\s+)(?=\d{1,2}[\/.\- ])/m,
+          45,
+        );
+
+  // « 17/08/2026 à 14:37:44 » : une date suivie d'une heure, c'est le constat.
+  const avecHeure = texte.match(/(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})\s*(?:à|a|om|-)\s*\d{1,2}\s*[:h.]\s*\d{2}/i);
+  const isoAvecHeure = avecHeure ? versISO(Number(avecHeure[1]), Number(avecHeure[2]), Number(avecHeure[3])) : null;
+  const constatDate: Champ<string> =
+    dateConstat.valeur === null && isoAvecHeure
+      ? { valeur: isoAvecHeure, confiance: "haute", contexte: contexteAutour(texte, avecHeure?.index ?? 0) }
+      : dateConstat;
 
   // À défaut de libellé, la première date du document est le plus souvent
   // celle du constat : utile, mais signalée comme peu sûre.
   const constatRetenu: Champ<string> =
-    dateConstat.valeur === null && dates.length > 0
+    constatDate.valeur === null && dates.length > 0
       ? { valeur: dates[0].iso, confiance: "faible", contexte: contexteAutour(texte, dates[0].index) }
-      : dateConstat;
+      : constatDate;
 
   return {
     reference: extraireReference(texte),
@@ -510,6 +704,7 @@ export function extraireDonnees(texteBrut: string): DonneesExtraites {
     communication: extraireCommunication(texte),
     iban: extraireIban(texte),
     zone: extraireZone(texte),
+    destinataire: extraireDestinataire(texte),
   };
 }
 
@@ -637,8 +832,62 @@ export function extraireDeTextes(textes: string[]): DonneesExtraites {
   // peuvent se trouver sur deux pages différentes d'un même PDF, et seule la
   // concaténation permet de les rapprocher.
   const ensemble = utiles.length > 1 ? [utiles.join("\n"), ...utiles] : utiles;
+  const lectures = ensemble.map(extraireDonnees);
+  const fusion = fusionnerExtractions(lectures) as unknown as Record<string, Champ<unknown>>;
 
-  return verifierCoherence(fusionnerExtractions(ensemble.map(extraireDonnees)));
+  // Seconde vérification : le vote. Chaque texte est une lecture indépendante
+  // (préparation, angle, ligne relue seule). Une valeur lue de la même façon
+  // par plusieurs d'entre elles est confirmée ; à confiance égale, la valeur
+  // la plus souvent lue l'emporte sur une lecture isolée.
+  const independantes = utiles.length > 1 ? lectures.slice(1) : lectures;
+  for (const nom of Object.keys(fusion)) {
+    // Une référence se compare sans ses séparateurs : « 2026/0091234 » et
+    // « 20260091234 » sont la même, lue avec ou sans sa barre oblique.
+    const cle = (v: unknown) =>
+      typeof v === "string"
+        ? v.replace(nom === "reference" ? /[\s\/\-.]+/g : /\s+/g, "").toUpperCase()
+        : JSON.stringify(v);
+    const votes = new Map<string, { champ: Champ<unknown>; voix: number; rang: number }>();
+    for (const l of independantes) {
+      const champ = (l as unknown as Record<string, Champ<unknown>>)[nom];
+      if (!champ || champ.valeur === null) continue;
+      const k = cle(champ.valeur);
+      const v = votes.get(k);
+      if (v) {
+        v.voix++;
+        if (RANG[champ.confiance] > v.rang) Object.assign(v, { champ, rang: RANG[champ.confiance] });
+      } else votes.set(k, { champ, voix: 1, rang: RANG[champ.confiance] });
+    }
+    if (votes.size === 0) continue;
+    const retenu = fusion[nom];
+    const rangRetenu = retenu.valeur === null ? -1 : RANG[retenu.confiance];
+    // La plus soutenue parmi les plus sûres.
+    const favorite = [...votes.values()]
+      .filter((v) => v.rang >= rangRetenu)
+      .sort((a, b) => b.rang - a.rang || b.voix - a.voix)[0];
+    if (favorite && favorite.voix >= 2 && cle(favorite.champ.valeur) !== cle(retenu.valeur)) {
+      fusion[nom] = favorite.champ;
+    }
+    const soutien = votes.get(cle(fusion[nom].valeur))?.voix ?? 0;
+    if (soutien >= 2 && fusion[nom].confiance === "moyenne") {
+      fusion[nom] = { ...fusion[nom], confiance: "haute" };
+    }
+    // Un séparateur fin (« / », « - ») disparaît souvent à la lecture ; il
+    // n'apparaît jamais de nulle part. Parmi les lectures d'une même
+    // référence, on garde celle qui l'a conservé.
+    if (nom === "reference" && typeof fusion[nom].valeur === "string") {
+      const separateurs = (v: string) => (v.match(/[\/\-.]/g) ?? []).length;
+      const k = cle(fusion[nom].valeur);
+      for (const l of lectures) {
+        const v = (l as unknown as Record<string, Champ<unknown>>)[nom]?.valeur;
+        if (typeof v === "string" && cle(v) === k && separateurs(v) > separateurs(fusion[nom].valeur as string)) {
+          fusion[nom] = { ...fusion[nom], valeur: v };
+        }
+      }
+    }
+  }
+
+  return verifierCoherence(fusion as unknown as DonneesExtraites);
 }
 
 /** Champs qui décident de la qualité d'une lecture, pour informer l'utilisateur. */

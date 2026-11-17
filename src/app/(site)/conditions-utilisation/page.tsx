@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import { PageHead, Card } from "@/components/ui";
 import { ASSO } from "@/lib/data";
+import { DOCUMENTS_LEGAUX } from "@/lib/versions-legales";
+
+const DOC = DOCUMENTS_LEGAUX.cgu;
+const dateLongue = (iso: string) =>
+  new Intl.DateTimeFormat("fr-BE", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(
+    new Date(`${iso}T00:00:00Z`),
+  );
 
 export const metadata: Metadata = {
   title: "Conditions d'utilisation",
@@ -16,6 +23,9 @@ export default function ConditionsUtilisationPage() {
         title="Conditions d'utilisation"
         intro="En utilisant ce site, vous acceptez les conditions décrites ci-dessous. Elles sont écrites pour rester simples et prévisibles."
       />
+      <p className="mt-4 text-center text-xs text-ink-faint">
+        Version {DOC.version} · en vigueur depuis le {dateLongue(DOC.date)}
+      </p>
 
       <Card title="Un service d'information et d'accompagnement" className="mt-8">
         <p className="text-sm leading-relaxed text-ink-soft">
@@ -26,6 +36,42 @@ export default function ConditionsUtilisationPage() {
           courrier, dont les mentions font foi. Ce
           service est un accompagnement citoyen : il ne constitue pas un contrat de conseil
           juridique ni d&apos;avocat, et ne garantit aucune issue sur un dossier.
+        </p>
+      </Card>
+
+      <Card title="Ce que signifient les résultats" className="mt-6">
+        <p className="text-sm leading-relaxed text-ink-soft">
+          Chaque élément contrôlé reçoit l&apos;un de trois verdicts.{" "}
+          <strong className="text-navy-900">Établi</strong> : le point satisfait le critère vérifié — ce
+          n&apos;est pas une certification de toute la redevance.{" "}
+          <strong className="text-navy-900">Anomalie potentielle</strong> : une discordance ou un élément à
+          examiner — ce n&apos;est pas une illégalité constatée.{" "}
+          <strong className="text-navy-900">Non déterminable</strong> : les données ne permettent pas de
+          conclure — cela ne dit rien de la validité de la redevance. Un frais n&apos;est jamais présenté comme
+          irrégulier sur son seul montant.
+        </p>
+      </Card>
+
+      <Card title="Délais, envoi et preuves" className="mt-6">
+        <p className="text-sm leading-relaxed text-ink-soft">
+          La date limite affichée est un calcul, avec sa trace : elle ne remplace pas les mentions de votre
+          courrier, et c&apos;est à vous de surveiller vos échéances. Ouvrir un dossier, préparer une lettre ou
+          demander de l&apos;aide n&apos;interrompt aucun délai et ne suspend pas le recouvrement. Aucun courrier
+          ne part en votre nom sans votre action. Une preuve d&apos;envoi ne prouve pas la réception : gardez
+          vos récépissés, captures et accusés.
+        </p>
+      </Card>
+
+      <Card title="Confier un dossier à l'association : le mandat" className="mt-6">
+        <p className="text-sm leading-relaxed text-ink-soft">
+          Vous pouvez confier un dossier à l&apos;association en lui donnant mandat depuis la fiche du
+          dossier. Le mandat couvre ce seul dossier, pour la durée que vous choisissez (un an au plus), et
+          précise ce qu&apos;il autorise : consulter le dossier et, si vous le cochez, écrire en votre nom à
+          l&apos;organisme qui réclame. Vous le retirez à tout moment ; l&apos;accès s&apos;arrête aussitôt,
+          sans effacer ce qui a été fait avant. La réception d&apos;une demande ne vaut pas acceptation
+          automatique d&apos;une mission, et un mandat n&apos;oblige aucune administration à accepter cette
+          représentation. L&apos;association n&apos;assure aucune représentation en justice réservée aux
+          avocats.
         </p>
       </Card>
 
@@ -46,6 +92,12 @@ export default function ConditionsUtilisationPage() {
           nouveaux dossiers. Les dossiers déjà ouverts restent accessibles. L&apos;adhésion est
           validée par l&apos;association après réception du paiement ; elle n&apos;est pas reconduite
           automatiquement.
+        </p>
+        <p className="mt-3 text-sm leading-relaxed text-ink-soft">
+          Trois choses distinctes : créer un compte ne fait pas de vous un membre de l&apos;association ;
+          l&apos;adhésion ouvre les services décrits sur la page des tarifs ; un don soutient
+          l&apos;association sans contrepartie et ne donne droit ni à la qualité de membre, ni à un service,
+          ni — à ce jour — à une attestation fiscale.
         </p>
       </Card>
 
@@ -82,11 +134,24 @@ export default function ConditionsUtilisationPage() {
         <p className="text-sm leading-relaxed text-ink-soft">
           Les présentes conditions sont soumises au droit belge. En cas de litige, une solution
           amiable sera recherchée en priorité ; à défaut, les tribunaux de Bruxelles sont compétents.
+          Les droits impératifs reconnus aux consommateurs restent entièrement réservés.
+        </p>
+        <p className="mt-3 text-sm leading-relaxed text-ink-soft">
+          Une réclamation sur le service s&apos;adresse à l&apos;association par le formulaire de contact. Elle
+          ne remplace pas une contestation à introduire auprès de l&apos;administration.
+        </p>
+      </Card>
+
+      <Card title="Modifications" className="mt-6">
+        <p className="text-sm leading-relaxed text-ink-soft">
+          Ces conditions portent un numéro de version. Quand elles changent, la version change aussi, et
+          les membres sont invités à accepter la nouvelle à leur prochaine visite ; la date et la version de
+          chaque acceptation sont conservées.
         </p>
       </Card>
 
       <p className="mt-8 text-center text-xs text-ink-soft">
-        Dernière mise à jour : août 2026. La version en ligne fait foi.
+        Version {DOC.version}. La version en ligne fait foi.
       </p>
     </div>
   );

@@ -185,3 +185,102 @@ export function CorrectionFaits({
     </form>
   );
 }
+
+/**
+ * Les deux montants que le courrier ne dit pas : celui du tout premier
+ * courrier (quand on tient un rappel) et ce qui a déjà été versé. Avec eux, le
+ * moteur reconstruit le solde et compare.
+ */
+export function MontantsDossier({
+  dossierId,
+  rappel,
+  montantInitial,
+  dejaPaye,
+}: {
+  dossierId: string;
+  /** Vrai à partir du rappel : le montant d'origine devient utile. */
+  rappel: boolean;
+  montantInitial: number | null;
+  dejaPaye: number | null;
+}) {
+  const router = useRouter();
+  const [ouvert, setOuvert] = useState(false);
+  const [valeurs, setValeurs] = useState({
+    montantInitial: montantInitial !== null ? String(montantInitial).replace(".", ",") : "",
+    dejaPaye: dejaPaye !== null ? String(dejaPaye).replace(".", ",") : "",
+  });
+  const [erreur, setErreur] = useState<string | null>(null);
+  const [enCours, demarrer] = useTransition();
+  const champ =
+    "w-full rounded-xl border border-line bg-white px-3.5 py-3 text-[0.95rem] tabular-nums outline-none focus:border-navy-600 focus:ring-4 focus:ring-gold-300/40";
+
+  if (!ouvert) {
+    return (
+      <div className="mt-4">
+        <Btn variant="secondary" taille="sm" onClick={() => setOuvert(true)}>
+          {rappel && montantInitial === null ? "Indiquer le montant du premier courrier" : "Compléter les montants"}
+        </Btn>
+      </div>
+    );
+  }
+
+  return (
+    <form
+      className={`mt-4 grid gap-3 rounded-2xl bg-paper p-4 ${rappel ? "sm:grid-cols-2" : ""}`}
+      onSubmit={(e) => {
+        e.preventDefault();
+        setErreur(null);
+        demarrer(async () => {
+          const r = await corrigerDossier(dossierId, {
+            ...(rappel ? { montantInitial: valeurs.montantInitial } : {}),
+            dejaPaye: valeurs.dejaPaye,
+          });
+          if (r.erreur) {
+            setErreur(r.erreur);
+            return;
+          }
+          setOuvert(false);
+          router.refresh();
+        });
+      }}
+    >
+      {rappel && (
+        <label className="block">
+          <span className="mb-1.5 block text-sm font-semibold text-navy-900">Montant du premier courrier (€)</span>
+          <input
+            inputMode="decimal"
+            autoComplete="off"
+            placeholder="25,00"
+            value={valeurs.montantInitial}
+            onChange={(e) => setValeurs({ ...valeurs, montantInitial: e.target.value })}
+            className={champ}
+          />
+        </label>
+      )}
+      <label className="block">
+        <span className="mb-1.5 block text-sm font-semibold text-navy-900">Déjà payé (€)</span>
+        <input
+          inputMode="decimal"
+          autoComplete="off"
+          placeholder="0,00"
+          value={valeurs.dejaPaye}
+          onChange={(e) => setValeurs({ ...valeurs, dejaPaye: e.target.value })}
+          className={champ}
+        />
+      </label>
+      {erreur && (
+        <p role="alert" className={`text-sm font-medium text-danger-700 ${rappel ? "sm:col-span-2" : ""}`}>
+          {erreur}
+        </p>
+      )}
+      <div className={`flex gap-2 ${rappel ? "sm:col-span-2" : ""}`}>
+        <Btn type="submit" variant="primary" taille="sm" disabled={enCours}>
+          {enCours ? "Recalcul…" : "Recalculer le solde"}
+        </Btn>
+        <Btn type="button" variant="ghost" taille="sm" onClick={() => setOuvert(false)}>
+          Annuler
+        </Btn>
+      </div>
+    </form>
+  );
+}

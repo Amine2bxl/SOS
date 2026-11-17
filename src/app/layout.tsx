@@ -3,6 +3,7 @@ import { Bricolage_Grotesque, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "@/components/useSession";
 import { RetourLienEmail } from "@/components/RetourLienEmail";
+import { AvisCookies } from "@/components/AvisCookies";
 import { LanguageProvider } from "@/lib/i18n";
 import { ASSO } from "@/lib/data";
 import { urlDuSite } from "@/lib/url-site";
@@ -44,6 +45,8 @@ export const metadata: Metadata = {
     "lettre de contestation stationnement",
     "SOS Citizens",
   ],
+  icons: { apple: "/apple-touch-icon.png" },
+  appleWebApp: { capable: true, title: "SOS Citizens", statusBarStyle: "default" },
   openGraph: {
     title: "SOS Citizens — Contestez votre redevance de stationnement",
     description:
@@ -77,7 +80,11 @@ const jsonLd = {
     addressCountry: "BE",
   },
   areaServed: "BE",
+  sameAs: [`https://www.tiktok.com/@${ASSO.tiktok}`],
 };
+
+/** Le choix enregistré (bouton soleil/lune), sinon celui du téléphone. */
+const SCRIPT_THEME = `try{var c=localStorage.getItem("sos:theme");var s=c?c==="sombre":matchMedia("(prefers-color-scheme: dark)").matches;document.documentElement.dataset.theme=s?"dark":"light"}catch(e){}`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -88,7 +95,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="fr"
       data-scroll-behavior="smooth"
       className={`${bricolage.variable} ${dmSans.variable}`}
+      // Le thème est posé par le script ci-dessous avant le premier rendu.
+      suppressHydrationWarning
     >
+      <head>
+        {/* Thème clair ou sombre, choisi avant le premier affichage : pas de flash. */}
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_THEME }} />
+      </head>
       <body className="flex min-h-screen flex-col font-sans antialiased">
         <SessionProvider>
           <a
@@ -102,6 +115,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               la frontière nette entre le site et l'application. */}
           <LanguageProvider>{children}</LanguageProvider>
           <RetourLienEmail />
+          <AvisCookies />
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

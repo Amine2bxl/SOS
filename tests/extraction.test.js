@@ -166,10 +166,12 @@ test("une communication structurée valide est reconnue comme sûre", () => {
   const bonne = extraireDonnees("Communication +++090/9337/55493+++");
   assert.equal(bonne.communication.confiance, "haute");
 
-  // Même forme, clé de contrôle fausse : la valeur est gardée mais signalée.
+  // Même forme, clé de contrôle fausse et aucune correction unique possible :
+  // la valeur est gardée, mais au plus bas niveau de confiance — plusieurs
+  // lectures identiques ne suffiront pas à la faire passer pour sûre.
   const douteuse = extraireDonnees("Communication +++090/9337/55401+++");
   assert.equal(douteuse.communication.valeur, "+++090/9337/55401+++");
-  assert.equal(douteuse.communication.confiance, "moyenne");
+  assert.equal(douteuse.communication.confiance, "faible");
 });
 
 test("la date d'envoi du courrier est distinguée de celle du constat", () => {
@@ -202,4 +204,51 @@ test("les champs peu sûrs sont listés pour être vérifiés en priorité", () 
   assert.ok(Array.isArray(aVerifier));
   // Une date sans libellé est retenue mais signalée comme peu sûre.
   assert.ok(aVerifier.includes("la date du constat"));
+});
+
+test("date dont un chiffre est lu comme une lettre : réparée, mais à vérifier", () => {
+  const d = extraireDonnees("Bruxelles, le 05/11/202G\nDate du constat 03/11/2026 à 14 10\n");
+  assert.equal(d.dateEnvoi.valeur, "2026-11-05");
+  assert.equal(d.dateEnvoi.confiance, "moyenne");
+  assert.equal(d.dateConstat.valeur, "2026-11-03");
+  assert.equal(d.dateConstat.confiance, "haute");
+  assert.equal(d.heureConstat.valeur, "14:10");
+  assert.equal(d.heureConstat.confiance, "moyenne");
+  // Des lettres seules ne font pas une date.
+  assert.equal(extraireDonnees("Référence : SO/IG-lb").dateConstat.valeur, null);
+});
+
+test("vrai premier rappel de parking.brussels : chaque information à sa place", () => {
+  const lu = `[PREMIER RAPPEL |
+parking.brussels > Redevance forfaitaire de stationnement 530329628051
+Exp. PO BOX 20020 = 1000 Bressel 1
+Euro Ambulance
+Rue de la Colonne 1 bte À
+1080 Molenbeek-Saint-Jean
+Bruxelles le 15/09/2026,
+Madame, Monsieur,
+Détail du constat Montant à payer
+Plaque 2JLX916 avant le 05/10/2026
+17/08/2026 à 14:37:44
+9 RUE ADOLPHE DE BRANDT à EVERE 37,00 €
+à la hauteur du numéro 58
+Numéro de compte : BE58 0960 2185 9979
+Communication : +++530/3296/28051+++
+1° rappel 2% rappel Mise en demeure Contrainte Mesure d'exécution
+forfaitaire + frais (indemnité judiciai (frais huissier)`;
+  const d = extraireDonnees(lu);
+  assert.equal(d.reference.valeur, "530329628051");
+  assert.equal(d.typeDocument.valeur, "premier_rappel");
+  assert.equal(d.montant.valeur, 37);
+  assert.equal(d.dateConstat.valeur, "2026-08-17");
+  assert.equal(d.heureConstat.valeur, "14:37:44");
+  assert.equal(d.dateEnvoi.valeur, "2026-09-15");
+  assert.equal(d.dateEcheance.valeur, "2026-10-05");
+  assert.equal(d.plaque.valeur, "2-JLX-916");
+  assert.equal(d.commune.valeur, "Evere");
+  assert.equal(d.lieuConstat.valeur, "Rue Adolphe de Brandt 58");
+  assert.equal(d.iban.valeur, "BE58 0960 2185 9979");
+  assert.equal(d.communication.valeur, "+++530/3296/28051+++");
+  // « À payer avant le » n'est jamais l'en-tête du courrier.
+  assert.equal(extraireDonnees("À payer avant le 05/12/2026 sur le compte").dateEnvoi.valeur, null);
 });

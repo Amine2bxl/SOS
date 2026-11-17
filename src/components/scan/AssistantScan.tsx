@@ -4,8 +4,13 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   lireDocument,
+  prechaufferOcr,
+  decouperPreuves,
+  documentSurligne,
   FORMATS_ACCEPTES,
   TAILLE_MAX_OCTETS,
+  type ChampPreuve,
+  type DocumentSurligne,
   type ProgressionOCR,
   type ResultatLecture,
 } from "@/lib/ocr";
@@ -14,6 +19,7 @@ import { detecterLieu } from "@/cerveau/moteur/region";
 import { questionsAPoser } from "@/cerveau/base/questions";
 import type { Analyse, Faits, MoyenRetenu, Region, Stade } from "@/cerveau/types";
 import { analyserFaits } from "@/lib/cerveau-actions";
+import { ControleCourrier } from "@/components/controle-ui";
 import { creerDossier } from "@/lib/dossiers-actions";
 import { nombreOuNull } from "@/lib/validation";
 import { COMMUNES } from "@/lib/data";
@@ -42,6 +48,7 @@ import {
   lireBrouillon,
   type Formulaire,
 } from "./brouillon";
+import { VisionneuseCourrier, type ChampVisible } from "./VisionneuseCourrier";
 
 type Etape = "depot" | "lecture" | "verification" | "questions" | "verdict";
 
@@ -123,6 +130,8 @@ export function AssistantScan({ mode }: { mode: "membre" | "visiteur" }) {
   const [form, setForm] = useState<Formulaire>(FORMULAIRE_VIDE);
   const [extrait, setExtrait] = useState<DonneesExtraites | null>(null);
   const [lecture, setLecture] = useState<ResultatLecture | null>(null);
+  const [preuves, setPreuves] = useState<Partial<Record<ChampPreuve, string>>>({});
+  const [documentLu, setDocumentLu] = useState<DocumentSurligne | null>(null);
   const [regionCertaine, setRegionCertaine] = useState(false);
   const [progression, setProgression] = useState<ProgressionOCR>({ etape: "", pourcentage: 0 });
   const [reponses, setReponses] = useState<Record<string, string>>({});
@@ -202,6 +211,31 @@ export function AssistantScan({ mode }: { mode: "membre" | "visiteur" }) {
 
       setLecture(resultat);
       setExtrait(donnees);
+      // L'extrait de la photo où chaque valeur a été lue s'affiche sous le
+      // champ ; la page entière, surlignée, s'ouvre d'un clic sur l'extrait.
+      const valeurs: Partial<Record<ChampPreuve, string | null>> = {
+        reference: donnees.reference.valeur,
+        montant: donnees.montant.valeur !== null ? donnees.montant.valeur.toFixed(2) : null,
+        dateConstat: donnees.dateConstat.valeur,
+        heureConstat: donnees.heureConstat.valeur,
+        dateEnvoi: donnees.dateEnvoi.valeur,
+        dateEcheance: donnees.dateEcheance.valeur,
+        plaque: donnees.plaque.valeur,
+        communication: donnees.communication.valeur,
+        iban: donnees.iban.valeur,
+        commune: donnees.commune.valeur,
+        lieuConstat: donnees.lieuConstat.valeur,
+        typeDocument: donnees.typeDocument.valeur,
+        autorite: donnees.autorite.valeur,
+        destinataire: donnees.destinataire.valeur,
+      };
+      try {
+        setPreuves(decouperPreuves(resultat, valeurs));
+        setDocumentLu(documentSurligne(resultat, valeurs));
+      } catch {
+        setPreuves({});
+        setDocumentLu(null);
+      }
       setRegionCertaine(lieu.certaine);
       setForm({
         reference: donnees.reference.valeur ?? "",
@@ -286,11 +320,21 @@ export function AssistantScan({ mode }: { mode: "membre" | "visiteur" }) {
     [extrait],
   );
 
+  // Visiteur : dès que les informations sont confirmées, l'analyse est gardée
+  // dans le navigateur. S'il crée son compte par un autre chemin que le bouton
+  // final, son espace la lui proposera quand même.
+  useEffect(() => {
+    if (mode === "visiteur" && (etape === "questions" || etape === "verdict")) enregistrerBrouillon({ form, reponses, ocrConfiance });
+  }, [mode, etape, form, reponses, ocrConfiance]);
+
+
   const creer = () => {
     setErreur(null);
     if (mode === "visiteur") {
       enregistrerBrouillon({ form, reponses, ocrConfiance });
-      router.push(`/connexion?suite=${encodeURIComponent("/tableau-de-bord/nouveau?reprise=1")}`);
+      // L'onglet « Créer un compte » s'ouvre d'office ; un membre qui a déjà
+      // un compte passe sur « Se connecter » d'un geste.
+      router.push(`/connexion?compte=nouveau&suite=${encodeURIComponent("/tableau-de-bord/nouveau?reprise=1")}`);
       return;
     }
     demarrerCreation(async () => {
@@ -342,6 +386,8 @@ export function AssistantScan({ mode }: { mode: "membre" | "visiteur" }) {
             saisirALaMain={() => {
               setExtrait(null);
               setLecture(null);
+              setPreuves({});
+              setDocumentLu(null);
               setForm(FORMULAIRE_VIDE);
               allerA("verification");
             }}
@@ -356,6 +402,8 @@ export function AssistantScan({ mode }: { mode: "membre" | "visiteur" }) {
             setForm={setForm}
             extrait={extrait}
             lecture={lecture}
+            preuves={preuves}
+            documentLu={documentLu}
             regionCertaine={regionCertaine}
             erreur={erreur}
             retour={() => allerA("depot")}
@@ -432,12 +480,14 @@ function EtapeDepot({
   const [survol, setSurvol] = useState(false);
 
   return (
-    <div className="animate-rise">
+    // Dès que la personne touche la zone (ou y amène un fichier), le moteur de
+    // lecture se prépare : le temps de choisir la photo, il est prêt.
+    <div className="animate-rise" onPointerDown={prechaufferOcr} onDragEnter={prechaufferOcr} onFocusCapture={prechaufferOcr}>
       <Titre className="font-display text-[1.9rem] font-extrabold leading-tight text-navy-900 sm:text-4xl">
-        Montrez-nous votre courrier
+        Montrez-nous votre lettre
       </Titre>
       <p className="mt-2 text-[1.05rem] text-ink-soft">
-        Une photo suffit. Le moteur lit les dates, le montant, la plaque — vous n&apos;avez rien à retaper.
+        Une photo suffit, même sombre ou de travers. Rien à recopier.
       </p>
 
       {/* Sur téléphone : deux gros boutons, l'appareil photo d'abord. */}
@@ -619,27 +669,131 @@ function Champ({
   label,
   confiance,
   aide,
+  preuve,
+  voir,
+  absent,
   children,
   className = "",
 }: {
   label: string;
   confiance?: Confiance;
   aide?: string;
+  /** L'extrait de la photo où la valeur a été lue. */
+  preuve?: string;
+  /** Ouvre le courrier entier, cette information entourée. */
+  voir?: () => void;
+  /** Lu sans rien trouver : le courrier ne porte pas cette information. */
+  absent?: boolean;
   children: React.ReactNode;
   className?: string;
 }) {
   const badge = confiance ? BADGE[confiance] : null;
+  const sur = confiance === "haute";
   return (
-    <label className={`block ${className}`}>
-      <span className="mb-1.5 flex items-center gap-2">
-        <span className="text-sm font-semibold text-navy-900">{label}</span>
-        {badge && <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${badge.classe}`}>{badge.texte}</span>}
-      </span>
-      {children}
+    <div className={className}>
+      <label className="block">
+        <span className="mb-1.5 flex items-center gap-2">
+          <span className="text-sm font-semibold text-navy-900">{label}</span>
+          {badge && <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${badge.classe}`}>{badge.texte}</span>}
+          {absent && !badge && (
+            <span className="rounded-full bg-paper px-2 py-0.5 text-[10px] font-bold text-ink-soft">Pas sur ce courrier</span>
+          )}
+        </span>
+        {children}
+      </label>
+      {preuve && (
+        <button
+          type="button"
+          onClick={voir}
+          disabled={!voir}
+          className={`group mt-2 block w-full overflow-hidden rounded-2xl border bg-white text-left transition hover:-translate-y-px hover:shadow-carte active:scale-[0.98] ${
+            sur ? "border-line" : "border-warn-600/40 ring-2 ring-warn-100"
+          }`}
+        >
+          <span
+            className={`flex items-center justify-between gap-2 px-3 py-1.5 text-[11px] font-semibold ${
+              sur ? "bg-paper text-ink-soft" : "bg-warn-100 text-warn-700"
+            }`}
+          >
+            {sur ? "Lu ici, sur votre courrier" : "Comparez avec votre courrier"}
+            {voir && (
+              <span className="flex items-center gap-1 text-navy-700 transition group-hover:text-navy-900">
+                <IconeLoupe className="h-3.5 w-3.5" />
+                Voir sur la page
+              </span>
+            )}
+          </span>
+          {/* Extrait généré dans le navigateur (data URL) : next/image n'a rien à optimiser. */}
+          <img src={preuve} alt={`Extrait du courrier : ${label}`} className="block h-11 w-auto max-w-full object-contain object-left px-2 py-1" />
+        </button>
+      )}
       {aide && <span className="mt-1 block text-xs text-ink-soft">{aide}</span>}
-    </label>
+    </div>
   );
 }
+
+/**
+ * Le moment où la lecture réussit : une coche qui se trace, et le bilan.
+ * Une seule entrée, courte (moins d'une demi-seconde), qui confirme sans
+ * retenir : les champs sont utilisables tout de suite.
+ */
+function LectureReussie({
+  trouves,
+  certaines,
+  aConfirmer,
+  pdf,
+  voirTout,
+}: {
+  trouves: number;
+  certaines: number;
+  aConfirmer: number;
+  pdf: boolean;
+  voirTout?: () => void;
+}) {
+  useEffect(() => {
+    // Sur téléphone, une vibration à peine perceptible accompagne la coche.
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.(18);
+  }, []);
+  return (
+    <div role="status" className="mt-4 flex items-center gap-4 rounded-[var(--radius-carte)] border border-ok-600/20 bg-ok-50 p-4 sm:p-5">
+      <svg viewBox="0 0 48 48" className="h-12 w-12 shrink-0 overflow-visible" aria-hidden="true">
+        <circle cx="24" cy="24" r="22" className="lecture-ok-onde fill-ok-600" />
+        <circle cx="24" cy="24" r="22" className="lecture-ok-rond fill-ok-600" />
+        <path
+          d="M14 24.5 21 31.5 34.5 17"
+          fill="none"
+          stroke="#fff"
+          strokeWidth="4.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="lecture-ok-coche"
+        />
+      </svg>
+      <div className="lecture-ok-texte min-w-0">
+        <p className="font-display text-lg font-bold leading-tight text-ok-700">{pdf ? "Document lu" : "Courrier lu"}</p>
+        <p className="mt-0.5 text-sm leading-snug text-ink-soft">
+          {trouves} information{trouves > 1 ? "s" : ""} trouvée{trouves > 1 ? "s" : ""}
+          {certaines > 0 && `, dont ${certaines} certaine${certaines > 1 ? "s" : ""}`}.
+          {aConfirmer > 0
+            ? ` ${aConfirmer} à confirmer d'un coup d'œil, l'extrait du courrier est juste en dessous.`
+            : " Tout concorde."}
+        </p>
+        {voirTout && (
+          <button
+            type="button"
+            onClick={voirTout}
+            className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-navy-900 shadow-carte transition hover:-translate-y-px active:scale-[0.97]"
+          >
+            <IconeLoupe className="h-3.5 w-3.5" />
+            Voir le courrier surligné
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const ZONES = ["Rouge", "Grise", "Verte", "Bleue", "Jaune", "Événement"];
 
 const champCls =
   "w-full rounded-xl border border-line bg-white px-3.5 py-3 text-[0.95rem] text-ink outline-none transition placeholder:text-ink-faint focus:border-navy-600 focus:ring-4 focus:ring-gold-300/40";
@@ -649,6 +803,8 @@ function EtapeVerification({
   setForm,
   extrait,
   lecture,
+  preuves,
+  documentLu,
   regionCertaine,
   erreur,
   retour,
@@ -658,21 +814,65 @@ function EtapeVerification({
   setForm: React.Dispatch<React.SetStateAction<Formulaire>>;
   extrait: DonneesExtraites | null;
   lecture: ResultatLecture | null;
+  preuves: Partial<Record<ChampPreuve, string>>;
+  documentLu: DocumentSurligne | null;
   regionCertaine: boolean;
   erreur: string | null;
   retour: () => void;
   suite: () => void;
 }) {
-  const [details, setDetails] = useState(false);
+  // Après une lecture, tout est déplié : l'heure, la rue et le paiement
+  // comptent autant que la référence, rien ne doit rester caché.
+  const [details, setDetails] = useState(() => !!extrait);
+  const [regard, setRegard] = useState<ChampPreuve | null>(null);
   const maj = (cle: keyof Formulaire) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [cle]: e.target.value }));
   const c = (cle: keyof DonneesExtraites) => (extrait && extrait[cle].valeur !== null ? extrait[cle].confiance : undefined);
+  const voir = (cle: ChampPreuve) => (documentLu?.zones[cle] ? () => setRegard(cle) : undefined);
+  const absent = (cle: keyof DonneesExtraites, saisi: string) => !!extrait && extrait[cle].valeur === null && !saisi.trim();
+  const destinataire = extrait?.destinataire.valeur ?? null;
 
-  const douteux = extrait
-    ? (["reference", "montant", "dateConstat", "dateEnvoi", "dateEcheance", "plaque"] as const).filter(
-        (k) => extrait[k].valeur !== null && extrait[k].confiance !== "haute",
-      ).length
-    : 0;
+  // Ce que la visionneuse peut montrer, dans l'ordre de lecture du courrier.
+  const champsVisibles: ChampVisible[] = (
+    [
+      ["autorite", "Organisme", form.crediteur],
+      ["typeDocument", "Type", TYPES_DOCUMENT[form.typeDocument as keyof typeof TYPES_DOCUMENT] ?? ""],
+      ["destinataire", "Adressé à", destinataire ?? ""],
+      ["dateEnvoi", "Date du courrier", form.dateEnvoi ? formatDate(form.dateEnvoi) : ""],
+      ["reference", "Référence", form.reference],
+      ["dateConstat", "Date du constat", form.dateConstat ? formatDate(form.dateConstat) : ""],
+      ["heureConstat", "Heure", form.heureConstat],
+      ["lieuConstat", "Rue", form.lieuConstat],
+      ["commune", "Commune", form.commune],
+      ["plaque", "Plaque", form.plaque],
+      ["montant", "Montant", form.montant ? `${form.montant} €` : ""],
+      ["dateEcheance", "Date limite", form.dateEcheance ? formatDate(form.dateEcheance) : ""],
+      ["communication", "Communication", form.communication],
+      ["iban", "IBAN", form.iban],
+    ] as [ChampPreuve, string, string][]
+  )
+    .filter(([, , valeur]) => valeur)
+    .map(([cle, label, valeur]) => ({ cle, label, valeur }));
+  const premierSitue = champsVisibles.find((x) => documentLu?.zones[x.cle])?.cle ?? null;
+
+  const CLES = [
+    "reference",
+    "montant",
+    "dateConstat",
+    "heureConstat",
+    "dateEnvoi",
+    "dateEcheance",
+    "plaque",
+    "commune",
+    "lieuConstat",
+    "autorite",
+    "typeDocument",
+    "destinataire",
+    "communication",
+    "iban",
+  ] as const;
+  const trouves = extrait ? CLES.filter((k) => extrait[k].valeur !== null).length : 0;
+  const certaines = extrait ? CLES.filter((k) => extrait[k].valeur !== null && extrait[k].confiance === "haute").length : 0;
   const sansDate = !form.dateEnvoi && !form.dateEcheance;
   const horsPerimetre = form.region !== "" && !regionOuverte(form.region);
 
@@ -681,13 +881,21 @@ function EtapeVerification({
       <Titre className="font-display text-[1.9rem] font-extrabold leading-tight text-navy-900 sm:text-4xl">
         {extrait ? "Voici ce que nous avons lu" : "Les informations du courrier"}
       </Titre>
-      <p className="mt-2 text-[1.05rem] text-ink-soft">
-        {!extrait
-          ? "Recopiez ce qui figure sur le courrier. Le reste se fera tout seul."
-          : douteux > 0
-            ? `Jetez un œil aux ${douteux} champ${douteux > 1 ? "s" : ""} signalé${douteux > 1 ? "s" : ""} : une date mal lue fausserait votre délai.`
-            : "Tout a été lu avec certitude. Un coup d'œil, et on continue."}
-      </p>
+      {extrait && lecture && trouves > 0 ? (
+        <LectureReussie
+          trouves={trouves}
+          certaines={certaines}
+          aConfirmer={trouves - certaines}
+          pdf={lecture.source === "texte-pdf"}
+          voirTout={premierSitue ? () => setRegard(premierSitue) : undefined}
+        />
+      ) : (
+        <p className="mt-2 text-[1.05rem] text-ink-soft">
+          {!extrait
+            ? "Recopiez ce qui figure sur le courrier. Le reste se fera tout seul."
+            : "Peu d'informations lisibles : complétez les champs ci-dessous."}
+        </p>
+      )}
       {lecture && (
         <p className="mt-3">
           <Pastille ton={lecture.source === "texte-pdf" ? "ok" : "neutre"}>
@@ -695,15 +903,34 @@ function EtapeVerification({
               ? "PDF lu directement — aucune erreur de lecture possible"
               : `Photo lue · fiabilité ${lecture.confiance} %`}
           </Pastille>
+          {lecture.diagnostic && (
+            <span className="ml-2 text-xs text-ink-soft">
+              {(lecture.diagnostic.duree / 1000).toFixed(1).replace(".", ",")} s · {lecture.diagnostic.lectures} lecture
+              {lecture.diagnostic.lectures > 1 ? "s croisées" : ""}
+              {lecture.diagnostic.relectures > 0 ? ` · ${lecture.diagnostic.relectures} chiffres revérifiés` : ""}
+              {lecture.diagnostic.recadree ? " · feuille détourée et remise à plat" : ""}
+              {Math.abs(lecture.diagnostic.biais) >= 1 ? " · photo redressée" : ""}
+            </span>
+          )}
         </p>
       )}
 
       {erreur && <Erreur texte={erreur} />}
 
+      {documentLu && (
+        <VisionneuseCourrier
+          document={documentLu}
+          champs={champsVisibles}
+          actif={regard}
+          surChoix={setRegard}
+          onFermer={() => setRegard(null)}
+        />
+      )}
+
       <div className="mt-6 overflow-hidden rounded-[var(--radius-carte)] border border-line/80 bg-card shadow-carte">
         <div className="motif-marquage h-1.5" aria-hidden="true" />
         <div className="space-y-5 p-5 sm:p-6">
-          <Champ label="Type de courrier" confiance={c("typeDocument")}>
+          <Champ label="Type de courrier" confiance={c("typeDocument")} preuve={preuves.typeDocument} voir={voir("typeDocument")}>
             <select value={form.typeDocument} onChange={maj("typeDocument")} className={champCls}>
               {Object.entries(TYPES_DOCUMENT).map(([v, l]) => (
                 <option key={v} value={v}>
@@ -762,10 +989,10 @@ function EtapeVerification({
           )}
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Champ label="Référence" confiance={c("reference")} aide="En haut du courrier.">
+            <Champ label="Référence" confiance={c("reference")} preuve={preuves.reference} voir={voir("reference")} absent={absent("reference", form.reference)} aide="En haut du courrier.">
               <input value={form.reference} onChange={maj("reference")} className={champCls} placeholder="Ex. 2026/4471820" />
             </Champ>
-            <Champ label="Montant réclamé" confiance={c("montant")}>
+            <Champ label="Montant réclamé" confiance={c("montant")} preuve={preuves.montant} voir={voir("montant")} absent={absent("montant", form.montant)}>
               <div className="relative">
                 <input
                   value={form.montant}
@@ -779,7 +1006,7 @@ function EtapeVerification({
                 </span>
               </div>
             </Champ>
-            <Champ label="Commune" confiance={c("commune")}>
+            <Champ label="Commune" confiance={c("commune")} preuve={preuves.commune} voir={voir("commune")} absent={absent("commune", form.commune)}>
               <input
                 value={form.commune}
                 onChange={maj("commune")}
@@ -794,7 +1021,7 @@ function EtapeVerification({
                 ))}
               </datalist>
             </Champ>
-            <Champ label="Plaque" confiance={c("plaque")}>
+            <Champ label="Plaque" confiance={c("plaque")} preuve={preuves.plaque} voir={voir("plaque")} absent={absent("plaque", form.plaque)}>
               <input
                 value={form.plaque}
                 onChange={(e) => setForm((f) => ({ ...f, plaque: e.target.value.toUpperCase() }))}
@@ -802,13 +1029,13 @@ function EtapeVerification({
                 placeholder="1-ABC-123"
               />
             </Champ>
-            <Champ label="Date du constat" confiance={c("dateConstat")}>
+            <Champ label="Date du constat" confiance={c("dateConstat")} preuve={preuves.dateConstat} voir={voir("dateConstat")} absent={absent("dateConstat", form.dateConstat)}>
               <input type="date" value={form.dateConstat} onChange={maj("dateConstat")} className={champCls} />
             </Champ>
-            <Champ label="Date du courrier" confiance={c("dateEnvoi")} aide="Le délai pour contester court depuis elle.">
+            <Champ label="Date du courrier" confiance={c("dateEnvoi")} preuve={preuves.dateEnvoi} voir={voir("dateEnvoi")} absent={absent("dateEnvoi", form.dateEnvoi)} aide="Le délai pour contester court depuis elle.">
               <input type="date" value={form.dateEnvoi} onChange={maj("dateEnvoi")} className={champCls} />
             </Champ>
-            <Champ label="Date limite imprimée" confiance={c("dateEcheance")} className="sm:col-span-2">
+            <Champ label="Date limite imprimée" confiance={c("dateEcheance")} preuve={preuves.dateEcheance} voir={voir("dateEcheance")} absent={absent("dateEcheance", form.dateEcheance)} className="sm:col-span-2">
               <input type="date" value={form.dateEcheance} onChange={maj("dateEcheance")} className={champCls} />
             </Champ>
           </div>
@@ -826,27 +1053,71 @@ function EtapeVerification({
             aria-expanded={details}
             className="flex w-full items-center justify-between rounded-xl bg-paper px-4 py-3 text-sm font-semibold text-navy-900"
           >
-            Heure, rue, zone, organisme, paiement
+            Heure, rue, zone, organisme, destinataire, paiement
             <IconeChevron className={`h-4 w-4 transition ${details ? "rotate-180" : ""}`} />
           </button>
           {details && (
             <div className="grid gap-4 sm:grid-cols-2">
-              <Champ label="Heure du constat" confiance={c("heureConstat")}>
+              <Champ label="Heure du constat" confiance={c("heureConstat")} preuve={preuves.heureConstat} voir={voir("heureConstat")} absent={absent("heureConstat", form.heureConstat)}>
                 <input type="time" value={form.heureConstat} onChange={maj("heureConstat")} className={champCls} />
               </Champ>
-              <Champ label="Zone" confiance={c("zone")}>
-                <input value={form.zone} onChange={maj("zone")} className={champCls} placeholder="Rouge, verte, bleue…" />
+              <Champ
+                label="Zone"
+                confiance={c("zone")}
+                aide={
+                  !form.zone && extrait
+                    ? /parking\.brussels/i.test(form.crediteur)
+                      ? "parking.brussels ne l'imprime pas : choisissez-la si vous la connaissez."
+                      : "Pas lue sur ce courrier : choisissez-la si vous la connaissez."
+                    : undefined
+                }
+              >
+                <select value={form.zone} onChange={maj("zone")} className={champCls}>
+                  <option value="">Non indiquée sur le courrier</option>
+                  {ZONES.map((z) => (
+                    <option key={z} value={z}>
+                      Zone {z.toLowerCase()}
+                    </option>
+                  ))}
+                  {form.zone && !ZONES.includes(form.zone) && <option value={form.zone}>{form.zone}</option>}
+                </select>
               </Champ>
-              <Champ label="Rue du constat" confiance={c("lieuConstat")} className="sm:col-span-2">
+              <Champ
+                label="Rue du constat"
+                confiance={c("lieuConstat")}
+                preuve={preuves.lieuConstat}
+                voir={voir("lieuConstat")}
+                absent={absent("lieuConstat", form.lieuConstat)}
+                className="sm:col-span-2"
+              >
                 <input value={form.lieuConstat} onChange={maj("lieuConstat")} className={champCls} placeholder="Rue et numéro" />
               </Champ>
-              <Champ label="Organisme qui réclame" confiance={c("autorite")} className="sm:col-span-2">
+              <Champ
+                label="Organisme qui réclame"
+                confiance={c("autorite")}
+                preuve={preuves.autorite}
+                voir={voir("autorite")}
+                absent={absent("autorite", form.crediteur)}
+                className="sm:col-span-2"
+              >
                 <input value={form.crediteur} onChange={maj("crediteur")} className={champCls} placeholder="parking.brussels, commune de…" />
               </Champ>
-              <Champ label="Communication structurée" confiance={c("communication")}>
+              {destinataire && (
+                <Champ
+                  label="Courrier adressé à"
+                  confiance={c("destinataire")}
+                  preuve={preuves.destinataire}
+                  voir={voir("destinataire")}
+                  aide="La lettre partira à ce nom : c'est vous, ou votre société."
+                  className="sm:col-span-2"
+                >
+                  <input value={destinataire} readOnly className={`${champCls} bg-paper text-ink-soft`} />
+                </Champ>
+              )}
+              <Champ label="Communication structurée" confiance={c("communication")} preuve={preuves.communication} voir={voir("communication")} absent={absent("communication", form.communication)}>
                 <input value={form.communication} onChange={maj("communication")} className={`${champCls} font-mono`} placeholder="+++000/0000/00000+++" />
               </Champ>
-              <Champ label="IBAN du créancier" confiance={c("iban")}>
+              <Champ label="IBAN du créancier" confiance={c("iban")} preuve={preuves.iban} voir={voir("iban")} absent={absent("iban", form.iban)}>
                 <input value={form.iban} onChange={maj("iban")} className={`${champCls} font-mono`} placeholder="BE.." />
               </Champ>
             </div>
@@ -1018,6 +1289,8 @@ function EtapeVerdict({
           ))}
         </ul>
       )}
+
+      {analyse.controles?.length > 0 && <ControleCourrier points={analyse.controles} />}
 
       <section className="rounded-[var(--radius-carte)] border border-line/80 bg-card p-5 shadow-carte sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">

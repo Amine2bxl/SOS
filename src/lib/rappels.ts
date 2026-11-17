@@ -95,3 +95,12 @@ export function rappelDu(
 
   return null;
 }
+
+/**
+ * Le même rappel, en SMS : une phrase, la référence, le lien. Court, pour
+ * tenir en un seul message autant que possible.
+ */
+export function texteSms(rappel: Rappel, reference: string | null, lien: string): string {
+  const ref = reference ? ` (réf. ${reference})` : "";
+  return `SOS Citizens : ${rappel.sujet}${ref}. ${lien}`;
+}

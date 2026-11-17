@@ -54,7 +54,16 @@ export type EtatAuth = {
   nouveau?: boolean;
   /** Nombre de chiffres du code envoyé (réglage Supabase « Email OTP Length »). */
   longueur?: number;
+  /** « Se connecter » avec une adresse inconnue : on propose de créer le compte. */
+  pasDeCompte?: boolean;
+  /** « Créer un compte » avec une adresse déjà inscrite : on connecte, sans doublon. */
+  dejaInscrit?: boolean;
 };
+
+/** Ce que la personne a dit vouloir faire. Sans précision : se connecter ou créer, au choix du serveur. */
+type Intention = "connexion" | "inscription" | null;
+const lireIntention = (v: FormDataEntryValue | null): Intention =>
+  v === "connexion" || v === "inscription" ? v : null;
 
 /** Le mode réellement actif, décidé par les variables d'environnement. */
 export async function modeConfirmation(): Promise<ModeConfirmation> {
@@ -90,6 +99,7 @@ async function envoyerCodeInterne(_precedent: EtatAuth, donnees: FormData): Prom
   const email = String(donnees.get("email") ?? "").trim().toLowerCase();
   const jetonHumain = String(donnees.get("cf-turnstile-response") ?? "") || null;
   const suite = cheminSur(donnees.get("suite"));
+  const intention = lireIntention(donnees.get("intention"));
   const ip = await ipVisiteur();
 
   if (!emailValide(email)) return { erreur: "Cette adresse e-mail ne semble pas valide." };
@@ -128,6 +138,11 @@ async function envoyerCodeInterne(_precedent: EtatAuth, donnees: FormData): Prom
         erreur:
           "Un compte existe déjà pour une variante de cette adresse. Connectez-vous avec l'adresse que vous aviez utilisée à l'inscription.",
       };
+    }
+    // « Se connecter » avec une adresse sans compte : on ne crée rien en douce,
+    // on propose de créer le compte.
+    if (intention === "connexion" && !existant) {
+      return { pasDeCompte: true, email, erreur: "Aucun compte avec cette adresse." };
     }
   }
 
@@ -168,7 +183,16 @@ async function envoyerCodeInterne(_precedent: EtatAuth, donnees: FormData): Prom
     if (!envoi.ok) {
       return { erreur: "L'e-mail n'a pas pu partir. Réessayez dans un instant." };
     }
-    return { envoye: true, email, mode: "code", nouveau, longueur: code.length };
+    return {
+      envoye: true,
+      email,
+      mode: "code",
+      nouveau,
+      longueur: code.length,
+      // « Créer un compte » pour une adresse déjà inscrite : un seul compte,
+      // on connecte simplement.
+      dejaInscrit: intention === "inscription" && !nouveau,
+    };
   }
 
   /* ---------------------------------------- repli : l'e-mail de Supabase */
@@ -177,11 +201,17 @@ async function envoyerCodeInterne(_precedent: EtatAuth, donnees: FormData): Prom
   const { error } = await clientLien.auth.signInWithOtp({
     email,
     options: {
-      shouldCreateUser: true,
+      // « Se connecter » ne crée jamais de compte.
+      shouldCreateUser: intention !== "connexion",
       emailRedirectTo: `${urlDuSite()}/connexion?suite=${encodeURIComponent(suite)}`,
     },
   });
-  if (error) return { erreur: traduireErreur(error.message) };
+  if (error) {
+    if (intention === "connexion" && /signups? not allowed|not found|otp_disabled/i.test(error.message)) {
+      return { pasDeCompte: true, email, erreur: "Aucun compte avec cette adresse." };
+    }
+    return { erreur: traduireErreur(error.message) };
+  }
   return { envoye: true, email, mode: "lien" };
 }
 

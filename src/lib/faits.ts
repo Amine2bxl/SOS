@@ -57,10 +57,9 @@ export function nettoyerReponses(brut: unknown): Record<string, string> {
 /** Ramène des faits venus du navigateur à ce que le moteur accepte. */
 export function nettoyerFaits(brut: unknown): Faits {
   const f = (brut && typeof brut === "object" ? brut : {}) as Record<string, unknown>;
-  const montant =
-    typeof f.montant === "number" && Number.isFinite(f.montant) && f.montant >= 0 && f.montant <= 100000
-      ? f.montant
-      : null;
+  const somme = (v: unknown): number | null =>
+    typeof v === "number" && Number.isFinite(v) && v >= 0 && v <= 100000 ? v : null;
+  const montant = somme(f.montant);
 
   return {
     region: REGIONS_VALIDES.includes(f.region as Region) ? (f.region as Region) : null,
@@ -79,6 +78,8 @@ export function nettoyerFaits(brut: unknown): Faits {
     communication: texte(f.communication, 30),
     langueDocument: f.langueDocument === "nl" ? "nl" : f.langueDocument === "fr" ? "fr" : null,
     reponses: nettoyerReponses(f.reponses),
+    montantInitial: somme(f.montantInitial),
+    dejaPaye: somme(f.dejaPaye),
   };
 }
 
@@ -101,5 +102,7 @@ export function faitsDepuisDossier(d: Dossier): Faits {
     communication: d.communication,
     langueDocument: d.langue === "nl" ? "nl" : "fr",
     reponses: nettoyerReponses(d.reponses),
+    montantInitial: d.montant_initial ?? null,
+    dejaPaye: d.deja_paye ?? null,
   };
 }

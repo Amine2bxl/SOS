@@ -160,3 +160,24 @@ test("une pseudo-plaque hors série belge est signalée", () => {
   assert.equal(extraireDonnees("2-XYZ-987").plaque.confiance, "haute");
   assert.equal(extraireDonnees("7-ABC-123").plaque.confiance, "faible");
 });
+
+test("vote : deux lectures d'accord battent une lecture isolée, et sont confirmées", () => {
+  const { extraireDeTextes } = require("../.test-build/lib/extraction.js");
+  const base = "Redevance de stationnement\nRéférence : 2026/0041234\nMontant : 37,00 EUR\n";
+  const d = extraireDeTextes([
+    base + "Plaque : 1-ABC-123",
+    base + "Plaque : 1-ABG-123",
+    base + "Plaque : 1-ABC-123",
+  ]);
+  assert.equal(d.plaque.valeur.replace(/-/g, ""), "1ABC123");
+  assert.notEqual(d.plaque.confiance, "faible");
+});
+
+test("référence : la barre oblique perdue par une lecture est reprise d'une autre", () => {
+  const d = extraireDeTextes([
+    "Référence 20260091234\nMontant à payer 37,00 EUR",
+    "Référence 2026/0091234",
+    "Référence 20260091234",
+  ]);
+  assert.equal(d.reference.valeur, "2026/0091234");
+});

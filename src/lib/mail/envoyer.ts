@@ -23,11 +23,17 @@ export async function envoyerEmail({
   sujet,
   html,
   texte,
+  repondreA,
+  copie,
 }: {
   destinataire: string;
   sujet: string;
   html: string;
   texte: string;
+  /** Adresse de réponse. Par défaut, celle de l'association. */
+  repondreA?: string;
+  /** Copie visible (Cc) : la personne au nom de qui l'e-mail part en garde la trace. */
+  copie?: string;
 }): Promise<ResultatEnvoi> {
   const canal = canalEnvoi();
   if (!canal) return { ok: false, raison: "non-configure" };
@@ -48,7 +54,8 @@ export async function envoyerEmail({
       await transport.sendMail({
         from: canal.expediteur,
         to: destinataire,
-        replyTo: ASSO.email,
+        cc: copie,
+        replyTo: repondreA ?? ASSO.email,
         subject: sujet,
         html,
         text: texte,
@@ -66,7 +73,8 @@ export async function envoyerEmail({
       body: JSON.stringify({
         from: canal.expediteur,
         to: [destinataire],
-        reply_to: ASSO.email,
+        ...(copie ? { cc: [copie] } : {}),
+        reply_to: repondreA ?? ASSO.email,
         subject: sujet,
         html,
         text: texte,

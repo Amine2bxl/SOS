@@ -1,11 +1,17 @@
-"use client";
-
-import { useMemo, useState } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
-import { PageHead, Card, Field, TextInput, TextArea, LinkBtn } from "@/components/ui";
+import { PageHead, Card, LinkBtn } from "@/components/ui";
 import { MailIcon } from "@/components/Logo";
 import { WhatsAppIcon } from "@/components/Contact";
 import { ASSO } from "@/lib/data";
+import { SUJETS_CONTACT } from "@/lib/contact";
+import { FormulaireContact } from "./FormulaireContact";
+
+export const metadata: Metadata = {
+  title: "Contact",
+  description:
+    "Écrivez à SOS Citizens : par le formulaire, sur WhatsApp ou par e-mail. Une association bruxelloise répond par écrit à vos questions sur une redevance, une amende ou une démarche administrative.",
+};
 
 /** Ce qu'il est utile de préparer avant de nous écrire. */
 const A_PREPARER = [
@@ -19,30 +25,15 @@ const LIEN_WHATSAPP = `https://wa.me/${ASSO.whatsapp}?text=${encodeURIComponent(
   "Bonjour, je vous contacte au sujet d'une redevance de stationnement.",
 )}`;
 
-export default function ContactPage() {
-  const [nom, setNom] = useState("");
-  const [message, setMessage] = useState("");
-
-  // Sans serveur, le formulaire prépare simplement un e-mail dans le client du visiteur.
-  const mailto = useMemo(() => {
-    const sujet = `Demande d'aide — ${nom.trim() || "stationnement"}`;
-    const corps = [
-      `Bonjour,`,
-      ``,
-      message.trim() || "Je vous écris au sujet d'une redevance de stationnement.",
-      ``,
-      `Cordialement,`,
-      nom.trim(),
-    ].join("\n");
-    return `mailto:${ASSO.email}?subject=${encodeURIComponent(sujet)}&body=${encodeURIComponent(corps)}`;
-  }, [nom, message]);
+export default async function ContactPage({ searchParams }: { searchParams: Promise<{ sujet?: string }> }) {
+  const { sujet } = await searchParams;
+  const sujetInitial = SUJETS_CONTACT.find((s) => s.id === sujet)?.id ?? null;
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
       <PageHead
-        kicker="Contact"
-        title="Parlons de votre dossier"
-        intro="Un message suffit. Nous sommes une petite association : ce sont nos bénévoles qui vous répondent, par écrit — c'est le plus sûr pour garder une trace de votre dossier."
+        title="Écrivez-nous"
+        intro="Un bénévole vous répond par écrit. WhatsApp est le plus rapide."
       />
 
       {/* CONTACT DIRECT — WhatsApp et e-mail, jamais d'appel direct. */}
@@ -90,72 +81,14 @@ export default function ContactPage() {
           </p>
         </Card>
 
-        <Card title="Rédiger votre message" subtitle="Ce formulaire ouvre simplement votre messagerie, pré-remplie.">
-          <div className="space-y-4">
-            <Field label="Votre nom">
-              <TextInput value={nom} onChange={(e) => setNom(e.target.value)} autoComplete="name" />
-            </Field>
-            <Field label="Votre message">
-              <TextArea
-                rows={5}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Décrivez votre situation en quelques lignes : type de courrier, commune, date, montant…"
-              />
-            </Field>
-          </div>
-          <LinkBtn href={mailto} variant="gold" className="mt-4 w-full">
-            <MailIcon className="h-4 w-4" />
-            Ouvrir mon e-mail
-          </LinkBtn>
-          <p className="mt-3 text-xs leading-relaxed text-ink-soft">
-            Rien n&apos;est envoyé depuis ce site et rien n&apos;y est enregistré : le message part de votre
-            propre messagerie, où vous pouvez encore joindre vos documents.
+        <Card title="Écrire à l'association" subtitle="Le message nous arrive directement ; la réponse vous parvient par e-mail.">
+          <FormulaireContact sujetInitial={sujetInitial} />
+          <p className="mt-4 text-xs leading-relaxed text-ink-soft">
+            Déjà membre ? Pour un dossier précis, demandez l&apos;accompagnement depuis la fiche du dossier : nous
+            aurons tout sous les yeux.
           </p>
         </Card>
       </div>
-
-      {/* L'ASSOCIATION */}
-      <Card title="L'association" className="mt-6">
-        <p className="text-sm leading-relaxed text-ink-soft">
-          {ASSO.nom} est une association sans but lucratif, créée le {ASSO.constitution} à Bruxelles,
-          qui aide les automobilistes à se défendre face à une redevance de stationnement — aujourd&apos;hui
-          dans les 19 communes de la Région de Bruxelles-Capitale. Identité ci-dessous ; notre rôle exact est décrit dans les mentions légales.
-        </p>
-
-        <dl className="mt-5 grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
-          <div>
-            <dt className="font-semibold text-navy-900">Dénomination</dt>
-            <dd className="text-ink-soft">{ASSO.nom}</dd>
-          </div>
-          <div>
-            <dt className="font-semibold text-navy-900">Forme juridique</dt>
-            <dd className="text-ink-soft">{ASSO.formeJuridique}</dd>
-          </div>
-          <div>
-            <dt className="font-semibold text-navy-900">Numéro d&apos;entreprise</dt>
-            <dd className="text-ink-soft">{ASSO.bce}</dd>
-          </div>
-          <div>
-            <dt className="font-semibold text-navy-900">Date de constitution</dt>
-            <dd className="text-ink-soft">{ASSO.constitution}</dd>
-          </div>
-          <div>
-            <dt className="font-semibold text-navy-900">Président</dt>
-            <dd className="text-ink-soft">{ASSO.president}</dd>
-          </div>
-          <div>
-            <dt className="font-semibold text-navy-900">Administrateurs</dt>
-            <dd className="text-ink-soft">{ASSO.administrateurs.join(", ")}</dd>
-          </div>
-          <div className="sm:col-span-2">
-            <dt className="font-semibold text-navy-900">Siège social</dt>
-            <dd className="text-ink-soft">
-              {ASSO.rue}, {ASSO.codePostal} {ASSO.ville}, {ASSO.pays}
-            </dd>
-          </div>
-        </dl>
-      </Card>
 
       {/* DONNÉES PERSONNELLES */}
       <Card title="Vos données personnelles" className="mt-6">
@@ -165,8 +98,9 @@ export default function ContactPage() {
           supprimer vous-même, à tout moment, depuis votre compte.
         </p>
         <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-          Si vous nous écrivez, nous gardons votre message le temps de vous accompagner. Demandez sa
-          suppression quand vous le souhaitez à{" "}
+          Si vous nous écrivez par le formulaire, votre nom, votre e-mail et votre message servent uniquement à vous
+          répondre ; ils sont effacés au plus tard après douze mois. Demandez leur suppression plus tôt quand vous le
+          souhaitez à{" "}
           <a href={`mailto:${ASSO.email}`} className="font-semibold text-navy-700 underline">
             {ASSO.email}
           </a>
@@ -181,7 +115,7 @@ export default function ContactPage() {
 
       <div className="mt-8 text-center">
         <LinkBtn href="/#analyser" variant="gold">
-          Analyser mon courrier
+          Vérifier ma lettre
         </LinkBtn>
       </div>
     </div>

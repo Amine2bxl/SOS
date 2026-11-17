@@ -4,9 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTransition } from "react";
 import { Logo, MarqueSos } from "@/components/Logo";
-import { ICONES, IconeScanDoc, IconeSortie } from "@/components/icones";
+import { ICONES, IconeMainTendue, IconeScanDoc, IconeSortie } from "@/components/icones";
 import { MODULES, moduleActif, type Module } from "@/components/app/modules";
 import { seDeconnecter } from "@/lib/auth-actions";
+import { RepriseBrouillon } from "@/components/app/RepriseBrouillon";
+import { BasculeTheme } from "@/components/BasculeTheme";
 
 export type InfosMembre = {
   prenom: string;
@@ -17,6 +19,8 @@ export type InfosMembre = {
   /** null = illimité */
   contestationsRestantes: number | null;
   estGratuit: boolean;
+  /** Bénévole de l'association : accès aux dossiers confiés sous mandat. */
+  operateur?: boolean;
 };
 
 /**
@@ -63,6 +67,18 @@ export function CoquilleApp({ membre, children }: { membre: InfosMembre; childre
         </nav>
 
         <div className="space-y-3 p-4">
+          {membre.operateur && (
+            <Link
+              href="/operateur"
+              aria-current={chemin.startsWith("/operateur") ? "page" : undefined}
+              className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 text-[0.95rem] font-semibold transition ${
+                chemin.startsWith("/operateur") ? "bg-navy-900 text-white" : "border border-line text-navy-800 hover:bg-navy-50"
+              }`}
+            >
+              <IconeMainTendue className="h-6 w-6" />
+              Dossiers confiés
+            </Link>
+          )}
           <EtatAdhesion membre={membre} />
           <div className="flex items-center gap-3 rounded-2xl px-2 py-1.5">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-navy-900 font-display text-sm font-bold text-gold-400">
@@ -74,6 +90,7 @@ export function CoquilleApp({ membre, children }: { membre: InfosMembre; childre
               </span>
               <span className="block truncate text-xs text-ink-soft">{membre.email}</span>
             </span>
+            <BasculeTheme className="h-9 w-9 text-ink-soft hover:bg-navy-50 hover:text-navy-900" />
             <button
               type="button"
               onClick={sortir}
@@ -97,6 +114,8 @@ export function CoquilleApp({ membre, children }: { membre: InfosMembre; childre
               {actif?.titre ?? "Mon espace"}
             </span>
           </Link>
+          <span className="flex items-center gap-1.5">
+          <BasculeTheme className="h-9 w-9 text-ink-soft" />
           <Link
             href="/tableau-de-bord/compte"
             aria-label="Mon compte"
@@ -104,9 +123,12 @@ export function CoquilleApp({ membre, children }: { membre: InfosMembre; childre
           >
             {membre.initiale}
           </Link>
+          </span>
         </header>
 
         <main id="contenu" className="flex-1 pb-28 lg:pb-12">
+          {/* Sur la page de scan, la reprise se fait d'elle-même. */}
+          {!chemin.startsWith("/tableau-de-bord/nouveau") && <RepriseBrouillon />}
           {children}
         </main>
 
@@ -116,7 +138,7 @@ export function CoquilleApp({ membre, children }: { membre: InfosMembre; childre
           className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-card pb-[env(safe-area-inset-bottom)] lg:hidden"
         >
           <ul className="mx-auto grid max-w-lg grid-cols-5 items-end px-2">
-            {MODULES.map((m) => (
+            {MODULES.filter((m) => !m.horsOnglets).map((m) => (
               <li key={m.href} className="flex justify-center">
                 <OngletMobile module={m} actif={actif?.href === m.href} />
               </li>

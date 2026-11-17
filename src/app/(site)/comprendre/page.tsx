@@ -10,6 +10,7 @@ import {
   PayerOuContester,
 } from "@/components/guide";
 import { FAQS } from "@/lib/data";
+import { VideoExplication } from "@/components/site/VideoExplication";
 import { IconeChevron, IconeFleche, IconeLien } from "@/components/icones";
 
 export const metadata: Metadata = {
@@ -22,17 +23,19 @@ export default function ComprendrePage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:py-16">
       <PageHead
-        kicker="Guide"
-        title="Comprendre votre courrier"
-        intro="Tout part du courrier que vous avez reçu. Trouvez-le dans la liste : vous saurez où vous en êtes et ce qu'il vous reste à faire."
+        title="Comprendre votre lettre"
+        intro="Redevance, délai, frais, huissier : tout le système belge, simplement."
       />
+
+      <section className="mx-auto mt-10 max-w-3xl">
+        <h2 className="sr-only">La vidéo</h2>
+        <VideoExplication />
+      </section>
 
       {/* CE QUE COÛTE CHAQUE ÉTAPE */}
       <section className="mt-12">
         <h2 className="font-display text-2xl font-extrabold text-navy-900">Ce que coûte chaque étape</h2>
-        <p className="mt-2 text-ink-soft">
-          Une redevance ne reste jamais à son prix. Plus vous réagissez tôt, moins cela vous coûte.
-        </p>
+        <p className="mt-2 text-ink-soft">Plus vous attendez, plus c&apos;est cher.</p>
         <div className="mt-6">
           <EscalierProcedure />
         </div>
@@ -133,13 +136,11 @@ export default function ComprendrePage() {
       <section className="relative mt-14 overflow-hidden rounded-[1.75rem] bg-navy-900 p-8 text-center text-white">
         <div className="motif-points absolute inset-0" aria-hidden="true" />
         <div className="relative">
-          <h2 className="font-display text-2xl font-extrabold">Votre courrier, analysé en une minute</h2>
-          <p className="mx-auto mt-3 max-w-lg text-navy-100">
-            Le moteur lit votre courrier, calcule votre délai et prépare votre lettre. Gratuit, sans compte.
-          </p>
+          <h2 className="font-display text-2xl font-extrabold">Votre lettre, vérifiée en une minute</h2>
+          <p className="mx-auto mt-3 max-w-lg text-navy-100">Gratuit, sans compte.</p>
           <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <LinkBtn href="/#analyser" variant="gold">
-              Analyser mon courrier
+              Vérifier ma lettre
             </LinkBtn>
             <BoutonContact variante="outline">Nous écrire</BoutonContact>
           </div>

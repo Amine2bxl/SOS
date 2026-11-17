@@ -25,7 +25,7 @@ export function MarqueSos({
   // quatre jaunes, quatre blancs, comme une vraie bouée.
   const segment = (2 * Math.PI * 7) / 8;
   return (
-    <svg viewBox="0 0 48 48" className={className} aria-hidden="true">
+    <svg viewBox="0 0 48 48" className={`marque-sos ${className}`} aria-hidden="true">
       <path
         d="M24 2.5 42 8.6v14c0 11.7-7.6 19.9-18 23.4C13.6 42.5 6 34.3 6 22.6v-14L24 2.5Z"
         fill={surFonce ? "#22396b" : "#0f1e3d"}

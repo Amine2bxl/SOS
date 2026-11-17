@@ -4,12 +4,13 @@
  * Un visiteur peut tout faire sans compte : scanner, répondre, lire l'analyse.
  * Au moment d'obtenir sa lettre, on lui demande son adresse e-mail — et il ne
  * doit surtout pas avoir à tout recommencer après. Le brouillon tient dans le
- * navigateur, quelques heures, et ne contient que les champs confirmés : ni
- * l'image, ni le texte brut du document.
+ * navigateur, trois jours au plus, et ne contient que les champs confirmés :
+ * ni l'image, ni le texte brut du document.
  */
 
 const CLE = "sos:brouillon";
-const DUREE_DE_VIE_MS = 6 * 3600 * 1000;
+// Trois jours : le temps de créer son compte demain soir, pas davantage.
+const DUREE_DE_VIE_MS = 72 * 3600 * 1000;
 
 export type Formulaire = {
   reference: string;
