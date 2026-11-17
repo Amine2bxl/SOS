@@ -49,6 +49,8 @@ export type DonneesExtraites = {
   iban: Champ<string>;
   /** Zone de stationnement mentionnée sur le document (rouge, verte, bleue…). */
   zone: Champ<string>;
+  /** À qui le courrier est adressé (nom et adresse), tel qu'imprimé. */
+  destinataire: Champ<string>;
 };
 
 const champVide = <T,>(): Champ<T> => ({ valeur: null, confiance: "faible" });
@@ -170,14 +172,15 @@ function dateApresLibelle(
 /** Heure du constat : 14h10, 14:10, 14.10 u. */
 function extraireHeure(texte: string): Champ<string> {
   const libelle =
-    /(heure|à\s+|om\s+|uur|tijdstip|constat[ée]?\s+(?:à|le)?[^0-9]{0,20})(\d{1,2})\s*[h:.]\s*(\d{2})\b/i;
+    /(heure|à\s+|om\s+|uur|tijdstip|constat[ée]?\s+(?:à|le)?[^0-9]{0,20})(\d{1,2})\s*[h:.]\s*(\d{2})(?:\s*:\s*(\d{2}))?\b/i;
   const m = texte.match(libelle);
   if (m) {
     const h = Number(m[2]);
     const min = Number(m[3]);
-    if (h < 24 && min < 60) {
+    const sec = m[4] !== undefined ? Number(m[4]) : null;
+    if (h < 24 && min < 60 && (sec === null || sec < 60)) {
       return {
-        valeur: `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`,
+        valeur: `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}${sec !== null ? `:${String(sec).padStart(2, "0")}` : ""}`,
         confiance: "haute",
         contexte: contexteAutour(texte, m.index ?? 0),
       };
@@ -225,7 +228,7 @@ function extraireMontant(texte: string): Champ<number> {
   // référence qui suit. Le négatif final protège du même piège : un montant
   // n'est jamais suivi d'un chiffre ni d'une barre oblique.
   const libelle =
-    /(montant\s+(?:total|d[ûu]|r[ée]clam[ée])?|total\s+[àa]\s+payer|[àa]\s+payer|somme\s+due|bedrag|te\s+betalen|totaal|verschuldigd)[^0-9€]{0,40}(\d{1,3}(?:[ .]\d{3})*(?:[.,]\d{2})?)(?![\d/])/i;
+    /(montant\s+(?:total|d[ûu]|r[ée]clam[ée])?|total\s+[àa]\s+payer|[àa]\s+payer|somme\s+due|bedrag|te\s+betalen|totaal|verschuldigd)[^0-9€]{0,40}(\d{1,3}(?:[ .]\d{3})*[.,]\d{2}|\d{1,4}(?=\s*(?:€|EUR)))(?![\d/])/i;
   const m = texte.match(libelle);
   if (m) {
     const valeur = parseFloat(m[2].replace(/[ .](?=\d{3})/g, "").replace(",", "."));
@@ -242,9 +245,11 @@ function extraireMontant(texte: string): Champ<number> {
 
   if (tous.length === 0) return champVide<number>();
   const max = tous.reduce((a, b) => (b.valeur > a.valeur ? b : a));
+  // Un seul montant en euros sur tout le courrier : c'est lui.
+  const enEuros = [...texte.matchAll(/\d{1,4}[.,]\d{2}\s*(?:€|EUR)/gi)].length;
   return {
     valeur: max.valeur,
-    confiance: tous.length === 1 ? "moyenne" : "faible",
+    confiance: enEuros === 1 ? "haute" : tous.length === 1 ? "moyenne" : "faible",
     contexte: contexteAutour(texte, max.index),
   };
 }
@@ -282,6 +287,12 @@ function extrairePlaque(texte: string): Champ<string> {
 }
 
 function extraireReference(texte: string): Champ<string> {
+  // parking.brussels : « Redevance forfaitaire de stationnement 530329628051 »,
+  // le numéro de la redevance, en titre du courrier.
+  const redevance = texte.match(/redevance\s+(?:forfaitaire\s+)?(?:de\s+stationnement\s+)?(?:n[°o]\s*)?[:.]?\s*(\d{8,15})\b/i);
+  if (redevance) {
+    return { valeur: redevance[1], confiance: "haute", contexte: contexteAutour(texte, redevance.index ?? 0) };
+  }
   const libelle =
     /(r[ée]f[ée]rence|dossier|n[°o]\s*de\s*dossier|kenmerk|dossiernummer|referentie|notre\s+r[ée]f)\s*[:.\-]?\s*([A-Z0-9][A-Z0-9\/\-.]{4,24})/i;
   const m = texte.match(libelle);
@@ -427,6 +438,12 @@ function communeDuLieu(texte: string): { commune: string; index: number } | null
 }
 
 function extraireCommune(texte: string): Champ<string> {
+  const precis = lieuAvecCommune(texte);
+  if (precis) {
+    const nom = majusculesSansAccents(precis.commune);
+    const trouvee = NOMS_COMMUNES.find((c) => majusculesSansAccents(c.nom) === nom || nom.startsWith(majusculesSansAccents(c.nom)));
+    if (trouvee) return { valeur: trouvee.commune, confiance: "haute", contexte: contexteAutour(texte, precis.index) };
+  }
   const lieu = communeDuLieu(texte);
   const normalise = majusculesSansAccents(texte);
   // En mots entiers : « Evere » ne doit pas surgir de « sévère », ni « Jette »
@@ -462,7 +479,42 @@ function extraireCommune(texte: string): Champ<string> {
  * Le formulaire de contestation le réclame, et c'est souvent la seule donnée
  * qui permet de rattacher le constat à une zone tarifaire précise.
  */
+const PARTICULES = new Set(["de", "du", "des", "la", "le", "les", "d'", "l'", "van", "der", "den", "het", "aux", "au", "et"]);
+/** « RUE ADOLPHE DE BRANDT » → « Rue Adolphe de Brandt ». */
+function casseNom(s: string): string {
+  return s
+    .toLowerCase()
+    .split(/(\s+|-)/)
+    .map((m, i) => (i > 0 && PARTICULES.has(m) ? m : m.replace(/^(d'|l')?(\p{L})/u, (_, a: string | undefined, l: string) => `${a ?? ""}${l.toUpperCase()}`)))
+    .join("");
+}
+
+const ODONYMES = "rue|avenue|av\\.|boulevard|bd|chauss[ée]e|place|square|quai|all[ée]e|dr[èe]ve|impasse|chemin|clos|parvis|straat|laan|steenweg|plein|lei|dreef";
+
+/**
+ * Le lieu du constat sur un courrier de parking.brussels : « RUE ADOLPHE DE
+ * BRANDT à EVERE », puis « à la hauteur du numéro 58 ». La commune vient
+ * après « à » ; l'adresse du destinataire, elle, a un code postal.
+ */
+function lieuAvecCommune(texte: string): { rue: string; commune: string; numero: string | null; index: number } | null {
+  const motif = new RegExp(`(?:^|\\n)[^\\n]*?\\b((?:${ODONYMES})\\b[^\\n]{2,60}?)\\s+(?:à|a|te)\\s+([A-ZÀ-Ÿ][A-ZÀ-Ÿa-zà-ÿ'\\- ]{2,30}?)\\s*(?=\\d{1,3}[.,]\\d{2}|\\n|$)`, "gi");
+  for (const m of texte.matchAll(motif)) {
+    const apres = texte.slice((m.index ?? 0) + m[0].length, (m.index ?? 0) + m[0].length + 120);
+    const numero = apres.match(/hauteur\s+du\s+(?:n[°o]|num[ée]ro)\s*(\d{1,4}[A-Za-z]?)/i)?.[1] ?? m[1].match(/\s(\d{1,4}[A-Za-z]?)$/)?.[1] ?? null;
+    return { rue: casseNom(m[1].replace(/\s+\d{1,4}[A-Za-z]?$/, "").trim()), commune: m[2].trim(), numero, index: m.index ?? 0 };
+  }
+  return null;
+}
+
 function extraireLieuConstat(texte: string): Champ<string> {
+  const precis = lieuAvecCommune(texte);
+  if (precis) {
+    return {
+      valeur: precis.numero ? `${precis.rue} ${precis.numero}` : precis.rue,
+      confiance: "haute",
+      contexte: contexteAutour(texte, precis.index),
+    };
+  }
   const libelle =
     /(lieu\s+du\s+constat|lieu|adresse\s+du\s+constat|stationn[ée]\s+(?:à|au|rue)|plaats|locatie|straat)\s*[:.\-]?\s*([A-ZÀ-Ÿ][^\n,;]{4,60})/i;
   const m = texte.match(libelle);
@@ -486,6 +538,30 @@ function extraireLieuConstat(texte: string): Champ<string> {
     };
   }
 
+  return champVide<string>();
+}
+
+/**
+ * Le destinataire imprimé sur le courrier : un nom, une rue, un code postal et
+ * une ville, sur trois lignes qui se suivent (le bloc d'adresse de la fenêtre
+ * de l'enveloppe). La boîte postale de l'expéditeur est écartée.
+ */
+function extraireDestinataire(texte: string): Champ<string> {
+  const lignes = texte.split("\n").map((l) => l.replace(/^[^A-Za-zÀ-ÿ0-9]+/, "").trim());
+  for (let i = 2; i < lignes.length; i++) {
+    const cp = lignes[i].match(/^([1-9]\d{3})\s+([A-ZÀ-Ÿ][A-Za-zÀ-ÿ'\- ]{2,40})$/);
+    if (!cp || /\bbox\b|brussel\s+1\b/i.test(lignes[i])) continue;
+    const rue = lignes[i - 1];
+    const nom = lignes[i - 2];
+    if (!/\d/.test(rue) || !/[A-Za-zÀ-ÿ]{3}/.test(nom) || /box|exp[.:]/i.test(rue + nom) || nom.length > 60) continue;
+    // Les débris d'un QR code imprimé à côté (« 0 Euro Ambulance ») sont retirés.
+    const propre = (x: string) => x.replace(/^(?:\S{1,2}\s+)+(?=[A-ZÀ-Ÿ])/, "").replace(/\s+bte\s+À$/i, " bte A").replace(/\s{2,}/g, " ");
+    return {
+      valeur: `${propre(nom)}, ${propre(rue)}, ${cp[1]} ${cp[2].trim()}`,
+      confiance: "moyenne",
+      contexte: contexteAutour(texte, Math.max(0, texte.indexOf(nom))),
+    };
+  }
   return champVide<string>();
 }
 
@@ -524,6 +600,25 @@ function extraireAutorite(texte: string): Champ<string> {
 
 /** Détermine le stade de la procédure : c'est lui qui dicte l'urgence. */
 function extraireTypeDocument(texte: string): Champ<string> {
+  // Le titre du courrier, en capitales (« PREMIER RAPPEL »), fait foi.
+  const titres: [RegExp, string][] = [
+    [/\b(?:DEUXI[ÈE]ME|SECOND|2E|2ÈME)\s+RAPPEL\b|\bTWEEDE\s+HERINNERING\b/, "deuxieme_rappel"],
+    [/\bPREMIER\s+RAPPEL\b|\bEERSTE\s+HERINNERING\b/, "premier_rappel"],
+    [/\bMISE\s+EN\s+DEMEURE\b|\bINGEBREKESTELLING\b/, "mise_en_demeure"],
+    [/\bCONTRAINTE\b|\bDWANGBEVEL\b/, "contrainte"],
+    [/\bNOTIFICATION\b|\bKENNISGEVING\b/, "notification"],
+  ];
+  for (const [motif, type] of titres) {
+    const m = texte.match(motif);
+    if (m) return { valeur: type, confiance: "haute", contexte: contexteAutour(texte, m.index ?? 0) };
+  }
+  // La frise de la procédure (« Notification · 1er rappel · … · Contrainte »)
+  // cite toutes les étapes : on la retire avant de chercher le stade.
+  const etapes = /notification|rappel|mise\s+en\s+demeure|contrainte|huissier|ex[ée]cution|herinnering|ingebrekestelling|dwangbevel|deurwaarder/gi;
+  texte = texte
+    .split("\n")
+    .filter((ligne) => (ligne.match(etapes) ?? []).length < 3 && !/\(\s*\+?\s*(?:frais|indemnit)/i.test(ligne))
+    .join("\n");
   // L'ordre est délibéré : du plus grave au plus doux, car un courrier
   // d'huissier mentionne aussi le mot « redevance ».
   const stades: [RegExp, string][] = [
@@ -570,14 +665,29 @@ export function extraireDonnees(texteBrut: string): DonneesExtraites {
   const dateEnvoi =
     dateEnvoiLibellee.valeur !== null
       ? dateEnvoiLibellee
-      : dateApresLibelle(texte, dates, /(?:^|\n)\s*[A-ZÀ-Ý][A-Za-zÀ-ÿ'\- ]{2,30},\s+(?:le\s+)?(?=\d{1,2}[\/.\- ])/m, 45);
+      : dateApresLibelle(
+          texte,
+          dates,
+          // Un nom de ville (chaque mot en capitale : « Bruxelles », « Sint-Jans-Molenbeek »),
+          // puis « , le » ou « le » : jamais « À payer avant le ».
+          /(?:^|\n)\s*[A-ZÀ-Ý][a-zà-ÿ'\-]+(?:[\s\-][A-ZÀ-Ý][a-zà-ÿ'\-]+){0,3}(?:,\s+(?:le\s+)?|\s+le\s+)(?=\d{1,2}[\/.\- ])/m,
+          45,
+        );
+
+  // « 17/08/2026 à 14:37:44 » : une date suivie d'une heure, c'est le constat.
+  const avecHeure = texte.match(/(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})\s*(?:à|a|om|-)\s*\d{1,2}\s*[:h.]\s*\d{2}/i);
+  const isoAvecHeure = avecHeure ? versISO(Number(avecHeure[1]), Number(avecHeure[2]), Number(avecHeure[3])) : null;
+  const constatDate: Champ<string> =
+    dateConstat.valeur === null && isoAvecHeure
+      ? { valeur: isoAvecHeure, confiance: "haute", contexte: contexteAutour(texte, avecHeure?.index ?? 0) }
+      : dateConstat;
 
   // À défaut de libellé, la première date du document est le plus souvent
   // celle du constat : utile, mais signalée comme peu sûre.
   const constatRetenu: Champ<string> =
-    dateConstat.valeur === null && dates.length > 0
+    constatDate.valeur === null && dates.length > 0
       ? { valeur: dates[0].iso, confiance: "faible", contexte: contexteAutour(texte, dates[0].index) }
-      : dateConstat;
+      : constatDate;
 
   return {
     reference: extraireReference(texte),
@@ -594,6 +704,7 @@ export function extraireDonnees(texteBrut: string): DonneesExtraites {
     communication: extraireCommunication(texte),
     iban: extraireIban(texte),
     zone: extraireZone(texte),
+    destinataire: extraireDestinataire(texte),
   };
 }
 

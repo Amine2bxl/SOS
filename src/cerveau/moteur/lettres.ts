@@ -13,7 +13,9 @@
  *
  * Le ton, l'enjeu et les paragraphes propres au cas viennent du scénario
  * (`scenario.ts`) : stade, montant, nombre de redevances, délai dépassé,
- * points relevés sur le courrier.
+ * points relevés sur le courrier. Le récit des faits, la posture et la
+ * formulation viennent de la plume (`redaction.ts`) : chaque combinaison de
+ * réponses écrit sa propre lettre, et deux dossiers ne se ressemblent pas.
  *
  * Chaque lettre existe en français et en néerlandais : en Flandre,
  * l'administration travaille en néerlandais, et une lettre dans sa langue est
@@ -22,7 +24,23 @@
  */
 
 import { MOYENS } from "../base/moyens";
-import { formuleFinale, lireScenario, ouverture, PARAGRAPHE_TARDIF } from "./scenario";
+import { lireScenario, PARAGRAPHE_TARDIF } from "./scenario";
+import {
+  conclusionDuRecit,
+  demandePrincipale,
+  formulesFinales,
+  INTITULES_FAITS,
+  INTITULES_FAITS_ET_MOYENS,
+  INTITULES_MOYENS,
+  INTRO_DEMANDES,
+  etapesDuChemin,
+  lirePosture,
+  ouvertures,
+  ouvrirMotif,
+  plumePour,
+  recitDesFaits,
+  RESERVES,
+} from "./redaction";
 import type { Faits, Identite, Langue, TypeLettre } from "../types";
 
 type T = { fr: string; nl: string };
@@ -60,6 +78,38 @@ const DEMANDES: Record<Langue, string[]> = {
   ],
 };
 
+/**
+ * Les pièces des moyens sont rédigées en français pour l'écran ; une lettre
+ * néerlandaise les annonce dans sa langue.
+ */
+const PIECES_NL: Record<string, string> = {
+  "Capture d'écran de la session (date, heures, plaque, zone)": "Schermafbeelding van de parkeersessie (datum, uren, nummerplaat, zone)",
+  "Historique des sessions de votre compte": "Overzicht van de parkeersessies van mijn account",
+  "Relevé bancaire du paiement": "Bankafschrift van de betaling",
+  "Copie du ticket horodaté": "Kopie van het parkeerticket",
+  "Relevé bancaire si vous avez payé par carte": "Bankafschrift van de kaartbetaling",
+  "Copie recto-verso de la carte et de sa période de validité": "Kopie (voor- en achterzijde) van de kaart en haar geldigheidsduur",
+  "Preuve que la plaque est bien associée à la carte": "Bewijs dat de nummerplaat aan de kaart gekoppeld is",
+  "Copie recto-verso de la carte de stationnement pour personnes handicapées": "Kopie (voor- en achterzijde) van de parkeerkaart voor personen met een handicap",
+  "Copie du certificat d'immatriculation": "Kopie van het inschrijvingsbewijs",
+  "Photo de votre véhicule et de sa plaque": "Foto van mijn voertuig en zijn nummerplaat",
+  "Acte de vente, contrat de location ou de prêt daté": "Gedateerde verkoopakte, huur- of leenovereenkomst",
+  "Preuve de la radiation ou du transfert de la plaque (DIV)": "Bewijs van de schrapping of overdracht van de nummerplaat (DIV)",
+  "Copie du procès-verbal de plainte pour vol, daté": "Kopie van het gedateerde proces-verbaal van de klacht wegens diefstal",
+  "Photo de l'horodateur hors service ou capture du message d'erreur": "Foto van de defecte parkeerautomaat of schermafbeelding van de foutmelding",
+  "Toute preuve de la tentative de paiement": "Elk bewijs van de betalingspoging",
+  "Photos datées des panneaux et du marquage au sol": "Gedateerde foto's van de borden en de wegmarkering",
+  "Vue d'ensemble situant l'emplacement du véhicule": "Overzichtsfoto van de plaats van het voertuig",
+  "Tout élément établissant la brièveté et l'objet de l'arrêt": "Elk element dat de korte duur en het doel van de stilstand aantoont",
+  "Attestation ou témoignage éventuel": "Eventueel attest of getuigenis",
+  "Copie des deux courriers reçus": "Kopie van de twee ontvangen brieven",
+  "Tout élément relatif à votre adresse officielle à la date des faits": "Elk element over mijn officieel adres op de datum van de feiten",
+  "Copie de votre première contestation": "Kopie van mijn eerste betwisting",
+  "Preuve de son envoi (récépissé, capture)": "Bewijs van verzending (ontvangstbewijs, schermafbeelding)",
+  "Copie de chaque courrier reçu, dans l'ordre": "Kopie van elke ontvangen brief, in volgorde",
+  "Preuve du paiement (extrait de compte, reçu)": "Betalingsbewijs (rekeninguittreksel, ontvangstbewijs)",
+};
+
 export type OptionsLettre = {
   type: TypeLettre;
   langue: Langue;
@@ -89,6 +139,8 @@ export type LettreComposee = {
   texteCourt: string;
   /** Le ton retenu, pour l'afficher à l'utilisateur. */
   ton: "courtois" | "ferme" | "pressant";
+  /** Les réponses qui ont façonné la lettre, en mots courts. */
+  chemin: string[];
 };
 
 const TITRES: Record<TypeLettre, T> = {
@@ -109,6 +161,11 @@ export function composerLettre(o: OptionsLettre): LettreComposee {
   const { langue, faits, identite } = o;
   const L = (x: T) => t(langue, x);
   const scenario = lireScenario(faits, o.nombre ?? 1);
+  const plume = plumePour(faits, o.type);
+  const posture = lirePosture(faits.reponses);
+  const recit = recitDesFaits(faits, plume, posture);
+  const conclusion = conclusionDuRecit(posture, plume);
+  const paragrapheRecit = recit.length ? [...recit, ...(conclusion ? [conclusion] : [])].map(L).join(" ") : null;
 
   const nomComplet = `${ou(identite.prenom, { fr: "Prénom", nl: "Voornaam" }, langue)} ${ou(identite.nom, { fr: "Nom", nl: "Naam" }, langue)}`;
   const reference = ou(faits.reference, { fr: "référence figurant sur votre courrier", nl: "referentie op uw brief" }, langue);
@@ -118,7 +175,7 @@ export function composerLettre(o: OptionsLettre): LettreComposee {
   const moyensChoisis = MOYENS.filter((m) =>
     o.moyens ? o.moyens.includes(m.id) : m.applicable(faits),
   );
-  const piecesMoyens = moyensChoisis.flatMap((m) => m.pieces);
+  const piecesMoyens = moyensChoisis.flatMap((m) => m.pieces).map((p) => (langue === "nl" ? (PIECES_NL[p] ?? p) : p));
 
   /* ------------------------------------------------------- en-tête commun */
   const expediteur = [
@@ -214,26 +271,41 @@ export function composerLettre(o: OptionsLettre): LettreComposee {
 
   switch (o.type) {
     case "contestation": {
-      corps.push(L(ouverture(scenario, nomComplet, identification)));
+      corps.push(`${L(plume.choisir("ouverture", ouvertures(scenario.stade, scenario.ton, nomComplet, scenario.nombre)))} ${identification}`);
       if (scenario.tardif) {
         corps.push("");
         corps.push(L(PARAGRAPHE_TARDIF));
       }
-      corps.push("");
-      corps.push(L({ fr: "EXPOSÉ DES FAITS ET MOYENS", nl: "FEITEN EN MIDDELEN" }));
-      if (moyensChoisis.length === 0) {
-        corps.push(
-          L({
-            fr: "Je conteste la redevance réclamée pour les motifs exposés ci-dessous, et sollicite un réexamen complet du dossier au vu des éléments que je porte à votre connaissance.",
-            nl: "Ik betwist de gevorderde retributie om de hieronder uiteengezette redenen en verzoek om een volledig nieuw onderzoek van het dossier in het licht van de elementen die ik u meedeel.",
-          }),
-        );
+      // Les faits d'abord, dans les mots du chemin choisi ; les motifs ensuite.
+      if (paragrapheRecit) {
+        corps.push("");
+        corps.push(L(plume.choisir("intitule:faits", INTITULES_FAITS)));
+        corps.push(paragrapheRecit);
+        if (recitUtilisateur) {
+          corps.push("");
+          corps.push(recitUtilisateur);
+        }
+        if (moyensChoisis.length > 0) {
+          corps.push("");
+          corps.push(L(plume.choisir("intitule:moyens", INTITULES_MOYENS)));
+        }
+      } else {
+        corps.push("");
+        corps.push(L(plume.choisir("intitule:faits_moyens", INTITULES_FAITS_ET_MOYENS)));
+        if (moyensChoisis.length === 0) {
+          corps.push(
+            L({
+              fr: "Je conteste la redevance réclamée pour les motifs exposés ci-dessous, et sollicite un réexamen complet du dossier au vu des éléments que je porte à votre connaissance.",
+              nl: "Ik betwist de gevorderde retributie om de hieronder uiteengezette redenen en verzoek om een volledig nieuw onderzoek van het dossier in het licht van de elementen die ik u meedeel.",
+            }),
+          );
+        }
       }
       moyensChoisis.forEach((m, i) => {
         if (i > 0) corps.push("");
-        corps.push(m.paragraphe(faits)[langue]);
+        corps.push(L(ouvrirMotif(m.paragraphe(faits), i, moyensChoisis.length, plume)));
       });
-      if (recitUtilisateur) {
+      if (recitUtilisateur && !paragrapheRecit) {
         corps.push("");
         corps.push(recitUtilisateur);
       }
@@ -246,8 +318,11 @@ export function composerLettre(o: OptionsLettre): LettreComposee {
         });
       }
       // Une petite redevance : trois demandes, l'essentiel. Un dossier lourd :
-      // tout, et un examen redevance par redevance.
-      demandes.push(...(scenario.enjeu === "faible" ? [DEMANDES[langue][0], DEMANDES[langue][1], DEMANDES[langue][4]] : DEMANDES[langue]));
+      // tout, et un examen redevance par redevance. La demande principale
+      // reprend la posture ; quand on doute, les photos passent devant.
+      const liste = [L(demandePrincipale(posture)), ...DEMANDES[langue].slice(1)];
+      const retenues = scenario.enjeu === "faible" ? [liste[0], liste[1], liste[4]] : liste;
+      demandes.push(...(posture === "doute" ? [retenues[1], retenues[0], ...retenues.slice(2)] : retenues));
       if (scenario.enjeu === "eleve") {
         demandes.push(
           L({
@@ -275,10 +350,22 @@ export function composerLettre(o: OptionsLettre): LettreComposee {
       corps.push(identification);
       corps.push("");
       corps.push(
-        L({
-          fr: `Par courrier du ${datePremiere}, j'ai contesté cette redevance de manière circonstanciée. Je n'ai reçu à ce jour ni accusé de réception, ni décision.`,
-          nl: `Bij brief van ${datePremiere} heb ik deze retributie omstandig betwist. Tot op heden ontving ik noch een ontvangstbevestiging, noch een beslissing.`,
-        }),
+        L(
+          plume.choisir("relance:rappel", [
+            {
+              fr: `Par courrier du ${datePremiere}, j'ai contesté cette redevance de manière circonstanciée. Je n'ai reçu à ce jour ni accusé de réception, ni décision.`,
+              nl: `Bij brief van ${datePremiere} heb ik deze retributie omstandig betwist. Tot op heden ontving ik noch een ontvangstbevestiging, noch een beslissing.`,
+            },
+            {
+              fr: `Le ${datePremiere}, je vous ai adressé une contestation motivée de cette redevance. Elle est restée sans accusé de réception et sans décision.`,
+              nl: `Op ${datePremiere} heb ik u een gemotiveerde betwisting van deze retributie gestuurd. Ze bleef zonder ontvangstbevestiging en zonder beslissing.`,
+            },
+            {
+              fr: `Ma contestation du ${datePremiere}, motivée et complète, n'a reçu à ce jour aucune réponse, pas même un accusé de réception.`,
+              nl: `Mijn gemotiveerde en volledige betwisting van ${datePremiere} heeft tot op heden geen enkel antwoord gekregen, zelfs geen ontvangstbevestiging.`,
+            },
+          ]),
+        ),
       );
       corps.push("");
       corps.push(
@@ -329,6 +416,10 @@ export function composerLettre(o: OptionsLettre): LettreComposee {
             nl: `Deze retributie werd schriftelijk betwist op ${dateLongue(o.datePremiereContestation, langue)}, waarvan een kopie bijgevoegd is. Een aldus betwiste schuld heeft niet het zekere karakter dat vereist is voor de gedwongen invordering ervan.`,
           }),
         );
+      }
+      if (paragrapheRecit) {
+        corps.push("");
+        corps.push(paragrapheRecit);
       }
       if (moyensChoisis.length > 0) {
         corps.push("");
@@ -497,6 +588,10 @@ export function composerLettre(o: OptionsLettre): LettreComposee {
                 nl: "Het gaat om een alleenstaande tekortkoming, te goeder trouw begaan. Ik kom mijn parkeerverplichtingen gewoonlijk zonder problemen na.",
               });
       corps.push(circonstance);
+      if (paragrapheRecit && faits.reponses?.carte !== "riverain" && faits.reponses?.carte !== "pmr") {
+        corps.push("");
+        corps.push(recit.map(L).join(" "));
+      }
       if (recitUtilisateur) {
         corps.push("");
         corps.push(recitUtilisateur);
@@ -532,20 +627,16 @@ export function composerLettre(o: OptionsLettre): LettreComposee {
     "",
     ...corps,
     "",
-    L({
-      fr: o.type === "demande_preuves" ? "Je sollicite en particulier :" : "Je sollicite dès lors :",
-      nl: o.type === "demande_preuves" ? "Ik verzoek in het bijzonder om:" : "Ik verzoek u dan ook om:",
-    }),
+    o.type === "demande_preuves"
+      ? L({ fr: "Je sollicite en particulier :", nl: "Ik verzoek in het bijzonder om:" })
+      : L(plume.choisir("intro:demandes", INTRO_DEMANDES)),
     ...demandes.map((d, i) => `${i + 1}. ${d}`),
     "",
     o.type === "demande_preuves" || o.type === "echelonnement" || o.type === "bonne_foi"
       ? null
-      : L({
-          fr: "La présente ne constitue en aucune manière une reconnaissance de dette. Tous mes droits et moyens demeurent expressément réservés.",
-          nl: "Deze brief houdt geenszins een erkenning van schuld in. Al mijn rechten en middelen blijven uitdrukkelijk voorbehouden.",
-        }),
+      : L(plume.choisir("reserve", RESERVES)),
     "",
-    L(formuleFinale(o.type === "bonne_foi" || o.type === "echelonnement" ? "courtois" : scenario.ton)),
+    L(plume.choisir("formule", formulesFinales(o.type === "bonne_foi" || o.type === "echelonnement" ? "courtois" : scenario.ton))),
     "",
     "",
     nomComplet,
@@ -557,21 +648,37 @@ export function composerLettre(o: OptionsLettre): LettreComposee {
   // La version courte : un formulaire en ligne n'accepte souvent que quelques
   // centaines de mots. L'essentiel, dans l'ordre : qui, quoi, pourquoi, quoi demander.
   const motifs = moyensChoisis.slice(0, 3).map((m) => `- ${m.titre}`);
+  // Elle porte aussi le récit : un formulaire en ligne reçoit des milliers de
+  // textes, celui-ci doit raconter ce cas-ci, pas un cas type.
+  const recitCourt = recit.length ? [...recit.slice(0, 3), ...(conclusion ? [conclusion] : [])].map(L).join(" ") : null;
   const court = [
     objet,
     "",
     identification,
     "",
+    ...(recitCourt && o.type !== "demande_preuves" && o.type !== "echelonnement" ? [recitCourt, ""] : []),
     ...(o.type === "contestation" || o.type === "reponse_huissier" || o.type === "relance"
       ? [
-          L({ fr: "Je conteste cette redevance pour les motifs suivants :", nl: "Ik betwist deze retributie om de volgende redenen:" }),
+          L(
+            plume.choisir("court:motifs", [
+              { fr: "Je conteste cette redevance pour les motifs suivants :", nl: "Ik betwist deze retributie om de volgende redenen:" },
+              { fr: "Mes motifs de contestation :", nl: "Mijn redenen van betwisting:" },
+              { fr: "Cette redevance n'est pas due, pour les raisons suivantes :", nl: "Deze retributie is niet verschuldigd, om de volgende redenen:" },
+            ]),
+          ),
           ...(motifs.length ? motifs : [L({ fr: "- voir ma lettre jointe", nl: "- zie mijn bijgevoegde brief" })]),
           ...scenario.pointsReleves.slice(0, 1).map((p) => `- ${L(p)}`),
           "",
         ]
       : []),
-    L({ fr: "Je sollicite :", nl: "Ik verzoek om:" }),
-    ...demandes.slice(0, 3).map((d) => `- ${d.replace(/[;.]$/, "")}`),
+    L(
+      plume.choisir("court:demandes", [
+        { fr: "Je sollicite :", nl: "Ik verzoek om:" },
+        { fr: "Je demande :", nl: "Ik vraag:" },
+        { fr: "Ma demande :", nl: "Mijn verzoek:" },
+      ]),
+    ),
+    ...demandes.slice(0, 3).map((d) => `- ${d.replace(/\s*[;.]$/, "")}`),
     "",
     nomComplet,
   ].join("\n");
@@ -583,6 +690,7 @@ export function composerLettre(o: OptionsLettre): LettreComposee {
     annexes: annexesUniques,
     texteCourt: court,
     ton: scenario.ton,
+    chemin: etapesDuChemin(faits.reponses),
   };
 }
 

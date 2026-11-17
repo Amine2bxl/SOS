@@ -101,56 +101,8 @@ export function lireScenario(faits: Faits, nombre = 1): Scenario {
   return { stade, ton, enjeu, tardif, nombre: Math.max(1, nombre), pointsReleves: points, ecart };
 }
 
-/** L'ouverture de la lettre, selon le stade et le ton. */
-export function ouverture(s: Scenario, nomComplet: string, identification: string): { fr: string; nl: string } {
-  const pluriel = s.nombre > 1;
-  switch (s.stade) {
-    case "premier_rappel":
-    case "deuxieme_rappel":
-      return {
-        fr: `Je soussigné(e) ${nomComplet} accuse réception de votre rappel et conteste ${pluriel ? "les redevances" : "la redevance"} concernée${pluriel ? "s" : ""}. ${identification}`,
-        nl: `Ondergetekende, ${nomComplet}, bevestigt de ontvangst van uw herinnering en betwist de betrokken ${pluriel ? "retributies" : "retributie"}. ${identification}`,
-      };
-    case "mise_en_demeure":
-      return {
-        fr: `Je soussigné(e) ${nomComplet} réponds à votre mise en demeure dans le délai imparti et conteste formellement la somme réclamée. ${identification}`,
-        nl: `Ondergetekende, ${nomComplet}, antwoordt binnen de gestelde termijn op uw ingebrekestelling en betwist formeel het gevorderde bedrag. ${identification}`,
-      };
-    default:
-      return s.ton === "courtois"
-        ? {
-            fr: `Je soussigné(e) ${nomComplet} me permets de contester la redevance mentionnée ci-dessous. ${identification}`,
-            nl: `Ondergetekende, ${nomComplet}, betwist hierbij de hieronder vermelde retributie. ${identification}`,
-          }
-        : {
-            fr: `Je soussigné(e) ${nomComplet} conteste par la présente ${pluriel ? `les ${s.nombre} redevances` : "la redevance"} visée${pluriel ? "s" : ""} ci-dessous. ${identification}`,
-            nl: `Ondergetekende, ${nomComplet}, betwist hierbij ${pluriel ? `de ${s.nombre} retributies` : "de retributie"} hieronder vermeld. ${identification}`,
-          };
-  }
-}
-
 /** Le paragraphe d'une contestation tardive : reconnaître, expliquer, demander l'examen. */
 export const PARAGRAPHE_TARDIF = {
   fr: "Je suis conscient(e) que le délai indiqué pour contester est dépassé. Je vous saurais gré d'examiner néanmoins la présente au fond : les éléments exposés ci-dessous établissent que la redevance n'est pas due, et une contestation tardive n'en rend pas pour autant la dette certaine.",
   nl: "Ik besef dat de termijn om te betwisten verstreken is. Ik verzoek u deze brief toch ten gronde te onderzoeken: de hieronder uiteengezette elementen tonen aan dat de retributie niet verschuldigd is, en een laattijdige betwisting maakt de schuld daarom nog niet zeker.",
 };
-
-/** La formule finale, selon le ton. */
-export function formuleFinale(ton: Ton): { fr: string; nl: string } {
-  if (ton === "pressant") {
-    return {
-      fr: "Dans l'attente de votre réponse écrite et de la suspension effective du recouvrement, je vous prie d'agréer, Madame, Monsieur, mes salutations distinguées.",
-      nl: "In afwachting van uw schriftelijk antwoord en de effectieve opschorting van de invordering, verblijf ik met de meeste hoogachting,",
-    };
-  }
-  if (ton === "ferme") {
-    return {
-      fr: "Dans l'attente d'une décision motivée, je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.",
-      nl: "In afwachting van een gemotiveerde beslissing verblijf ik met de meeste hoogachting,",
-    };
-  }
-  return {
-    fr: "En vous remerciant de l'attention portée à la présente, je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.",
-    nl: "Met dank voor uw aandacht verblijf ik met de meeste hoogachting,",
-  };
-}

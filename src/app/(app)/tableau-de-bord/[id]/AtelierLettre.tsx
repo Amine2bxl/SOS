@@ -93,6 +93,7 @@ export function AtelierLettre({
   const [texte, setTexte] = useState(initiale?.contenu ?? "");
   const [texteCourt, setTexteCourt] = useState<string | null>(null);
   const [ton, setTon] = useState<string | null>(null);
+  const [chemin, setChemin] = useState<string[]>([]);
   const [enregistree, setEnregistree] = useState(!!initiale);
   const [edition, setEdition] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -125,6 +126,7 @@ export function AtelierLettre({
         setTexte(r.lettre.texte);
         setTexteCourt(r.lettre.texteCourt ?? null);
         setTon(r.lettre.ton ?? null);
+        setChemin(r.lettre.chemin ?? []);
         setEnregistree(false);
         setEdition(false);
       });
@@ -348,6 +350,15 @@ export function AtelierLettre({
             {ton && !generation && (
               <span className="rounded-full bg-navy-50 px-2 py-0.5 text-xs font-bold text-navy-700">
                 Ton {ton === "courtois" ? "courtois" : ton === "ferme" ? "ferme" : "pressant"}
+              </span>
+            )}
+            {chemin.length > 0 && !generation && (
+              <span
+                className="rounded-full bg-gold-100 px-2 py-0.5 text-xs font-bold text-navy-900"
+                title={`Rédigée d'après vos réponses : ${chemin.join(" · ")}`}
+              >
+                Écrite pour votre cas · {chemin.slice(0, 2).join(" · ")}
+                {chemin.length > 2 ? ` +${chemin.length - 2}` : ""}
               </span>
             )}
             {enregistree ? (

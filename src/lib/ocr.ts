@@ -394,7 +394,7 @@ function noterLecture(texte: string, confiance: number): number {
     /\b[1-9][\s\-.]?[A-Z]{3}[\s\-.]?\d{3}\b/, // plaque belge
     /\d{1,3}[.,]\d{2}\s*(?:€|EUR)/i, // montant
     /\b\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4}\b/, // date
-    /(r[ée]f[ée]rence|dossier|kenmerk)/i,
+    /(r[ée]f[ée]rence|dossier|kenmerk|redevance\s+(?:forfaitaire|de\s+stationnement)|retributie)/i,
     /\+{3}\d{3}\/\d{4}\/\d{5}\+{3}/, // communication structurée
   ];
   for (const motif of indices) if (motif.test(texte)) note += 25;
@@ -402,7 +402,15 @@ function noterLecture(texte: string, confiance: number): number {
   return note;
 }
 
-type Boite = { texte: string; x0: number; y0: number; x1: number; y1: number };
+export type Boite = { texte: string; x0: number; y0: number; x1: number; y1: number };
+
+/** Le document entier, prêt à afficher, et la place de chaque information dessus. */
+export type DocumentSurligne = {
+  image: string;
+  largeur: number;
+  hauteur: number;
+  zones: Partial<Record<ChampPreuve, Boite>>;
+};
 type Ligne = Boite & { mots?: Boite[] };
 type Tentative = {
   texte: string;
@@ -420,7 +428,7 @@ const INDICES = [
   /\b[1-9][\s\-.]?[A-Z]{3}[\s\-.]?\d{3}\b/,
   /\d{1,3}[.,]\d{2}\s*(?:€|EUR)/i,
   /\b\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4}\b/,
-  /(r[ée]f[ée]rence|dossier|kenmerk)/i,
+  /(r[ée]f[ée]rence|dossier|kenmerk|redevance\s+(?:forfaitaire|de\s+stationnement)|retributie)/i,
   /\d{3}\s*\/\s*\d{4}\s*\/\s*\d{5}/,
 ];
 const compterIndices = (texte: string) => INDICES.filter((m) => m.test(texte)).length;
@@ -706,7 +714,7 @@ const LIGNES_CRITIQUES: { motif: RegExp; caracteres?: string }[] = [
   { motif: /\b\d\s*[-.]?\s*[A-Z]{3}\s*[-.]?\s*\d{3}\b|plaque|immatriculation|nummerplaat|kenteken/i, caracteres: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789- " },
   { motif: /€|EUR\b|montant|bedrag|total|à payer|te betalen/i },
   { motif: /\b\d{1,2}\s*[\/.\-]\s*\d{1,2}\s*[\/.\-]\s*\d{2,4}\b|date|datum|échéance|vervaldag/i },
-  { motif: /r[ée]f[ée]rence|dossier|kenmerk|n[°o]\s*:/i },
+  { motif: /r[ée]f[ée]rence|dossier|kenmerk|n[°o]\s*:|redevance\s+forfaitaire/i },
   { motif: /BE\d{2}\s?\d{4}/i, caracteres: "BE0123456789 " },
 ];
 
@@ -757,6 +765,52 @@ async function relireLignesCritiques(
       if (fermee.texte.trim()) relectures.push(fermee.texte.trim());
     }
   }
+  // Au mot près : ce qui ressemble à une plaque est relu seul. Sur un vrai
+  // courrier, une icône collée à la plaque (la petite voiture de
+  // parking.brussels) fait dérailler la lecture de toute la ligne ; le mot
+  // découpé seul, agrandi, se lit sans faute.
+  const mots = meilleure.lignes.flatMap((l) => l.mots ?? []);
+  const ressemblePlaque = (texte: string) => {
+    const t = texte.replace(/[^A-Za-z0-9]/g, "");
+    return /^[1-9][A-Za-z0-9]{4,7}$/.test(t) && (t.match(/[A-Za-z]/g) ?? []).length >= 2;
+  };
+  // Et, quelle que soit sa lecture (« 2016 », « 2ixc16 »…), le premier mot qui
+  // commence par un chiffre sur la ligne qui suit « Détail du constat » ou
+  // « Plaque » : c'est là que les courriers impriment la plaque.
+  const lignesTriees = [...meilleure.lignes].sort((a, b) => a.y0 - b.y0);
+  const sousLibelle = lignesTriees.flatMap((l, i) =>
+    /d[ée]tail\s+du\s+constat|plaque|immatriculation|kenteken|nummerplaat/i.test(l.texte)
+      ? lignesTriees.slice(i, i + 2).flatMap((suivante) => (suivante.mots ?? []).filter((m) => /^[1-9][A-Za-z0-9]{3,7}$/.test(m.texte.replace(/[^A-Za-z0-9]/g, ""))).slice(0, 2))
+      : [],
+  );
+  const plaques = Array.from(new Set([...sousLibelle, ...mots.filter((m) => ressemblePlaque(m.texte))]));
+  for (const mot of plaques.slice(0, 4)) {
+    const h = mot.y1 - mot.y0;
+    const marge = Math.round(h * 0.3);
+    const x0 = Math.max(0, mot.x0 - marge);
+    const y0 = Math.max(0, mot.y0 - marge);
+    const w = Math.min(image.width - x0, mot.x1 - mot.x0 + marge * 2);
+    const hh = Math.min(image.height - y0, h + marge * 2);
+    if (w < 8 || hh < 6) continue;
+    const facteur = Math.min(5, Math.max(2, 48 / Math.max(1, h)));
+    const zoom = document.createElement("canvas");
+    zoom.width = Math.round(w * facteur);
+    zoom.height = Math.round(hh * facteur);
+    const ctx = zoom.getContext("2d");
+    if (!ctx) continue;
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, zoom.width, zoom.height);
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(image, x0, y0, w, hh, 0, 0, zoom.width, zoom.height);
+    const lu = await reconnaisseur.lire(await canvasVersBlob(zoom), 7, { caracteres: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-" });
+    const texte = lu.texte.trim();
+    if (texte && lu.confiance >= 60) {
+      relectures.push(`Plaque ${texte}`);
+      // La relecture garde sa place sur la page : la visionneuse l'entoure.
+      const boite = { x0: mot.x0, y0: mot.y0, x1: mot.x1, y1: mot.y1 };
+      meilleure.lignes.push({ texte: `Plaque ${texte}`, ...boite, mots: [{ texte, ...boite }] });
+    }
+  }
   return relectures;
 }
 
@@ -790,6 +844,10 @@ function apercuCouleur(t: Tentative): HTMLCanvasElement | undefined {
 }
 
 export type ChampPreuve =
+  | "lieuConstat"
+  | "typeDocument"
+  | "autorite"
+  | "destinataire"
   | "reference"
   | "montant"
   | "dateConstat"
@@ -812,6 +870,18 @@ function formesImprimees(champ: ChampPreuve, valeur: string): string[] {
     return [`${j}${mo}${a}`, `${j}${mo}${a.slice(2)}`, `${Number(j)}${mo}${a}`];
   }
   if (champ === "montant") return [alnum(valeur.replace(/[.,]00$/, "")), alnum(valeur)];
+  if (champ === "typeDocument") {
+    const titres: Record<string, string[]> = {
+      premier_rappel: ["PREMIERRAPPEL", "EERSTEHERINNERING"],
+      deuxieme_rappel: ["DEUXIEMERAPPEL", "SECONDRAPPEL", "TWEEDEHERINNERING"],
+      notification: ["NOTIFICATION", "KENNISGEVING"],
+      mise_en_demeure: ["MISEENDEMEURE", "INGEBREKESTELLING"],
+      contrainte: ["CONTRAINTE", "DWANGBEVEL"],
+    };
+    return titres[valeur] ?? [];
+  }
+  if (champ === "lieuConstat") return [alnum(valeur), alnum(valeur.replace(/\s+\d+[A-Za-z]?$/, ""))];
+  if (champ === "destinataire") return [alnum(valeur.split(",")[0] ?? valeur)];
   if (champ === "heureConstat") return [alnum(valeur)];
   return [alnum(valeur)];
 }
@@ -864,31 +934,77 @@ function motsDeLaValeur(l: Ligne, forme: string): Boite | null {
  * en couleur, avec un peu de marge. Affiché à côté du champ, il permet de
  * confirmer d'un coup d'œil, sans chercher sur la feuille.
  */
-export function decouperPreuves(
-  lecture: ResultatLecture,
-  valeurs: Partial<Record<ChampPreuve, string | null>>,
-): Partial<Record<ChampPreuve, string>> {
-  const { apercu, lignes } = lecture;
-  if (!apercu || !lignes?.length) return {};
-  const lignesNorm = lignes.map((l) => ({ l, n: alnum(l.texte) }));
-  const preuves: Partial<Record<ChampPreuve, string>> = {};
+/**
+ * Ce qui annonce chaque information sur la ligne. Quand deux lignes portent
+ * les mêmes chiffres (la référence et la communication structurée de
+ * parking.brussels, par exemple), c'est l'étiquette qui tranche.
+ */
+const ETIQUETTES: Partial<Record<ChampPreuve, RegExp>> = {
+  reference: /redevance|r[ée]f[ée]rence|dossier|n[°o]\s|retributie|kenmerk/i,
+  communication: /communication|mededeling|\+\+\+|\*\*\*/i,
+  iban: /compte|iban|rekening|BE\d{2}/i,
+  montant: /€|eur\b|montant|bedrag|payer/i,
+  dateEcheance: /avant|uiterlijk|[ée]ch[ée]ance|payer|betalen/i,
+  dateConstat: /\d\s*[:h]\s*\d{2}|constat|vastgesteld/i,
+  plaque: /plaque|immatriculation|kenteken|nummerplaat/i,
+};
+
+/** Où chaque valeur a été lue sur la page (coordonnées de l'aperçu). */
+function zonesDesChamps(lecture: ResultatLecture, valeurs: Partial<Record<ChampPreuve, string | null>>): Partial<Record<ChampPreuve, Boite>> {
+  const { lignes } = lecture;
+  if (!lignes?.length) return {};
+  const lignesNorm = lignes.map((l) => ({ l: l as Ligne, n: alnum(l.texte) }));
+  const zones: Partial<Record<ChampPreuve, Boite>> = {};
   for (const [champ, valeur] of Object.entries(valeurs) as [ChampPreuve, string | null][]) {
     if (!valeur) continue;
     // La forme la plus précise d'abord (« 3700 » avant « 37 ») : une ligne qui
     // la contient en entier l'emporte, sans chercher plus loin.
-    let retenue: { l: Ligne; score: number } | null = null;
+    let retenue: { l: Ligne; score: number; forme: string } | null = null;
     const formes = formesImprimees(champ, valeur).filter((f) => f.length >= 2).sort((x, y) => y.length - x.length);
     for (const forme of formes) {
+      const etiquette = ETIQUETTES[champ];
       for (const { l, n } of lignesNorm) {
-        const score = recouvrement(forme, n);
-        if (score >= 0.7 && (!retenue || score > retenue.score)) retenue = { l, score };
+        const brut = recouvrement(forme, n);
+        const score = brut + (brut >= 0.7 && etiquette?.test(l.texte) ? 0.05 : 0);
+        if (score >= 0.7 && (!retenue || score > retenue.score)) retenue = { l, score, forme };
       }
-      if (retenue && retenue.score > 0.999) break;
+      if (retenue && retenue.score > 1.04) break;
     }
     if (!retenue) continue;
-    // Dans la ligne, les mots qui portent la valeur : on découpe la valeur
-    // elle-même, assez grande pour se lire, pas toute la ligne du tableau.
-    const zone = motsDeLaValeur(retenue.l, formes[0]) ?? retenue.l;
+    zones[champ] = motsDeLaValeur(retenue.l, retenue.forme) ?? retenue.l;
+  }
+  return zones;
+}
+
+/**
+ * Le document entier, prêt à afficher, et la place de chaque information
+ * dessus : la visionneuse les surligne, et entoure celle qu'on regarde.
+ */
+export function documentSurligne(
+  lecture: ResultatLecture,
+  valeurs: Partial<Record<ChampPreuve, string | null>>,
+): DocumentSurligne | null {
+  const { apercu } = lecture;
+  if (!apercu) return null;
+  const echelle = Math.min(1, 1500 / Math.max(apercu.width, apercu.height));
+  const c = document.createElement("canvas");
+  c.width = Math.round(apercu.width * echelle);
+  c.height = Math.round(apercu.height * echelle);
+  const ctx = c.getContext("2d");
+  if (!ctx) return null;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(apercu, 0, 0, c.width, c.height);
+  return { image: c.toDataURL("image/jpeg", 0.82), largeur: apercu.width, hauteur: apercu.height, zones: zonesDesChamps(lecture, valeurs) };
+}
+
+export function decouperPreuves(
+  lecture: ResultatLecture,
+  valeurs: Partial<Record<ChampPreuve, string | null>>,
+): Partial<Record<ChampPreuve, string>> {
+  const { apercu } = lecture;
+  if (!apercu) return {};
+  const preuves: Partial<Record<ChampPreuve, string>> = {};
+  for (const [champ, zone] of Object.entries(zonesDesChamps(lecture, valeurs)) as [ChampPreuve, Boite][]) {
     const marge = Math.round((zone.y1 - zone.y0) * 0.5);
     const x0 = Math.max(0, zone.x0 - marge);
     const y0 = Math.max(0, zone.y0 - marge);
