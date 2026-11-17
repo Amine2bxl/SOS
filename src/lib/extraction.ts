@@ -100,7 +100,14 @@ function versISO(jour: number, mois: number, annee: number): string | null {
   return d.toISOString().slice(0, 10);
 }
 
-type DateTrouvee = { iso: string; index: number };
+type DateTrouvee = { iso: string; index: number; reparee?: boolean };
+
+/** Lettres que l'OCR lit à la place d'un chiffre, dans une date. */
+const SOSIES_CHIFFRES: Record<string, string> = {
+  O: "0", o: "0", D: "0", Q: "0", I: "1", l: "1", "|": "1", i: "1", Z: "2", S: "5", s: "5", G: "6", b: "6", B: "8", g: "9", q: "9",
+};
+const SOSIE = "[\\dOoDQIl|iZSsGbBgq]";
+const enChiffres = (x: string) => [...x].map((c) => SOSIES_CHIFFRES[c] ?? c).join("");
 
 /** Toutes les dates du texte, sous forme numérique, ISO ou littérale. */
 function trouverDates(texte: string): DateTrouvee[] {
@@ -110,6 +117,15 @@ function trouverDates(texte: string): DateTrouvee[] {
   for (const m of texte.matchAll(/\b(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})\b/g)) {
     const iso = versISO(Number(m[1]), Number(m[2]), Number(m[3]));
     if (iso) dates.push({ iso, index: m.index ?? 0 });
+  }
+
+  // 05/11/202G : une date dont un chiffre a été lu comme une lettre. On la
+  // répare, mais elle reste « à vérifier » (et l'extrait de la photo est montré).
+  const sosie = new RegExp(`(?<![\\w])(${SOSIE}{1,2})[\\/.\\-](${SOSIE}{1,2})[\\/.\\-](${SOSIE}{4}|${SOSIE}{2})(?![\\w])`, "g");
+  for (const m of texte.matchAll(sosie)) {
+    if ((m[0].match(/\d/g) ?? []).length < 4 || dates.some((d) => d.index === m.index)) continue;
+    const iso = versISO(Number(enChiffres(m[1])), Number(enChiffres(m[2])), Number(enChiffres(m[3])));
+    if (iso) dates.push({ iso, index: m.index ?? 0, reparee: true });
   }
 
   // 2026-03-12 (format ISO, fréquent sur les documents générés)
@@ -146,7 +162,7 @@ function dateApresLibelle(
 
   return {
     valeur: candidate.iso,
-    confiance: "haute",
+    confiance: candidate.reparee ? "moyenne" : "haute",
     contexte: contexteAutour(texte, m.index),
   };
 }
@@ -164,6 +180,20 @@ function extraireHeure(texte: string): Champ<string> {
         valeur: `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`,
         confiance: "haute",
         contexte: contexteAutour(texte, m.index ?? 0),
+      };
+    }
+  }
+
+  // « 03/11/2026 à 14 10 » : le deux-points s'est perdu à la lecture.
+  const apresDate = texte.match(/\d{1,2}[\/.]\d{1,2}[\/.]\d{2,4}\s*(?:à|a|om)\s*(\d{1,2})\s+(\d{2})\b/i);
+  if (apresDate) {
+    const h = Number(apresDate[1]);
+    const min = Number(apresDate[2]);
+    if (h < 24 && min < 60) {
+      return {
+        valeur: `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`,
+        confiance: "moyenne",
+        contexte: contexteAutour(texte, apresDate.index ?? 0),
       };
     }
   }

@@ -205,3 +205,15 @@ test("les champs peu sûrs sont listés pour être vérifiés en priorité", () 
   // Une date sans libellé est retenue mais signalée comme peu sûre.
   assert.ok(aVerifier.includes("la date du constat"));
 });
+
+test("date dont un chiffre est lu comme une lettre : réparée, mais à vérifier", () => {
+  const d = extraireDonnees("Bruxelles, le 05/11/202G\nDate du constat 03/11/2026 à 14 10\n");
+  assert.equal(d.dateEnvoi.valeur, "2026-11-05");
+  assert.equal(d.dateEnvoi.confiance, "moyenne");
+  assert.equal(d.dateConstat.valeur, "2026-11-03");
+  assert.equal(d.dateConstat.confiance, "haute");
+  assert.equal(d.heureConstat.valeur, "14:10");
+  assert.equal(d.heureConstat.confiance, "moyenne");
+  // Des lettres seules ne font pas une date.
+  assert.equal(extraireDonnees("Référence : SO/IG-lb").dateConstat.valeur, null);
+});

@@ -146,3 +146,69 @@ test("commune : le code postal du lieu tranche quand le nom est mal lu", () => {
   assert.equal(net.commune.valeur, "Ixelles");
   assert.equal(net.commune.confiance, "haute");
 });
+
+/* ------------------------------------------------------ feuille et perspective */
+
+const { detecterPage, homographie, redresserPerspective, tailleRedressee } = require("../.test-build/lib/ocr-image.js");
+
+/** Une table sombre, une feuille claire posée de biais, des lignes de texte dessus. */
+function photoSurTable(w, h, coins) {
+  const px = new Uint8ClampedArray(w * h).fill(55);
+  const Hm = homographie([[0, 0], [199, 0], [199, 279], [0, 279]], coins);
+  // On peint la feuille point par point, dans son repère à elle.
+  for (let v = 0; v < 280; v += 0.5)
+    for (let u = 0; u < 200; u += 0.5) {
+      const d = Hm[6] * u + Hm[7] * v + Hm[8];
+      const x = Math.round((Hm[0] * u + Hm[1] * v + Hm[2]) / d);
+      const y = Math.round((Hm[3] * u + Hm[4] * v + Hm[5]) / d);
+      if (x < 0 || y < 0 || x >= w || y >= h) continue;
+      const texte = u > 20 && u < 180 && v > 30 && Math.floor(v) % 14 < 3;
+      px[y * w + x] = texte ? 40 : 228;
+    }
+  return { px, largeur: w, hauteur: h };
+}
+
+test("la feuille posée de biais sur une table est trouvée, coins à quelques pixels près", () => {
+  const vrais = [[70, 40], [250, 62], [262, 300], [52, 286]];
+  const coins = detecterPage(photoSurTable(320, 340, vrais));
+  assert.ok(coins, "feuille non trouvée");
+  coins.forEach((c, k) => assert.ok(Math.hypot(c[0] - vrais[k][0], c[1] - vrais[k][1]) <= 6, `coin ${k} : ${c} au lieu de ${vrais[k]}`));
+});
+
+test("une ombre en dégradé sur une feuille n'est pas prise pour un bord de feuille", () => {
+  // Feuille plein cadre, éclairée à gauche, dans l'ombre à droite, avec du texte.
+  const w = 320, h = 400;
+  const px = new Uint8ClampedArray(w * h);
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      const fond = 245 - (150 * x) / w;
+      const texte = x > 20 && x < w - 20 && y % 16 < 3;
+      px[y * w + x] = texte ? fond * 0.2 : fond;
+    }
+  assert.equal(detecterPage({ px, largeur: w, hauteur: h }), null);
+});
+
+test("pas de recadrage quand la feuille remplit déjà la photo, ni sur une image uniforme", () => {
+  assert.equal(detecterPage(photoSurTable(200, 280, [[0, 0], [199, 0], [199, 279], [0, 279]])), null);
+  assert.equal(detecterPage({ px: new Uint8ClampedArray(200 * 200).fill(200), largeur: 200, hauteur: 200 }), null);
+});
+
+test("l'homographie envoie chaque coin sur son image, et la feuille redressée est droite", () => {
+  const de = [[0, 0], [99, 0], [99, 59], [0, 59]];
+  const vers = [[10, 5], [120, 20], [110, 90], [3, 70]];
+  const m = homographie(de, vers);
+  de.forEach(([x, y], k) => {
+    const d = m[6] * x + m[7] * y + m[8];
+    assert.ok(Math.abs((m[0] * x + m[1] * y + m[2]) / d - vers[k][0]) < 1e-6);
+    assert.ok(Math.abs((m[3] * x + m[4] * y + m[5]) / d - vers[k][1]) < 1e-6);
+  });
+  const vrais = [[70, 40], [250, 62], [262, 300], [52, 286]];
+  const g = photoSurTable(320, 340, vrais);
+  const rvba = new Uint8ClampedArray(g.px.length * 4);
+  for (let i = 0; i < g.px.length; i++) { rvba[i * 4] = rvba[i * 4 + 1] = rvba[i * 4 + 2] = g.px[i]; rvba[i * 4 + 3] = 255; }
+  const [W, H] = tailleRedressee(vrais);
+  const plat = redresserPerspective(rvba, 320, 340, vrais, W, H);
+  // Redressée, la feuille est claire jusque dans ses coins : plus de table autour.
+  const coin = (x, y) => plat[(y * W + x) * 4];
+  for (const [x, y] of [[4, 4], [W - 5, 4], [W - 5, H - 5], [4, H - 5]]) assert.ok(coin(x, y) > 180, `coin (${x},${y}) = ${coin(x, y)}`);
+});

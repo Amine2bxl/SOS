@@ -5,8 +5,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   lireDocument,
   prechaufferOcr,
+  decouperPreuves,
   FORMATS_ACCEPTES,
   TAILLE_MAX_OCTETS,
+  type ChampPreuve,
   type ProgressionOCR,
   type ResultatLecture,
 } from "@/lib/ocr";
@@ -125,6 +127,7 @@ export function AssistantScan({ mode }: { mode: "membre" | "visiteur" }) {
   const [form, setForm] = useState<Formulaire>(FORMULAIRE_VIDE);
   const [extrait, setExtrait] = useState<DonneesExtraites | null>(null);
   const [lecture, setLecture] = useState<ResultatLecture | null>(null);
+  const [preuves, setPreuves] = useState<Partial<Record<ChampPreuve, string>>>({});
   const [regionCertaine, setRegionCertaine] = useState(false);
   const [progression, setProgression] = useState<ProgressionOCR>({ etape: "", pourcentage: 0 });
   const [reponses, setReponses] = useState<Record<string, string>>({});
@@ -204,6 +207,25 @@ export function AssistantScan({ mode }: { mode: "membre" | "visiteur" }) {
 
       setLecture(resultat);
       setExtrait(donnees);
+      // L'extrait de la photo où chaque valeur a été lue : il s'affiche sous le champ.
+      try {
+        setPreuves(
+          decouperPreuves(resultat, {
+            reference: donnees.reference.valeur,
+            montant: donnees.montant.valeur !== null ? donnees.montant.valeur.toFixed(2) : null,
+            dateConstat: donnees.dateConstat.valeur,
+            heureConstat: donnees.heureConstat.valeur,
+            dateEnvoi: donnees.dateEnvoi.valeur,
+            dateEcheance: donnees.dateEcheance.valeur,
+            plaque: donnees.plaque.valeur,
+            communication: donnees.communication.valeur,
+            iban: donnees.iban.valeur,
+            commune: donnees.commune.valeur,
+          }),
+        );
+      } catch {
+        setPreuves({});
+      }
       setRegionCertaine(lieu.certaine);
       setForm({
         reference: donnees.reference.valeur ?? "",
@@ -358,6 +380,7 @@ export function AssistantScan({ mode }: { mode: "membre" | "visiteur" }) {
             setForm={setForm}
             extrait={extrait}
             lecture={lecture}
+            preuves={preuves}
             regionCertaine={regionCertaine}
             erreur={erreur}
             retour={() => allerA("depot")}
@@ -623,16 +646,20 @@ function Champ({
   label,
   confiance,
   aide,
+  preuve,
   children,
   className = "",
 }: {
   label: string;
   confiance?: Confiance;
   aide?: string;
+  /** L'extrait de la photo où la valeur a été lue. */
+  preuve?: string;
   children: React.ReactNode;
   className?: string;
 }) {
   const badge = confiance ? BADGE[confiance] : null;
+  const sur = confiance === "haute";
   return (
     <label className={`block ${className}`}>
       <span className="mb-1.5 flex items-center gap-2">
@@ -640,8 +667,60 @@ function Champ({
         {badge && <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${badge.classe}`}>{badge.texte}</span>}
       </span>
       {children}
+      {preuve && (
+        <span
+          className={`mt-2 block overflow-hidden rounded-lg border bg-white ${
+            sur ? "border-line" : "border-warn-600/40 ring-2 ring-warn-100"
+          }`}
+        >
+          <span className={`block px-2.5 py-1 text-[11px] font-semibold ${sur ? "bg-paper text-ink-soft" : "bg-warn-100 text-warn-700"}`}>
+            {sur ? "Lu ici, sur votre courrier" : "Comparez avec votre courrier"}
+          </span>
+          {/* Extrait généré dans le navigateur (data URL) : next/image n'a rien à optimiser. */}
+          <img src={preuve} alt={`Extrait du courrier : ${label}`} className="block h-11 w-auto max-w-full object-contain object-left px-1.5 py-1" />
+        </span>
+      )}
       {aide && <span className="mt-1 block text-xs text-ink-soft">{aide}</span>}
     </label>
+  );
+}
+
+/**
+ * Le moment où la lecture réussit : une coche qui se trace, et le bilan.
+ * Une seule entrée, courte (moins d'une demi-seconde), qui confirme sans
+ * retenir : les champs sont utilisables tout de suite.
+ */
+function LectureReussie({ trouves, certaines, aConfirmer, pdf }: { trouves: number; certaines: number; aConfirmer: number; pdf: boolean }) {
+  useEffect(() => {
+    // Sur téléphone, une vibration à peine perceptible accompagne la coche.
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.(18);
+  }, []);
+  return (
+    <div role="status" className="mt-4 flex items-center gap-4 rounded-[var(--radius-carte)] border border-ok-600/20 bg-ok-50 p-4 sm:p-5">
+      <svg viewBox="0 0 48 48" className="h-12 w-12 shrink-0 overflow-visible" aria-hidden="true">
+        <circle cx="24" cy="24" r="22" className="lecture-ok-onde fill-ok-600" />
+        <circle cx="24" cy="24" r="22" className="lecture-ok-rond fill-ok-600" />
+        <path
+          d="M14 24.5 21 31.5 34.5 17"
+          fill="none"
+          stroke="#fff"
+          strokeWidth="4.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="lecture-ok-coche"
+        />
+      </svg>
+      <div className="lecture-ok-texte min-w-0">
+        <p className="font-display text-lg font-bold leading-tight text-ok-700">{pdf ? "Document lu" : "Courrier lu"}</p>
+        <p className="mt-0.5 text-sm leading-snug text-ink-soft">
+          {trouves} information{trouves > 1 ? "s" : ""} trouvée{trouves > 1 ? "s" : ""}
+          {certaines > 0 && `, dont ${certaines} certaine${certaines > 1 ? "s" : ""}`}.
+          {aConfirmer > 0
+            ? ` ${aConfirmer} à confirmer d'un coup d'œil, l'extrait du courrier est juste en dessous.`
+            : " Tout concorde."}
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -653,6 +732,7 @@ function EtapeVerification({
   setForm,
   extrait,
   lecture,
+  preuves,
   regionCertaine,
   erreur,
   retour,
@@ -662,6 +742,7 @@ function EtapeVerification({
   setForm: React.Dispatch<React.SetStateAction<Formulaire>>;
   extrait: DonneesExtraites | null;
   lecture: ResultatLecture | null;
+  preuves: Partial<Record<ChampPreuve, string>>;
   regionCertaine: boolean;
   erreur: string | null;
   retour: () => void;
@@ -672,11 +753,9 @@ function EtapeVerification({
     setForm((f) => ({ ...f, [cle]: e.target.value }));
   const c = (cle: keyof DonneesExtraites) => (extrait && extrait[cle].valeur !== null ? extrait[cle].confiance : undefined);
 
-  const douteux = extrait
-    ? (["reference", "montant", "dateConstat", "dateEnvoi", "dateEcheance", "plaque"] as const).filter(
-        (k) => extrait[k].valeur !== null && extrait[k].confiance !== "haute",
-      ).length
-    : 0;
+  const CLES = ["reference", "montant", "dateConstat", "dateEnvoi", "dateEcheance", "plaque", "commune", "heureConstat", "communication", "iban"] as const;
+  const trouves = extrait ? CLES.filter((k) => extrait[k].valeur !== null).length : 0;
+  const certaines = extrait ? CLES.filter((k) => extrait[k].valeur !== null && extrait[k].confiance === "haute").length : 0;
   const sansDate = !form.dateEnvoi && !form.dateEcheance;
   const horsPerimetre = form.region !== "" && !regionOuverte(form.region);
 
@@ -685,13 +764,15 @@ function EtapeVerification({
       <Titre className="font-display text-[1.9rem] font-extrabold leading-tight text-navy-900 sm:text-4xl">
         {extrait ? "Voici ce que nous avons lu" : "Les informations du courrier"}
       </Titre>
-      <p className="mt-2 text-[1.05rem] text-ink-soft">
-        {!extrait
-          ? "Recopiez ce qui figure sur le courrier. Le reste se fera tout seul."
-          : douteux > 0
-            ? `Jetez un œil aux ${douteux} champ${douteux > 1 ? "s" : ""} signalé${douteux > 1 ? "s" : ""} : une date mal lue fausserait votre délai.`
-            : "Tout a été lu avec certitude. Un coup d'œil, et on continue."}
-      </p>
+      {extrait && lecture && trouves > 0 ? (
+        <LectureReussie trouves={trouves} certaines={certaines} aConfirmer={trouves - certaines} pdf={lecture.source === "texte-pdf"} />
+      ) : (
+        <p className="mt-2 text-[1.05rem] text-ink-soft">
+          {!extrait
+            ? "Recopiez ce qui figure sur le courrier. Le reste se fera tout seul."
+            : "Peu d'informations lisibles : complétez les champs ci-dessous."}
+        </p>
+      )}
       {lecture && (
         <p className="mt-3">
           <Pastille ton={lecture.source === "texte-pdf" ? "ok" : "neutre"}>
@@ -704,6 +785,7 @@ function EtapeVerification({
               {(lecture.diagnostic.duree / 1000).toFixed(1).replace(".", ",")} s · {lecture.diagnostic.lectures} lecture
               {lecture.diagnostic.lectures > 1 ? "s croisées" : ""}
               {lecture.diagnostic.relectures > 0 ? ` · ${lecture.diagnostic.relectures} chiffres revérifiés` : ""}
+              {lecture.diagnostic.recadree ? " · feuille détourée et remise à plat" : ""}
               {Math.abs(lecture.diagnostic.biais) >= 1 ? " · photo redressée" : ""}
             </span>
           )}
@@ -774,10 +856,10 @@ function EtapeVerification({
           )}
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Champ label="Référence" confiance={c("reference")} aide="En haut du courrier.">
+            <Champ label="Référence" confiance={c("reference")} preuve={preuves.reference} aide="En haut du courrier.">
               <input value={form.reference} onChange={maj("reference")} className={champCls} placeholder="Ex. 2026/4471820" />
             </Champ>
-            <Champ label="Montant réclamé" confiance={c("montant")}>
+            <Champ label="Montant réclamé" confiance={c("montant")} preuve={preuves.montant}>
               <div className="relative">
                 <input
                   value={form.montant}
@@ -791,7 +873,7 @@ function EtapeVerification({
                 </span>
               </div>
             </Champ>
-            <Champ label="Commune" confiance={c("commune")}>
+            <Champ label="Commune" confiance={c("commune")} preuve={preuves.commune}>
               <input
                 value={form.commune}
                 onChange={maj("commune")}
@@ -806,7 +888,7 @@ function EtapeVerification({
                 ))}
               </datalist>
             </Champ>
-            <Champ label="Plaque" confiance={c("plaque")}>
+            <Champ label="Plaque" confiance={c("plaque")} preuve={preuves.plaque}>
               <input
                 value={form.plaque}
                 onChange={(e) => setForm((f) => ({ ...f, plaque: e.target.value.toUpperCase() }))}
@@ -814,13 +896,13 @@ function EtapeVerification({
                 placeholder="1-ABC-123"
               />
             </Champ>
-            <Champ label="Date du constat" confiance={c("dateConstat")}>
+            <Champ label="Date du constat" confiance={c("dateConstat")} preuve={preuves.dateConstat}>
               <input type="date" value={form.dateConstat} onChange={maj("dateConstat")} className={champCls} />
             </Champ>
-            <Champ label="Date du courrier" confiance={c("dateEnvoi")} aide="Le délai pour contester court depuis elle.">
+            <Champ label="Date du courrier" confiance={c("dateEnvoi")} preuve={preuves.dateEnvoi} aide="Le délai pour contester court depuis elle.">
               <input type="date" value={form.dateEnvoi} onChange={maj("dateEnvoi")} className={champCls} />
             </Champ>
-            <Champ label="Date limite imprimée" confiance={c("dateEcheance")} className="sm:col-span-2">
+            <Champ label="Date limite imprimée" confiance={c("dateEcheance")} preuve={preuves.dateEcheance} className="sm:col-span-2">
               <input type="date" value={form.dateEcheance} onChange={maj("dateEcheance")} className={champCls} />
             </Champ>
           </div>
@@ -843,7 +925,7 @@ function EtapeVerification({
           </button>
           {details && (
             <div className="grid gap-4 sm:grid-cols-2">
-              <Champ label="Heure du constat" confiance={c("heureConstat")}>
+              <Champ label="Heure du constat" confiance={c("heureConstat")} preuve={preuves.heureConstat}>
                 <input type="time" value={form.heureConstat} onChange={maj("heureConstat")} className={champCls} />
               </Champ>
               <Champ label="Zone" confiance={c("zone")}>
@@ -855,10 +937,10 @@ function EtapeVerification({
               <Champ label="Organisme qui réclame" confiance={c("autorite")} className="sm:col-span-2">
                 <input value={form.crediteur} onChange={maj("crediteur")} className={champCls} placeholder="parking.brussels, commune de…" />
               </Champ>
-              <Champ label="Communication structurée" confiance={c("communication")}>
+              <Champ label="Communication structurée" confiance={c("communication")} preuve={preuves.communication}>
                 <input value={form.communication} onChange={maj("communication")} className={`${champCls} font-mono`} placeholder="+++000/0000/00000+++" />
               </Champ>
-              <Champ label="IBAN du créancier" confiance={c("iban")}>
+              <Champ label="IBAN du créancier" confiance={c("iban")} preuve={preuves.iban}>
                 <input value={form.iban} onChange={maj("iban")} className={`${champCls} font-mono`} placeholder="BE.." />
               </Champ>
             </div>

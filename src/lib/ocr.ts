@@ -25,6 +25,10 @@ import {
   masqueFlou,
   inverserSiSombre,
   sensDesLignes,
+  detecterPage,
+  redresserPerspective,
+  tailleRedressee,
+  type Point,
   lisser,
   normaliserEclairage,
   sauvola,
@@ -63,7 +67,16 @@ export type ResultatLecture = {
     relectures: number;
     /** Inclinaison corrigée, en degrés. */
     biais: number;
+    /** La feuille a été détourée et remise à plat (photo prise de biais sur une table). */
+    recadree?: boolean;
   };
+  /**
+   * La photo telle qu'elle a été lue (détourée, redressée, en couleur), et les
+   * lignes reconnues avec leur position : de quoi montrer, à côté de chaque
+   * champ, l'endroit exact du courrier où il a été lu.
+   */
+  apercu?: HTMLCanvasElement;
+  lignes?: { texte: string; x0: number; y0: number; x1: number; y1: number; mots?: { texte: string; x0: number; y0: number; x1: number; y1: number }[] }[];
 };
 
 const LANGUES = "fra+nld";
@@ -389,8 +402,18 @@ function noterLecture(texte: string, confiance: number): number {
   return note;
 }
 
-type Ligne = { texte: string; x0: number; y0: number; x1: number; y1: number };
-type Tentative = { texte: string; confiance: number; note: number; lignes?: Ligne[]; image?: HTMLCanvasElement };
+type Boite = { texte: string; x0: number; y0: number; x1: number; y1: number };
+type Ligne = Boite & { mots?: Boite[] };
+type Tentative = {
+  texte: string;
+  confiance: number;
+  note: number;
+  lignes?: Ligne[];
+  image?: HTMLCanvasElement;
+  /** Angle et image source de la tentative : de quoi redessiner la photo en couleur, même cadrage. */
+  angle?: number;
+  source?: CanvasImageSource & { width: number; height: number };
+};
 
 /** Les motifs décisifs présents dans une lecture : plaque, montant, date, référence, communication. */
 const INDICES = [
@@ -423,12 +446,18 @@ type Reconnaisseur = {
 
 /** Les lignes reconnues, avec leur position, quelle que soit la version de tesseract.js. */
 function extraireLignes(data: unknown): Ligne[] {
+  type BoiteBrute = { text?: string; bbox?: Omit<Boite, "texte"> };
   const lignes: Ligne[] = [];
-  const blocs = (data as { blocks?: { paragraphs?: { lines?: { text?: string; bbox?: Ligne }[] }[] }[] }).blocks ?? [];
+  const blocs = (data as { blocks?: { paragraphs?: { lines?: (BoiteBrute & { words?: BoiteBrute[] })[] }[] }[] }).blocks ?? [];
   for (const b of blocs)
     for (const p of b.paragraphs ?? [])
       for (const l of p.lines ?? [])
-        if (l.text && l.bbox) lignes.push({ texte: l.text, x0: l.bbox.x0, y0: l.bbox.y0, x1: l.bbox.x1, y1: l.bbox.y1 });
+        if (l.text && l.bbox)
+          lignes.push({
+            texte: l.text,
+            ...l.bbox,
+            mots: (l.words ?? []).filter((m) => m.text && m.bbox).map((m) => ({ texte: m.text as string, ...(m.bbox as Omit<Boite, "texte">) })),
+          });
   const directes = (data as { lines?: { text?: string; bbox?: Ligne }[] }).lines ?? [];
   if (lignes.length === 0)
     for (const l of directes)
@@ -537,12 +566,51 @@ function examinerPage(image: CanvasImageSource & { width: number; height: number
  * adaptatif, image redressée) passe en premier, parce qu'elle réussit sur la
  * plupart des photos réelles ; les autres ne servent qu'en renfort.
  */
+/**
+ * Détoure la feuille et la remet à plat, quand la photo montre une lettre
+ * posée de biais sur une table. `null` si la feuille remplit déjà la photo ou
+ * si ses bords ne sont pas trouvés avec certitude : on ne recadre jamais au
+ * hasard.
+ */
+function recadrerPage(image: CanvasImageSource & { width: number; height: number }): HTMLCanvasElement | null {
+  const reduction = Math.min(1, 420 / Math.max(image.width, image.height));
+  const petit = dessiner(image, Math.max(1, Math.round(image.width * reduction)), Math.max(1, Math.round(image.height * reduction)));
+  const ctxPetit = petit.getContext("2d", { willReadFrequently: true });
+  if (!ctxPetit) return null;
+  const coinsPetits = detecterPage(versGris(ctxPetit.getImageData(0, 0, petit.width, petit.height).data, petit.width, petit.height));
+  if (!coinsPetits) return null;
+
+  // Travail en pleine définition, plafonnée : une photo de 12 Mpx n'apporte rien de plus.
+  const plafond = Math.min(1, 3000 / Math.max(image.width, image.height));
+  const grand = dessiner(image, Math.round(image.width * plafond), Math.round(image.height * plafond));
+  const ctxGrand = grand.getContext("2d", { willReadFrequently: true });
+  if (!ctxGrand) return null;
+  const echelle = grand.width / petit.width;
+  const coins = coinsPetits.map(([x, y]) => [x * echelle, y * echelle] as Point);
+  const [W, H] = tailleRedressee(coins);
+  if (W < 200 || H < 200) return null;
+  const plat = redresserPerspective(ctxGrand.getImageData(0, 0, grand.width, grand.height).data, grand.width, grand.height, coins, W, H);
+  const sortie = document.createElement("canvas");
+  sortie.width = W;
+  sortie.height = H;
+  const ctx = sortie.getContext("2d");
+  if (!ctx) return null;
+  const donnees = ctx.createImageData(W, H);
+  donnees.data.set(plat);
+  ctx.putImageData(donnees, 0, 0);
+  return sortie;
+}
+
 async function lirePhoto(
   fichier: File,
   reconnaisseur: Reconnaisseur,
   surProgression?: (p: ProgressionOCR) => void,
-): Promise<{ meilleure: Tentative; toutes: Tentative[]; biais: number }> {
-  const image = await decoderImage(fichier);
+): Promise<{ meilleure: Tentative; toutes: Tentative[]; biais: number; recadree: boolean }> {
+  const brute = await decoderImage(fichier);
+  // 0. Une lettre photographiée de biais sur une table : on la détoure et on
+  //    la remet à plat avant toute lecture.
+  const detouree = recadrerPage(brute);
+  const image = detouree ?? brute;
   const [largeur, hauteur] = tailleDeTravail(image.width, image.height);
   // Lignes qui descendent vers la droite (biais positif) : on tourne d'autant
   // dans l'autre sens pour les remettre à plat.
@@ -553,15 +621,23 @@ async function lirePhoto(
   const toutes: Tentative[] = [];
   let passes = 0;
 
-  const essayer = async (preparation: Preparation, angle: number, psm = 3): Promise<Tentative> => {
+  const essayer = async (
+    preparation: Preparation,
+    angle: number,
+    psm = 3,
+    source: CanvasImageSource & { width: number; height: number } = image,
+  ): Promise<Tentative> => {
     surProgression?.({
       etape: passes === 0 ? "Lecture du courrier…" : "Lecture sous un autre angle…",
       pourcentage: Math.min(74, 15 + passes * 12),
     });
     passes++;
-    const canvas = preparer(dessiner(image, largeur, hauteur, angle), preparation);
+    const [lw, lh] = source === image ? [largeur, hauteur] : tailleDeTravail(source.width, source.height);
+    const canvas = preparer(dessiner(source, lw, lh, angle), preparation);
     const tentative = await reconnaisseur.lire(await canvasVersBlob(canvas), psm, { lignes: true });
     tentative.image = canvas;
+    tentative.angle = angle;
+    tentative.source = source;
     // Une tentative quasi vide n'apporte rien à la fusion et ne ferait que
     // diluer le résultat : on ne garde que celles qui ont lu quelque chose.
     if (richesse(tentative.texte) >= 40 && tentative.confiance >= 35) toutes.push(tentative);
@@ -607,12 +683,20 @@ async function lirePhoto(
     await essayer(preparation, angleFinal, preparation === "encre" ? 6 : 3);
   }
 
+  // 4. Filet de sécurité du détourage : si la page remise à plat ne se lit pas
+  //    parfaitement, la photo d'origine a aussi sa chance.
+  if (detouree && !excellente(meilleure)) {
+    const origine = examinerPage(brute);
+    await essayer("eclairage", origine.sens === "vertical" ? 90 : -origine.biais, 3, brute);
+  }
+
   // La meilleure d'abord : c'est l'arbitre à égalité de confiance côté
   // extraction, et c'est elle qu'on affiche.
   return {
     meilleure,
     toutes: [meilleure, ...toutes.filter((t) => t !== meilleure)],
     biais: -redresser,
+    recadree: detouree !== null && meilleure.source === detouree,
   };
 }
 
@@ -696,6 +780,134 @@ async function relireEntete(meilleure: Tentative, reconnaisseur: Reconnaisseur):
   return lecture.texte.trim() || null;
 }
 
+/** La photo telle que la meilleure lecture l'a vue (cadrage, angle), mais en couleur. */
+function apercuCouleur(t: Tentative): HTMLCanvasElement | undefined {
+  if (!t.source || !t.image || t.angle === undefined) return undefined;
+  const [lw, lh] = tailleDeTravail(t.source.width, t.source.height);
+  const canvas = dessiner(t.source, lw, lh, t.angle);
+  // Même géométrie que l'image lue : les positions des lignes s'y appliquent telles quelles.
+  return canvas.width === t.image.width && canvas.height === t.image.height ? canvas : undefined;
+}
+
+export type ChampPreuve =
+  | "reference"
+  | "montant"
+  | "dateConstat"
+  | "heureConstat"
+  | "dateEnvoi"
+  | "dateEcheance"
+  | "plaque"
+  | "communication"
+  | "iban"
+  | "commune";
+
+const alnum = (s: string) => s.toUpperCase().replace(/[^0-9A-Z]/g, "");
+
+/** Les formes sous lesquelles une valeur extraite apparaît sur le courrier. */
+function formesImprimees(champ: ChampPreuve, valeur: string): string[] {
+  if (/^date/.test(champ)) {
+    const m = valeur.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return [alnum(valeur)];
+    const [, a, mo, j] = m;
+    return [`${j}${mo}${a}`, `${j}${mo}${a.slice(2)}`, `${Number(j)}${mo}${a}`];
+  }
+  if (champ === "montant") return [alnum(valeur.replace(/[.,]00$/, "")), alnum(valeur)];
+  if (champ === "heureConstat") return [alnum(valeur)];
+  return [alnum(valeur)];
+}
+
+/** Plus longue sous-chaîne commune : la part de la valeur retrouvée telle quelle dans la ligne. */
+function recouvrement(valeur: string, ligne: string): number {
+  if (!valeur) return 0;
+  let meilleur = 0;
+  const prec = new Uint16Array(ligne.length + 1);
+  for (let i = 1; i <= valeur.length; i++) {
+    let diag = 0;
+    for (let j = 1; j <= ligne.length; j++) {
+      const garde = prec[j];
+      prec[j] = valeur[i - 1] === ligne[j - 1] ? diag + 1 : 0;
+      if (prec[j] > meilleur) meilleur = prec[j];
+      diag = garde;
+    }
+  }
+  return meilleur / valeur.length;
+}
+
+/** La suite de mots de la ligne qui ressemble le plus à la valeur. */
+function motsDeLaValeur(l: Ligne, forme: string): Boite | null {
+  const mots = l.mots ?? [];
+  let meilleur: { score: number; i: number; j: number } | null = null;
+  for (let i = 0; i < mots.length; i++) {
+    let suite = "";
+    for (let j = i; j < Math.min(mots.length, i + 6); j++) {
+      suite += alnum(mots[j].texte);
+      if (!suite) continue;
+      // Part de la valeur retrouvée, rapportée à la plus longue des deux :
+      // un mot de trop ou de moins fait baisser le score.
+      const score = (recouvrement(forme, suite) * forme.length) / Math.max(forme.length, suite.length);
+      if (!meilleur || score > meilleur.score) meilleur = { score, i, j };
+    }
+  }
+  if (!meilleur || meilleur.score < 0.5) return null;
+  const choisis = mots.slice(meilleur.i, meilleur.j + 1);
+  return {
+    texte: choisis.map((m) => m.texte).join(" "),
+    x0: Math.min(...choisis.map((m) => m.x0)),
+    y0: Math.min(...choisis.map((m) => m.y0)),
+    x1: Math.max(...choisis.map((m) => m.x1)),
+    y1: Math.max(...choisis.map((m) => m.y1)),
+  };
+}
+
+/**
+ * Pour chaque champ, l'extrait de la photo où sa valeur a été lue : la ligne,
+ * en couleur, avec un peu de marge. Affiché à côté du champ, il permet de
+ * confirmer d'un coup d'œil, sans chercher sur la feuille.
+ */
+export function decouperPreuves(
+  lecture: ResultatLecture,
+  valeurs: Partial<Record<ChampPreuve, string | null>>,
+): Partial<Record<ChampPreuve, string>> {
+  const { apercu, lignes } = lecture;
+  if (!apercu || !lignes?.length) return {};
+  const lignesNorm = lignes.map((l) => ({ l, n: alnum(l.texte) }));
+  const preuves: Partial<Record<ChampPreuve, string>> = {};
+  for (const [champ, valeur] of Object.entries(valeurs) as [ChampPreuve, string | null][]) {
+    if (!valeur) continue;
+    // La forme la plus précise d'abord (« 3700 » avant « 37 ») : une ligne qui
+    // la contient en entier l'emporte, sans chercher plus loin.
+    let retenue: { l: Ligne; score: number } | null = null;
+    const formes = formesImprimees(champ, valeur).filter((f) => f.length >= 2).sort((x, y) => y.length - x.length);
+    for (const forme of formes) {
+      for (const { l, n } of lignesNorm) {
+        const score = recouvrement(forme, n);
+        if (score >= 0.7 && (!retenue || score > retenue.score)) retenue = { l, score };
+      }
+      if (retenue && retenue.score > 0.999) break;
+    }
+    if (!retenue) continue;
+    // Dans la ligne, les mots qui portent la valeur : on découpe la valeur
+    // elle-même, assez grande pour se lire, pas toute la ligne du tableau.
+    const zone = motsDeLaValeur(retenue.l, formes[0]) ?? retenue.l;
+    const marge = Math.round((zone.y1 - zone.y0) * 0.5);
+    const x0 = Math.max(0, zone.x0 - marge);
+    const y0 = Math.max(0, zone.y0 - marge);
+    const w = Math.min(apercu.width - x0, zone.x1 - zone.x0 + marge * 2);
+    const h = Math.min(apercu.height - y0, zone.y1 - zone.y0 + marge * 2);
+    if (w < 8 || h < 6) continue;
+    const echelle = Math.min(1, 900 / w);
+    const extrait = document.createElement("canvas");
+    extrait.width = Math.round(w * echelle);
+    extrait.height = Math.round(h * echelle);
+    const ctx = extrait.getContext("2d");
+    if (!ctx) continue;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(apercu, x0, y0, w, h, 0, 0, extrait.width, extrait.height);
+    preuves[champ] = extrait.toDataURL("image/jpeg", 0.85);
+  }
+  return preuves;
+}
+
 /* -------------------------------------------------------------------------- */
 
 /**
@@ -759,7 +971,7 @@ export async function lireDocument(
   const debut = performance.now();
   const reconnaisseur = await ouvrirReconnaisseur(surProgression, 20, 70);
   try {
-    const { meilleure, toutes, biais } = await lirePhoto(fichier, reconnaisseur, surProgression);
+    const { meilleure, toutes, biais, recadree } = await lirePhoto(fichier, reconnaisseur, surProgression);
     const relectures = await relireLignesCritiques(meilleure, reconnaisseur, surProgression).catch((): string[] => []);
     const entete = await relireEntete(meilleure, reconnaisseur).catch(() => null);
     if (entete) relectures.push(entete);
@@ -775,7 +987,10 @@ export async function lireDocument(
         lectures: toutes.length,
         relectures: relectures.length,
         biais,
+        recadree,
       },
+      apercu: apercuCouleur(meilleure),
+      lignes: meilleure.lignes,
     };
   } finally {
     await reconnaisseur.fermer();

@@ -232,6 +232,39 @@ body {
   animation: avis-monte 0.26s cubic-bezier(0.23, 1, 0.32, 1) both;
 }
 
+/* La lecture a réussi : le rond arrive, la coche se trace, une onde part une
+   fois. Courbe de sortie franche, moins d'une demi-seconde en tout. */
+@keyframes lecture-ok-rond {
+  from { transform: scale(0.82); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@keyframes lecture-ok-coche {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes lecture-ok-onde {
+  from { transform: scale(1); opacity: 0.35; }
+  to { transform: scale(1.7); opacity: 0; }
+}
+.lecture-ok-rond {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: lecture-ok-rond 0.3s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+.lecture-ok-onde {
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+  animation: lecture-ok-onde 0.7s 0.22s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+.lecture-ok-coche {
+  stroke-dasharray: 31;
+  stroke-dashoffset: 31;
+  animation: lecture-ok-coche 0.32s 0.14s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+.lecture-ok-texte {
+  animation: rise 0.36s 0.08s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
