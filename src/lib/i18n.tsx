@@ -60,9 +60,8 @@ const FR = {
   "footer.mentionsLegales": "Mentions légales",
   "footer.confidentialite": "Confidentialité",
   "footer.conditions": "Conditions d'utilisation",
-  "footer.tagline":
-    "Association citoyenne qui aide à comprendre et contester les redevances de stationnement, dans les 19 communes de Bruxelles-Capitale.",
-  "footer.identite": "Association d'information et d'accompagnement citoyen, non un cabinet d'avocats : aucune annulation n'est garantie.",
+  "footer.tagline": "Comprendre et contester une redevance de stationnement. Les 19 communes de Bruxelles.",
+  "footer.identite": "Pas un cabinet d'avocats. Aucune annulation garantie.",
 };
 
 const EN: Record<string, string> = {

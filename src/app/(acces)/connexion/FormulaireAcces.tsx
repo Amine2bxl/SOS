@@ -53,10 +53,10 @@ const stockageServeur = () => null;
 const ERREURS_URL: Record<string, string> = {
   "lien-expire": "Ce lien a expiré ou a déjà servi. Demandez un nouveau code ci-dessous.",
   "autre-navigateur":
-    "Le lien a été ouvert dans un autre navigateur que celui de la demande. Saisissez plutôt le code reçu, ou redemandez-en un ici.",
-  "connexion-annulee": "La connexion a été annulée. Vous pouvez réessayer.",
+    "Lien ouvert dans un autre navigateur. Entrez plutôt le code reçu, ou demandez-en un nouveau.",
+  "connexion-annulee": "Connexion annulée. Réessayez.",
   "lien-incomplet": "Ce lien est incomplet. Demandez un nouveau code ci-dessous.",
-  "service-indisponible": "Le service est momentanément indisponible. Réessayez dans un instant.",
+  "service-indisponible": "Service indisponible. Réessayez dans un instant.",
 };
 
 function IconeGoogle() {
@@ -257,12 +257,10 @@ export function FormulaireAcces({
         <p className="mt-2 leading-relaxed text-ink-soft">
           {envoi.dejaInscrit && (
             <span className="mb-2 block rounded-xl bg-ok-50 p-3 text-sm font-medium text-ok-700">
-              Vous aviez déjà un compte avec cette adresse : on vous connecte, sans en créer un deuxième.
+              Compte existant : on vous connecte, sans doublon.
             </span>
           )}
-          Un e-mail de vérification vient de partir vers{" "}
-          <strong className="text-ink">{adresse}</strong>.
-          {" "}Saisissez son code ici pour continuer sur cette page.
+          Code envoyé à <strong className="text-ink">{adresse}</strong>.
         </p>
 
         <form ref={formulaireCode} action={verifier} onSubmit={() => {
@@ -337,7 +335,7 @@ export function FormulaireAcces({
         </form>
         {modeEnvoi === "lien" && (
           <p className="mt-4 text-xs leading-relaxed text-ink-soft">
-            Si votre e-mail contient uniquement un lien, ouvrez-le puis revenez à cet onglet : la vérification sera reconnue automatiquement.
+            E-mail avec un lien seulement ? Ouvrez-le, puis revenez ici : c&apos;est reconnu tout seul.
           </p>
         )}
       </div>
@@ -373,8 +371,8 @@ export function FormulaireAcces({
       </h1>
       <p className="mt-2.5 leading-relaxed text-ink-soft">
         {intention === "inscription"
-          ? "Gratuit. Un code par e-mail ou SMS, pas de mot de passe. Déjà inscrit ? On vous connecte, sans doublon."
-          : "Recevez un code et entrez. Pas de mot de passe."}
+          ? "Gratuit. Un code, pas de mot de passe. Déjà inscrit ? On vous connecte."
+          : "Un code, pas de mot de passe."}
       </p>
 
       {appareil && !autreCompte && (
@@ -545,8 +543,7 @@ export function FormulaireAcces({
         <a href="/conditions-utilisation" className="underline hover:text-ink">
           conditions d&apos;utilisation
         </a>
-        . Votre adresse ou votre numéro sert à vous envoyer votre code et les rappels de vos dossiers,
-        rien d&apos;autre.
+        . Votre adresse sert au code et aux rappels, rien d&apos;autre.
       </p>
     </div>
   );

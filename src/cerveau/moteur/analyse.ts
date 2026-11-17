@@ -92,7 +92,7 @@ export function calculerDelai(faits: Faits, stade: Stade): Delai {
         limite: versISO(limite),
         joursRestants: jours(limite),
         origine: "calcule",
-        explication: `${delai} jours à compter de la réception du courrier. Calculé depuis sa date d'envoi, pour ne jamais vous faire agir trop tard. Si votre courrier indique un autre délai, c'est lui qui compte.`,
+        explication: `${delai} jours après réception, comptés depuis la date d'envoi pour ne jamais être en retard. Un autre délai sur le courrier ? C'est lui qui compte.`,
         trace,
       };
     }
@@ -103,13 +103,13 @@ export function calculerDelai(faits: Faits, stade: Stade): Delai {
         joursRestants: jours(echeance),
         origine: "document",
         explication:
-          "Date limite imprimée sur votre courrier. Le délai pour contester peut être plus court : agissez sans attendre cette date.",
+          "Date imprimée sur le courrier. Le délai pour contester peut être plus court : n'attendez pas.",
         trace: [
           { libelle: "Date imprimée sur le courrier", valeur: dateLongue(versISO(echeance)) },
           ...noteCalendrier(versISO(echeance)),
           {
             libelle: "Ce qui manque",
-            valeur: "La date d'envoi du courrier : sans elle, le délai de contestation ne peut pas être calculé.",
+            valeur: "La date d'envoi du courrier : sans elle, pas de délai de contestation calculé.",
           },
           restants(echeance),
         ],
@@ -121,8 +121,8 @@ export function calculerDelai(faits: Faits, stade: Stade): Delai {
       joursRestants: null,
       origine: "inconnu",
       explication: delai
-        ? `Le délai habituel est de ${delai} jours après réception. Sans date sur le courrier, considérez qu'il court déjà.`
-        : "Le délai est fixé par le règlement de la commune et figure sur votre courrier. Sans date lisible, agissez cette semaine.",
+        ? `Délai habituel : ${delai} jours après réception. Sans date sur le courrier, il court déjà.`
+        : "Délai fixé par le règlement de la commune, imprimé sur votre courrier. Sans date lisible : agissez cette semaine.",
       trace: [],
     };
   }
@@ -144,8 +144,8 @@ export function calculerDelai(faits: Faits, stade: Stade): Delai {
       origine: echeance !== null ? "document" : "inconnu",
       explication:
         stade === "contrainte"
-          ? "Le recours contre une contrainte est enfermé dans un délai court, souvent d'un mois après sa signification. N'attendez pas."
-          : "Un huissier n'attend pas : répondez par écrit le jour même, même sans date limite affichée.",
+          ? "Recours contre une contrainte : délai court, souvent 1 mois après signification. N'attendez pas."
+          : "Huissier : répondez par écrit aujourd'hui, même sans date limite.",
       trace: traceDocument(),
     };
   }
@@ -157,8 +157,8 @@ export function calculerDelai(faits: Faits, stade: Stade): Delai {
     origine: echeance !== null ? "document" : "inconnu",
     explication:
       echeance !== null
-        ? "Date limite imprimée sur votre courrier. Répondre par écrit avant cette date arrête la montée des frais."
-        : "Aucune date lisible sur le courrier : répondez cette semaine, par écrit.",
+        ? "Date imprimée sur le courrier. Répondre par écrit avant cette date arrête les frais."
+        : "Pas de date lisible : répondez par écrit cette semaine.",
     trace: traceDocument(),
   };
 }
@@ -245,7 +245,7 @@ function choisirStrategie(faits: Faits, stade: Stade, moyens: MoyenRetenu[]): St
       code: "rembourser",
       titre: "Faire cesser le recouvrement",
       explication:
-        "Vous avez déjà payé : on ne conteste plus la redevance, on exige l'arrêt des poursuites et, si besoin, le remboursement de ce qui a été payé en double.",
+        "Déjà payé : on exige l'arrêt des poursuites et, si besoin, le remboursement du double paiement.",
     };
   }
 
@@ -254,8 +254,8 @@ function choisirStrategie(faits: Faits, stade: Stade, moyens: MoyenRetenu[]): St
       code: "repondre_huissier",
       titre: "Répondre par écrit, aujourd'hui",
       explication: meilleur
-        ? "La procédure est avancée, mais vous avez un argument. On conteste la dette et chaque frais, on rappelle vos démarches antérieures, et on demande la suspension du recouvrement."
-        : "La procédure est avancée. Même sans argument sur le fond, on exige le décompte détaillé et le fondement de chaque frais avant tout paiement.",
+        ? "Procédure avancée, mais vous avez un argument. On conteste la dette et chaque frais, et on demande la suspension du recouvrement."
+        : "Procédure avancée. Sans argument sur le fond, on exige le détail et la base de chaque frais avant de payer.",
     };
   }
 
@@ -265,8 +265,8 @@ function choisirStrategie(faits: Faits, stade: Stade, moyens: MoyenRetenu[]): St
       titre: "Contester",
       explication:
         meilleur.force === "solide"
-          ? "Vous avez un argument solide. Avec la bonne pièce jointe, c'est le type de dossier qui aboutit le plus souvent."
-          : "Vous avez un argument recevable. Il tient d'autant mieux que vous le documentez : photos, captures, témoignage.",
+          ? "Argument solide. Avec la bonne pièce jointe, ce type de dossier aboutit le plus souvent."
+          : "Argument recevable. Plus il est prouvé (photos, captures, témoin), mieux il tient.",
     };
   }
 
@@ -275,7 +275,7 @@ function choisirStrategie(faits: Faits, stade: Stade, moyens: MoyenRetenu[]): St
       code: "contester_frais",
       titre: "Contester les frais ajoutés",
       explication:
-        "Aucun argument ne porte sur la redevance elle-même, mais les frais ajoutés depuis le premier courrier doivent reposer sur un texte. On les conteste, et on demande le détail du calcul.",
+        "Rien contre la redevance elle-même. Mais chaque frais ajouté doit reposer sur un texte : on les conteste et on demande le calcul.",
     };
   }
 
@@ -285,7 +285,7 @@ function choisirStrategie(faits: Faits, stade: Stade, moyens: MoyenRetenu[]): St
     code: "payer",
     titre: "Payer dans le délai — ou demander d'abord les photos",
     explication:
-      "Rien dans vos réponses ne fait tomber cette redevance. Payer dans le délai vous évite les frais de rappel. Si le constat vous paraît malgré tout injuste, demandez d'abord les photos du contrôle : elles peuvent révéler une erreur de plaque, d'heure ou de lieu.",
+      "Rien ne fait tomber cette redevance. Payer à temps évite les frais de rappel. Un doute sur le constat ? Demandez d'abord les photos : erreur de plaque, d'heure ou de lieu possible.",
   };
 }
 
@@ -305,7 +305,7 @@ function evaluerSolidite(
   if (meilleur.force === "solide" && urgence !== "depasse") {
     return {
       niveau: "solide",
-      explication: "Un argument solide, à temps. Joignez la pièce qui le prouve : c'est elle qui emporte la décision.",
+      explication: "Argument solide, dans les temps. Joignez la pièce qui le prouve : c'est elle qui décide.",
     };
   }
   if (meilleur.force === "solide" || meilleur.force === "serieux" || fond.length >= 2) {
@@ -313,13 +313,13 @@ function evaluerSolidite(
       niveau: "defendable",
       explication:
         urgence === "depasse"
-          ? "Un bon argument, mais le délai est passé : contestez quand même, sans tarder."
-          : "Un argument recevable. Plus il est documenté, plus il pèse.",
+          ? "Bon argument, délai passé : contestez quand même, vite."
+          : "Argument recevable. Plus il est prouvé, plus il pèse.",
     };
   }
   return {
     niveau: "fragile",
-    explication: "L'argument existe mais se prouve difficilement. Rassemblez tout ce qui peut l'étayer.",
+    explication: "Argument difficile à prouver. Réunissez tout ce qui l'appuie.",
   };
 }
 
@@ -350,25 +350,25 @@ export function analyser(faitsBruts: Faits): Analyse {
 
   const etapes: string[] = [];
   if (strategie.code === "payer") {
-    etapes.push("Payez avec la communication structurée indiquée sur le courrier, avant la date limite.");
+    etapes.push("Payez avant la date limite, avec la communication structurée du courrier.");
     etapes.push("Gardez la preuve du paiement jusqu'à la clôture du dossier.");
-    etapes.push("Si vous voulez vérifier le constat, envoyez d'abord la demande de photos que nous préparons.");
+    etapes.push("Un doute sur le constat ? Envoyez d'abord la demande de photos préparée.");
   } else {
-    if (pieces.length > 1) etapes.push("Rassemblez les pièces listées : elles font la force de la lettre.");
-    etapes.push("Relisez la lettre préparée par le moteur, complétez-la si besoin.");
+    if (pieces.length > 1) etapes.push("Réunissez les pièces listées : elles font la force de la lettre.");
+    etapes.push("Relisez la lettre, complétez-la si besoin.");
     etapes.push(
       faits.region === "bruxelles"
-        ? "Envoyez-la par le canal indiqué sur le courrier — chez parking.brussels, le formulaire en ligne."
-        : "Envoyez-la par le canal indiqué sur le courrier, de préférence en recommandé.",
+        ? "Envoyez-la par le canal du courrier : chez parking.brussels, le formulaire en ligne."
+        : "Envoyez-la par le canal du courrier, de préférence en recommandé.",
     );
-    etapes.push("Gardez la preuve de l'envoi : capture de confirmation ou récépissé.");
-    etapes.push("Notez la date d'envoi ici : nous vous dirons quand relancer.");
+    etapes.push("Gardez la preuve d'envoi : capture ou récépissé.");
+    etapes.push("Notez la date d'envoi ici : on vous dira quand relancer.");
   }
 
   const alertes: string[] = [];
   if (urgence === "depasse") {
     alertes.push(
-      "Le délai est dépassé. Contestez quand même, aujourd'hui : un courrier tardif peut encore être examiné, et il fige votre position avant le recouvrement.",
+      "Délai dépassé. Contestez quand même, aujourd'hui : une lettre tardive peut encore être examinée, et elle fixe votre position.",
     );
   } else if (urgence === "critique") {
     alertes.push("Il reste moins de trois jours : envoyez aujourd'hui.");
@@ -379,7 +379,7 @@ export function analyser(faitsBruts: Faits): Analyse {
     );
   }
   if (!region) {
-    alertes.push("Nous n'avons pas pu déterminer la région du constat : confirmez-la pour un délai exact.");
+    alertes.push("Région du constat inconnue : confirmez-la pour un délai exact.");
   }
 
   return {

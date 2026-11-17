@@ -33,8 +33,8 @@ export function AccordConditions({ documents, premiereFois }: { documents: Docum
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-ink-soft">
         {premiereFois
-          ? "Deux documents encadrent votre espace : ce que nous faisons de vos données, et les règles du service. Prenez le temps de les lire."
-          : "Une nouvelle version est en vigueur. Votre acceptation précédente reste enregistrée ; celle-ci s'y ajoute."}
+          ? "Deux documents : vos données, et les règles du service."
+          : "Nouvelle version. Votre accord précédent reste enregistré."}
       </p>
       <div className="mt-5 space-y-2.5">
         {documents.map((d) => {

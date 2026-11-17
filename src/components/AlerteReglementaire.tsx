@@ -108,9 +108,8 @@ export function AlerteReglementaire({ alerte }: { alerte: Alerte }) {
         <div className="mt-5 rounded-2xl border-l-4 border-gold-400 bg-gold-50 p-4">
           <p className="text-sm font-bold text-navy-900">Ce que cela change pour vous</p>
           <p className="mt-1 text-sm leading-relaxed text-ink">
-            Si une contestation est en cours, vérifiez qu&apos;elle respecte encore cette règle.
-            Une démarche engagée sous l&apos;ancienne version peut devoir être refaite — et le
-            délai, lui, continue de courir.
+            Contestation en cours ? Vérifiez qu&apos;elle suit la nouvelle règle. Il faudra peut-être la refaire, et
+            le délai court toujours.
           </p>
         </div>
 

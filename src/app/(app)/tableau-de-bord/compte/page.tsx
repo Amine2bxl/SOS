@@ -123,18 +123,17 @@ export default async function MonCompte() {
           <h2 className="font-display text-lg font-bold text-navy-900">Vos données</h2>
         </div>
         <ul className="mt-4 space-y-2 text-sm leading-relaxed text-ink-soft">
-          <li>Vos courriers sont lus sur votre appareil : l&apos;image ou le PDF n&apos;est envoyé nulle part.</li>
-          <li>Le texte lu sur un courrier est effacé automatiquement au bout de six mois.</li>
-          <li>Vos données ne servent qu&apos;à vos dossiers. Elles ne sont ni vendues, ni partagées.</li>
-          <li>Un bénévole de l&apos;association ne voit un dossier que si vous lui donnez mandat, depuis la fiche du dossier.</li>
+          <li>Vos courriers sont lus sur votre appareil. L&apos;image ne part nulle part.</li>
+          <li>Le texte lu est effacé après 6 mois.</li>
+          <li>Vos données servent à vos dossiers. Ni vendues, ni partagées.</li>
+          <li>Un bénévole voit un dossier seulement avec votre mandat.</li>
         </ul>
 
         <div className="mt-5 rounded-2xl bg-paper p-4">
           <h3 className="font-semibold text-navy-900">Vos droits</h3>
           <p className="mt-1 text-sm leading-relaxed text-ink-soft">
-            Accès, rectification, effacement, portabilité : tout se fait d&apos;ici. Pour le reste — opposition,
-            limitation, question — écrivez-nous ; nous répondons dans le mois. Vous pouvez aussi saisir
-            l&apos;Autorité de protection des données.
+            Accès, rectification, effacement, portabilité : ici. Opposition, limitation, question : écrivez-nous, réponse
+            sous 1 mois. Recours : l&apos;Autorité de protection des données.
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <a

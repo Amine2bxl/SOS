@@ -13,8 +13,7 @@ export function ServiceIndisponible() {
         Cet espace est en cours d&apos;installation
       </h2>
       <p className="mt-4 leading-relaxed text-ink-soft">
-        La création de compte et le suivi en ligne arrivent bientôt. Le reste du site fonctionne, et
-        nous restons joignables pour vous aider.
+        Compte et suivi en ligne : bientôt. Le reste du site marche, et on répond toujours.
       </p>
       <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
         <BoutonContact variante="gold" />

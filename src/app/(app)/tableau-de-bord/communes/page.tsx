@@ -49,7 +49,7 @@ export default async function CommunesApp({ searchParams }: { searchParams: Prom
       </div>
 
       <p className="mt-8 text-center text-xs leading-relaxed text-ink-soft">
-        C&apos;est de l&apos;information : le règlement de la commune fait foi.
+        Le règlement de la commune fait foi.
       </p>
     </div>
   );

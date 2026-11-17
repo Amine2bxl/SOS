@@ -50,7 +50,7 @@ export default async function MesDossiers({ searchParams }: { searchParams: Prom
           <EtatVide
             icone={<IconeDossiers className="h-12 w-12" />}
             titre="Aucun dossier pour l'instant"
-            texte="Prenez votre lettre en photo : on la vérifie et on prépare votre réponse."
+            texte="Une photo de la lettre : on vérifie, on prépare la réponse."
           >
             <LinkBtn href="/tableau-de-bord/nouveau" variant="gold">
               Scanner mon courrier

@@ -67,10 +67,7 @@ export function BoutonContact({
       <Modale ouverte={ouvert} onFermer={() => setOuvert(false)} titre="Nous contacter">
         <EnTeteModale titre="Nous contacter" onFermer={() => setOuvert(false)} />
 
-        <p className="mt-2 text-sm leading-relaxed text-ink-soft">
-          Nous répondons par écrit, comme vous préférez : c&apos;est le plus simple pour garder une
-          trace de votre dossier.
-        </p>
+        <p className="mt-2 text-sm leading-relaxed text-ink-soft">Un bénévole répond par écrit.</p>
 
         <div className="mt-5 space-y-3">
           <a
@@ -85,7 +82,7 @@ export function BoutonContact({
               </span>
               <span>
                 <span className="block text-sm font-bold text-navy-900">WhatsApp</span>
-                <span className="block text-xs text-ink-soft">Réponse en général rapide</span>
+                <span className="block text-xs text-ink-soft">Le plus rapide</span>
               </span>
             </span>
             <IconeFleche className="h-5 w-5 text-navy-700" />
@@ -108,10 +105,7 @@ export function BoutonContact({
           </a>
         </div>
 
-        <p className="mt-5 text-center text-xs leading-relaxed text-ink-soft">
-          Pas d&apos;appel direct : nous répondons surtout par écrit. Si c&apos;est urgent,
-          précisez-le, nous vous rappelons si nécessaire.
-        </p>
+        <p className="mt-5 text-center text-xs leading-relaxed text-ink-soft">Urgent ? Dites-le : on vous rappelle.</p>
       </Modale>
     </>
   );

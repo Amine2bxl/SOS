@@ -201,7 +201,7 @@ export function VueAccueil({ dossiers, profil, alertes }: { dossiers: Dossier[];
                     : "Vos dossiers offerts sont utilisés"}
                 </h2>
                 <p className="mt-1.5 text-sm leading-relaxed text-navy-100">
-                  Membre : dossiers illimités, relecture par nos bénévoles, alertes quand la règle change.
+                  Membre : dossiers illimités, relecture par un bénévole, alertes quand la règle change.
                 </p>
                 <LinkBtn href="/adherer" variant="gold" className="mt-4 w-full">
                   Adhérer — 70 € / an
@@ -303,13 +303,13 @@ function PremierPas() {
     },
     {
       Icone: IconeBalance,
-      titre: "Répondez à trois questions",
-      texte: "2 ou 3 questions simples : aviez-vous payé ? C'était votre voiture ?",
+      titre: "Répondez à 2 ou 3 questions",
+      texte: "Aviez-vous payé ? C'était votre voiture ?",
     },
     {
       Icone: IconeLettre,
       titre: "Envoyez votre lettre",
-      texte: "Prête à envoyer, avec la date limite.",
+      texte: "Prête, avec la date limite.",
     },
   ];
   return (

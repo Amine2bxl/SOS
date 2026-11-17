@@ -198,7 +198,7 @@ export function AssistantScan({ mode }: { mode: "membre" | "visiteur" }) {
   const traiterFichier = async (fichier: File) => {
     setErreur(null);
     if (fichier.size > TAILLE_MAX_OCTETS) {
-      setErreur("Ce fichier dépasse 20 Mo. Reprenez la photo en qualité un peu moindre.");
+      setErreur("Plus de 20 Mo. Reprenez la photo en qualité moindre.");
       return;
     }
     allerA("lecture");
@@ -257,13 +257,13 @@ export function AssistantScan({ mode }: { mode: "membre" | "visiteur" }) {
       });
       if (resultat.texte.trim().length < 20) {
         setErreur(
-          "Le document est très peu lisible. Complétez les champs ci-dessous, ou reprenez la photo à plat, bien éclairée.",
+          "Peu lisible. Complétez les champs, ou reprenez la photo à plat, bien éclairée.",
         );
       }
       setEtape("verification");
     } catch {
       setErreur(
-        "La lecture a échoué. Une photo d'iPhone ? Exportez-la en JPEG — ou saisissez les informations vous-même.",
+        "Lecture impossible. Photo d'iPhone ? Exportez-la en JPEG. Ou remplissez à la main.",
       );
       setEtape("depot");
     }
@@ -487,7 +487,7 @@ function EtapeDepot({
         Montrez-nous votre lettre
       </Titre>
       <p className="mt-2 text-[1.05rem] text-ink-soft">
-        Une photo suffit, même sombre ou de travers. Rien à recopier.
+        Une photo suffit, même sombre ou de travers.
       </p>
 
       {/* Sur téléphone : deux gros boutons, l'appareil photo d'abord. */}
@@ -648,8 +648,7 @@ function EtapeLecture({ progression }: { progression: ProgressionOCR }) {
         />
       </div>
       <p className="mx-auto mt-5 max-w-sm text-sm leading-relaxed text-ink-soft">
-        La première photo prend une trentaine de secondes : le lecteur se charge dans votre navigateur. Un PDF
-        est lu instantanément.
+        1re photo : environ 30 s. Un PDF : immédiat.
       </p>
     </div>
   );
@@ -775,7 +774,7 @@ function LectureReussie({
           {trouves} information{trouves > 1 ? "s" : ""} trouvée{trouves > 1 ? "s" : ""}
           {certaines > 0 && `, dont ${certaines} certaine${certaines > 1 ? "s" : ""}`}.
           {aConfirmer > 0
-            ? ` ${aConfirmer} à confirmer d'un coup d'œil, l'extrait du courrier est juste en dessous.`
+            ? ` ${aConfirmer} à confirmer : l'extrait est sous chaque case.`
             : " Tout concorde."}
         </p>
         {voirTout && (
@@ -892,15 +891,15 @@ function EtapeVerification({
       ) : (
         <p className="mt-2 text-[1.05rem] text-ink-soft">
           {!extrait
-            ? "Recopiez ce qui figure sur le courrier. Le reste se fera tout seul."
-            : "Peu d'informations lisibles : complétez les champs ci-dessous."}
+            ? "Recopiez le courrier. Le reste se fait seul."
+            : "Peu lisible : complétez les champs."}
         </p>
       )}
       {lecture && (
         <p className="mt-3">
           <Pastille ton={lecture.source === "texte-pdf" ? "ok" : "neutre"}>
             {lecture.source === "texte-pdf"
-              ? "PDF lu directement — aucune erreur de lecture possible"
+              ? "PDF lu directement : zéro erreur de lecture"
               : `Photo lue · fiabilité ${lecture.confiance} %`}
           </Pastille>
           {lecture.diagnostic && (
@@ -974,8 +973,7 @@ function EtapeVerification({
               ))}
             </div>
             <p className="mt-1.5 text-xs text-ink-soft">
-              SOS Citizens couvre aujourd&apos;hui les 19 communes de Bruxelles-Capitale. La Flandre, puis la Wallonie,
-              suivront.
+              Aujourd&apos;hui : les 19 communes de Bruxelles. Puis la Flandre et la Wallonie.
             </p>
           </fieldset>
 
@@ -1043,7 +1041,7 @@ function EtapeVerification({
           {sansDate && (
             <p className="flex items-start gap-2 rounded-xl bg-warn-100 p-3 text-sm text-warn-700">
               <IconeAttention className="mt-0.5 h-4 w-4 shrink-0" />
-              Sans aucune date, nous ne pourrons pas calculer votre délai. Indiquez au moins la date du courrier.
+              Sans date, pas de délai calculé. Indiquez au moins la date du courrier.
             </p>
           )}
 
@@ -1176,7 +1174,7 @@ function EtapeQuestions({
         </div>
       </div>
     ) : (
-      <Patience texte="Le moteur confronte votre cas à sa base…" />
+      <Patience texte="Analyse de votre cas…" />
     );
   }
 
@@ -1315,7 +1313,7 @@ function EtapeVerdict({
                   <p className="mt-1 text-sm leading-relaxed text-ink-soft">{m.explication}</p>
                   {m.fiabilite === "a_confirmer" && (
                     <p className="mt-1.5 text-xs text-ink-faint">
-                      La règle varie selon les communes : la lettre le formule avec prudence.
+                      Varie selon la commune : la lettre reste prudente.
                     </p>
                   )}
                 </div>

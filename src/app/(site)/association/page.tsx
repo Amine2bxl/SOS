@@ -16,7 +16,7 @@ import {
 export const metadata: Metadata = {
   title: "L'association",
   description:
-    "SOS Citizens est une association sans but lucratif bruxelloise. Elle informe, accompagne et défend les citoyens face aux redevances de stationnement, aux amendes, aux sanctions communales et aux administrations.",
+    "SOS Citizens, association sans but lucratif bruxelloise : redevances de stationnement, amendes, sanctions communales, administrations.",
 };
 
 /**
@@ -29,68 +29,58 @@ const DOMAINES = [
   {
     Icone: IconePanneauP,
     titre: "Stationnement et redevances",
-    texte:
-      "Redevances, rappels, huissier. On vérifie votre lettre et on prépare la réponse.",
+    texte: "Redevances, rappels, huissier. On vérifie la lettre, on prépare la réponse.",
     outille: true,
     sujet: "redevance",
   },
   {
     Icone: IconePvPolice,
     titre: "Amendes routières",
-    texte:
-      "PV, perception immédiate : on vérifie le constat et les délais.",
+    texte: "PV, perception immédiate : constat et délais vérifiés.",
     sujet: "amende",
   },
   {
     Icone: IconeTampon,
-    titre: "Sanctions administratives communales",
-    texte:
-      "Une sanction de la commune (SAC) : on vérifie la décision et vos droits de recours.",
+    titre: "Sanctions communales (SAC)",
+    texte: "La décision et vos recours, vérifiés.",
     sujet: "sac",
   },
   {
     Icone: IconeHotelDeVille,
-    titre: "Relations avec les administrations",
-    texte:
-      "Pas de réponse, une décision sans explication : on vous aide à obtenir une réponse écrite.",
+    titre: "Administrations",
+    texte: "Pas de réponse ? Décision sans explication ? On obtient une réponse écrite.",
     sujet: "administration",
   },
   {
     Icone: IconeBalance,
-    titre: "Médiation et litiges",
-    texte:
-      "D'abord une solution à l'amiable. Et on vous dit quand il faut un avocat.",
+    titre: "Médiation",
+    texte: "L'amiable d'abord. Un avocat quand il le faut : on vous le dit.",
     sujet: "mediation",
   },
   {
     Icone: IconeMainTendue,
-    titre: "Accompagnement citoyen",
-    texte:
-      "Comprendre un courrier, savoir à qui écrire, rassembler vos preuves.",
+    titre: "Accompagnement",
+    texte: "Comprendre un courrier, savoir à qui écrire, réunir vos preuves.",
     sujet: "autre",
   },
 ];
 
 const PRINCIPES = [
   {
-    titre: "Vérifier avant de conclure",
-    texte:
-      "On regarde les pièces : le constat, le montant, les délais. Chaque conclusion s'explique.",
+    titre: "Les pièces d'abord",
+    texte: "Constat, montant, délais. Chaque conclusion s'explique.",
   },
   {
-    titre: "Ne rien promettre",
-    texte:
-      "Personne ne peut garantir une annulation. On vous dit aussi quand il vaut mieux payer.",
+    titre: "Aucune promesse",
+    texte: "Pas de garantie d'annulation. Quand il vaut mieux payer, on le dit.",
   },
   {
-    titre: "Agir avec votre accord",
-    texte:
-      "On ne voit votre dossier qu'avec votre accord, et vous pouvez le retirer. Rien n'est envoyé sans vous.",
+    titre: "Votre accord",
+    texte: "On voit votre dossier seulement si vous le permettez. Rien ne part sans vous.",
   },
   {
-    titre: "Rester à sa place",
-    texte:
-      "Nous ne sommes ni une administration, ni des avocats. Si votre dossier en demande un, on vous oriente.",
+    titre: "Ni administration, ni avocats",
+    texte: "Si votre dossier demande un avocat, on vous oriente.",
   },
 ];
 
@@ -104,11 +94,10 @@ export default function AssociationPage() {
         <div className="motif-points absolute inset-0" aria-hidden="true" />
         <div className="relative mx-auto max-w-5xl px-4 pb-14 pt-12 sm:px-6 lg:pb-20 lg:pt-16">
           <h1 className="max-w-3xl font-display text-[2.4rem] font-extrabold leading-[1.04] text-balance sm:text-[3.4rem]">
-            Vos droits méritent une réponse écrite et motivée.
+            On aide les Bruxellois face aux administrations.
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-navy-100">
-            {ASSO.nom} est une association bruxelloise, sans but lucratif. On aide les citoyens face aux
-            administrations — d&apos;abord pour les redevances de stationnement.
+            Association sans but lucratif. D&apos;abord : les redevances de stationnement.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <LinkBtn href="/#analyser" variant="gold" taille="lg">
@@ -126,9 +115,9 @@ export default function AssociationPage() {
       {/* ---------------------------------------------------------- missions */}
       <section id="missions" className="mx-auto max-w-5xl scroll-mt-20 px-4 py-16 sm:px-6 lg:py-20">
         <div className="max-w-2xl">
-          <h2 className="font-display text-3xl font-extrabold text-navy-900 sm:text-4xl">Nos domaines d&apos;intervention</h2>
+          <h2 className="font-display text-3xl font-extrabold text-navy-900 sm:text-4xl">Ce qu&apos;on fait</h2>
           <p className="mt-3 text-[1.05rem] leading-relaxed text-ink-soft">
-            Pour le stationnement, l&apos;outil fait tout. Pour le reste, un bénévole vous répond.
+            Stationnement : l&apos;outil fait tout. Le reste : un bénévole répond.
           </p>
         </div>
 
@@ -158,8 +147,7 @@ export default function AssociationPage() {
       <section className="border-y border-line bg-card py-16 lg:py-20">
         <div className="mx-auto grid max-w-5xl gap-10 px-4 sm:px-6 lg:grid-cols-[0.8fr_1.2fr]">
           <div className="lg:sticky lg:top-24 lg:self-start">
-            <h2 className="font-display text-3xl font-extrabold text-navy-900 sm:text-4xl">Notre façon de faire</h2>
-            <p className="mt-3 text-[1.05rem] leading-relaxed text-ink-soft">Quatre règles, toujours.</p>
+            <h2 className="font-display text-3xl font-extrabold text-navy-900 sm:text-4xl">Nos 4 règles</h2>
           </div>
           <dl className="space-y-7">
             {PRINCIPES.map((p) => (
@@ -222,17 +210,13 @@ export default function AssociationPage() {
               <dt className="text-ink-faint">Administrateurs</dt>
               <dd className="text-navy-900">{ASSO.administrateurs.join(", ")}</dd>
             </dl>
-            <p className="mt-6 border-t border-line pt-4 text-sm leading-relaxed text-ink-soft">
-              Une association indépendante : ni une administration publique, ni une autorité judiciaire, ni un cabinet
-              d&apos;avocats.
-            </p>
           </div>
 
           <div className="rounded-[var(--radius-carte)] bg-navy-900 p-6 text-white sm:p-8">
             <div>
               <h2 className="font-display text-2xl font-extrabold">Soutenir l&apos;association</h2>
               <p className="mt-3 leading-relaxed text-navy-100">
-                L&apos;association vit des adhésions et des dons. Chaque euro garde l&apos;outil gratuit pour tous.
+                Financée par les adhésions et les dons. Chaque euro garde la vérification gratuite.
               </p>
             </div>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">

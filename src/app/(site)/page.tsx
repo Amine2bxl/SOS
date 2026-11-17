@@ -22,26 +22,26 @@ import {
 /** Trois gestes, dans l'ordre où on les fait. */
 const ETAPES = [
   { Icone: IconeScanDoc, titre: "Photographiez la lettre", texte: "Ou ajoutez le PDF. Rien à recopier." },
-  { Icone: IconeLoupe, titre: "On vérifie tout", texte: "Dates, montant, délai, lieu : chaque point est contrôlé." },
-  { Icone: IconeLettre, titre: "Votre réponse est prête", texte: "Une lettre à envoyer, en français ou en néerlandais." },
+  { Icone: IconeLoupe, titre: "On vérifie tout", texte: "Dates, montant, délai, lieu." },
+  { Icone: IconeLettre, titre: "Votre lettre est prête", texte: "En français ou en néerlandais." },
 ];
 
 const FAQ = [
   {
     q: "C'est vraiment gratuit ?",
-    r: "Oui. La vérification est gratuite, sans compte. Vos 2 premiers dossiers aussi, lettre comprise. Ensuite, l'adhésion coûte 70 € par an.",
+    r: "Oui. Vérifier : gratuit, sans compte. 2 dossiers offerts, lettre comprise. Ensuite : 70 € par an.",
   },
   {
     q: "Ma photo part sur internet ?",
-    r: "Non. La lettre est lue sur votre téléphone. Seules les informations que vous confirmez sont gardées.",
+    r: "Non. La lettre est lue sur votre téléphone. On garde seulement ce que vous confirmez.",
   },
   {
     q: "Vous garantissez l'annulation ?",
-    r: "Non. Personne ne peut. On vous dit honnêtement si votre dossier tient, ou s'il vaut mieux payer.",
+    r: "Non, personne ne peut. On vous dit si votre dossier tient, ou s'il vaut mieux payer.",
   },
   {
     q: "Mon cas est compliqué.",
-    r: "Écrivez-nous : un bénévole de l'association vous répond par écrit.",
+    r: "Écrivez-nous : un bénévole vous répond par écrit.",
   },
 ];
 
@@ -70,11 +70,11 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
               Association bruxelloise · 19 communes
             </p>
             <h1 className="mt-5 font-display text-[2.5rem] font-extrabold leading-[1.03] text-balance sm:text-6xl">
-              Une lettre pour du stationnement ?{" "}
-              <span className="text-gold-400">On vérifie si vous devez vraiment payer.</span>
+              Une redevance de stationnement&nbsp;?{" "}
+              <span className="text-gold-400">Vérifiez si vous devez payer.</span>
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-navy-100">
-              Prenez la lettre en photo. En une minute, vous savez quoi faire. Gratuit.
+              Une photo de la lettre. En 1 minute : payer ou contester.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <LinkBtn href="#analyser" variant="gold" taille="lg">
@@ -85,10 +85,17 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
                 Voir la vidéo (1 min)
               </LinkBtn>
             </div>
-            <p className="mt-5 flex items-center gap-2 text-sm text-navy-100">
-              <IconeCadenas className="h-4 w-4 shrink-0 text-gold-300 [--icone-accent:transparent]" />
-              Sans compte. Votre photo reste sur votre téléphone.
-            </p>
+            <ul className="mt-6 flex flex-wrap gap-2 text-sm font-semibold text-navy-100" aria-label="En bref">
+              {["Gratuit", "Sans compte", "1 minute"].map((x) => (
+                <li key={x} className="rounded-full border border-white/15 bg-white/5 px-3 py-1">
+                  {x}
+                </li>
+              ))}
+              <li className="flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1">
+                <IconeCadenas className="h-4 w-4 shrink-0 text-gold-300 [--icone-accent:transparent]" />
+                Photo gardée sur votre téléphone
+              </li>
+            </ul>
           </div>
           <div className="lg:pl-6">
             <ApercuAnalyse />
@@ -114,7 +121,6 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
       <section id="analyser" className="scroll-mt-20 px-4 py-14 sm:px-6 lg:py-20">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="font-display text-3xl font-extrabold text-navy-900 sm:text-4xl">Vérifiez votre lettre</h2>
-          <p className="mt-3 text-[1.05rem] text-ink-soft">Gratuit et sans compte. Le résultat en une minute.</p>
         </div>
         <div className="mx-auto mt-8 max-w-2xl rounded-[1.75rem] border border-line/80 bg-card p-5 shadow-flotte sm:p-8">
           <Suspense>
@@ -198,7 +204,7 @@ export default async function Accueil({ searchParams }: { searchParams: Promise<
           <div className="text-center">
             <h2 className="font-display text-3xl font-extrabold text-navy-900 sm:text-4xl">Commencez gratuitement</h2>
             <p className="mx-auto mt-3 max-w-xl text-[1.05rem] text-ink-soft">
-              2 dossiers offerts, sans carte bancaire. Ensuite : 70 € par an, dossiers illimités.
+              2 dossiers offerts, sans carte. Ensuite : 70 € par an, dossiers illimités.
             </p>
           </div>
           <div className="mt-8 grid items-start gap-5 md:grid-cols-2">

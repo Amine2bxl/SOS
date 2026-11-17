@@ -50,8 +50,8 @@ export default async function Aide({ searchParams }: { searchParams: Promise<{ q
           <h1 className="font-display text-[2rem] font-extrabold leading-tight text-navy-900">Aide</h1>
         </div>
         <p className="mt-3 text-[1.05rem] text-ink-soft">
-          Posez votre question comme vous la poseriez à quelqu&apos;un. La réponse vient de notre base de savoir :{" "}
-          {base.fiches + base.passagesCorpus} fiches, vérifiées par l&apos;association.
+          Posez votre question avec vos mots. Réponse tirée de{" "}
+          {base.fiches + base.passagesCorpus} fiches vérifiées par l&apos;association.
         </p>
       </header>
 
@@ -104,7 +104,7 @@ export default async function Aide({ searchParams }: { searchParams: Promise<{ q
         <section className="mt-6 rounded-[var(--radius-carte)] border-2 border-dashed border-line p-6 text-center">
           <p className="font-display text-lg font-bold text-navy-900">Pas de réponse dans notre base</p>
           <p className="mx-auto mt-2 max-w-md text-sm text-ink-soft">
-            Reformulez avec d&apos;autres mots — « rappel », « huissier », « horodateur »… — ou posez-la directement à
+            Essayez d&apos;autres mots (« rappel », « huissier », « horodateur ») ou posez-la à
             l&apos;association.
           </p>
           <div className="mt-4">

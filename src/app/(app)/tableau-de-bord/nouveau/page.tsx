@@ -25,8 +25,7 @@ export default async function NouveauCourrier() {
             </span>
             <h1 className="mt-5 font-display text-2xl font-extrabold">Vos 2 dossiers offerts sont utilisés</h1>
             <p className="mt-3 text-sm leading-relaxed text-navy-100">
-              Vos dossiers restent ouverts et suivis. Pour en ouvrir un nouveau, devenez membre de
-              l&apos;association : dossiers illimités toute l&apos;année.
+              Vos dossiers restent suivis. Un nouveau dossier ? Devenez membre : illimité toute l&apos;année.
             </p>
             <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
               <LinkBtn href="/adherer" variant="gold" taille="lg">

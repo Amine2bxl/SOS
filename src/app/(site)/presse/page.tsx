@@ -24,8 +24,7 @@ export default async function PressePage({ searchParams }: { searchParams: Promi
           Ils parlent de nous
         </h1>
         <p className="mt-3 text-[1.05rem] leading-relaxed text-ink-soft">
-          {ARTICLES_TRIES.length} articles publiés par {journaux.join(", ")}. Chaque article est en ligne : cliquez pour
-          le lire chez le journal.
+          {ARTICLES_TRIES.length} articles : {journaux.join(", ")}. Cliquez pour lire chez le journal.
         </p>
       </header>
 
@@ -104,8 +103,8 @@ export default async function PressePage({ searchParams }: { searchParams: Promi
       </ul>
 
       <p className="mt-8 max-w-2xl text-xs leading-relaxed text-ink-faint">
-        Articles vérifiés en ligne le 16 novembre 2026. Les photos et les textes appartiennent aux journaux. Chaque
-        dossier est différent : un résultat obtenu ne garantit pas le suivant.
+        Articles vérifiés le 16 novembre 2026. Photos et textes : propriété des journaux. Un résultat ne garantit pas le
+        suivant.
       </p>
     </div>
   );

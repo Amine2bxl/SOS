@@ -33,14 +33,14 @@ export function PreferencesRappels({ email: e0, sms: s0, aTelephone }: { email: 
       <ul className="divide-y divide-line rounded-2xl border border-line bg-white">
         <Interrupteur
           titre="Par e-mail"
-          detail="Trois jours avant une date limite, la veille, et quand il faut relancer."
+          detail="3 jours avant une date limite, la veille, et pour relancer."
           actif={email}
           desactive={enCours}
           onChange={(v) => changer({ email: v, sms })}
         />
         <Interrupteur
           titre="Par SMS"
-          detail={aTelephone ? "Les mêmes rappels, sur votre téléphone. Gratuit." : "Ajoutez votre numéro dans « Vos coordonnées » pour l'activer."}
+          detail={aTelephone ? "Les mêmes, par SMS. Gratuit." : "Ajoutez votre numéro dans « Vos coordonnées »."}
           actif={sms}
           desactive={enCours || (!aTelephone && !sms)}
           onChange={(v) => changer({ email, sms: v })}

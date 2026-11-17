@@ -24,7 +24,7 @@ export default function ComprendrePage() {
     <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:py-16">
       <PageHead
         title="Comprendre votre lettre"
-        intro="Redevance, délai, frais, huissier : tout le système belge, simplement."
+        intro="Chaque courrier, ce qu'il coûte, ce qu'il faut faire."
       />
 
       <section className="mx-auto mt-10 max-w-3xl">
@@ -90,27 +90,27 @@ export default function ComprendrePage() {
 
       {/* LIENS UTILES ET SOURCES OFFICIELLES */}
       <section className="mt-14">
-        <Card title="Liens utiles et sources officielles" subtitle="Les seuls textes et services qui font foi pour votre dossier.">
+        <Card title="Sources officielles" subtitle="Ce qui fait foi pour votre dossier.">
           <div className="grid gap-3 sm:grid-cols-2">
             {[
               {
                 titre: "parking.brussels",
-                texte: "Zones, tarifs, horaires et démarches de contestation en ligne.",
+                texte: "Zones, tarifs, horaires, contestation en ligne.",
                 href: "https://www.parking.brussels",
               },
               {
                 titre: "Votre commune",
-                texte: "Le règlement communal applicable figure sur le site officiel de chaque commune.",
+                texte: "Le règlement de chaque commune.",
                 href: "/communes",
               },
               {
                 titre: "Ombudsman bruxellois",
-                texte: "Médiation gratuite en cas de blocage avec une administration régionale.",
+                texte: "Médiation gratuite si une administration régionale bloque.",
                 href: "https://www.ombudsmanbru.be",
               },
               {
                 titre: "Protection des données",
-                texte: "Pour vos droits en matière de données personnelles (RGPD).",
+                texte: "Vos droits sur vos données (RGPD).",
                 href: "https://www.autoriteprotectiondonnees.be",
               },
             ].map((l) => (

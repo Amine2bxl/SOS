@@ -56,8 +56,8 @@ export function ControleCourrier({ points }: { points: PointControle[] }) {
         ))}
       </ul>
       <p className="mt-4 border-t border-line pt-3 text-xs leading-relaxed text-ink-faint">
-        « Établi » vaut pour le point contrôlé, pas pour la redevance entière. Une anomalie potentielle est une question
-        à poser, pas une illégalité constatée.
+        « Établi » : ce point seulement, pas toute la redevance. « Anomalie potentielle » : une question à poser, pas
+        une illégalité.
       </p>
     </section>
   );
