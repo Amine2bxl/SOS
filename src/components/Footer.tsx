@@ -1,18 +1,30 @@
 import Link from "next/link";
 import { Logo, MailIcon } from "@/components/Logo";
 import { WhatsAppIcon } from "@/components/Contact";
+import { IconeFleche } from "@/components/icones";
 import { ASSO } from "@/lib/data";
+import { DOCUMENTS_LEGAUX } from "@/lib/versions-legales";
 import { t, type Langue } from "@/lib/i18n";
 
+/**
+ * Le pied de page : trois colonnes de navigation, un bloc légal à part, et
+ * l'identité de l'association. Le légal a sa propre ligne : on le trouve sans
+ * le chercher, et chaque document affiche sa version.
+ */
 const COLONNES: { titreCle: string; liens: { href: string; cle: string }[] }[] = [
   {
-    titreCle: "footer.decouvrir",
+    titreCle: "footer.service",
     liens: [
       { href: "/#comment", cle: "nav.commentCaMarche" },
-      { href: "/comprendre", cle: "nav.comprendre" },
+      { href: "/comprendre", cle: "nav.videoMinute" },
       { href: "/communes", cle: "nav.communes" },
       { href: "/tarifs", cle: "nav.tarifs" },
-      { href: "/association", cle: "nav.association" },
+    ],
+  },
+  {
+    titreCle: "footer.association",
+    liens: [
+      { href: "/association", cle: "nav.quiSommesNous" },
       { href: "/presse", cle: "nav.presse" },
       { href: "/don", cle: "nav.don" },
       { href: "/contact", cle: "nav.contact" },
@@ -23,17 +35,18 @@ const COLONNES: { titreCle: string; liens: { href: string; cle: string }[] }[] =
     liens: [
       { href: "/#analyser", cle: "commun.analyser" },
       { href: "/connexion", cle: "commun.seConnecter" },
+      { href: "/connexion?compte=nouveau", cle: "nav.creerCompte" },
       { href: "/tableau-de-bord", cle: "commun.monEspace" },
     ],
   },
-  {
-    titreCle: "footer.legal",
-    liens: [
-      { href: "/mentions-legales", cle: "footer.mentionsLegales" },
-      { href: "/confidentialite", cle: "footer.confidentialite" },
-      { href: "/conditions-utilisation", cle: "footer.conditions" },
-    ],
-  },
+];
+
+const LEGAL: { href: string; cle: string }[] = [
+  { href: "/mentions-legales", cle: "footer.mentionsLegales" },
+  { href: "/conditions-utilisation", cle: "footer.cgu" },
+  { href: "/confidentialite", cle: "footer.rgpd" },
+  { href: "/confidentialite#cookies", cle: "footer.cookies" },
+  { href: "/confidentialite#droits", cle: "footer.droits" },
 ];
 
 const LIEN_WHATSAPP = `https://wa.me/${ASSO.whatsapp}?text=${encodeURIComponent(
@@ -41,14 +54,16 @@ const LIEN_WHATSAPP = `https://wa.me/${ASSO.whatsapp}?text=${encodeURIComponent(
 )}`;
 
 export function Footer({ langue }: { langue: Langue }) {
+  const annee = new Date().getFullYear();
   return (
     <footer className="border-t border-white/10 bg-navy-950 text-navy-100 print:hidden">
       <div className="motif-marquage h-1.5" aria-hidden="true" />
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-        <div className="flex flex-col gap-10 lg:flex-row lg:justify-between">
-          <div className="max-w-xs">
+      <div className="mx-auto max-w-6xl px-4 pb-8 pt-12 sm:px-6">
+        <div className="grid gap-10 lg:grid-cols-[1.25fr_2fr]">
+          {/* ------------------------------------------- l'association, en bref */}
+          <div>
             <Logo />
-            <p className="mt-4 text-sm leading-relaxed text-navy-100/75">{t(langue, "footer.tagline")}</p>
+            <p className="mt-4 max-w-sm text-sm leading-relaxed text-navy-100/75">{t(langue, "footer.tagline")}</p>
             <div className="mt-5 flex flex-wrap gap-2">
               <a
                 href={LIEN_WHATSAPP}
@@ -66,19 +81,25 @@ export function Footer({ langue }: { langue: Langue }) {
                 <MailIcon className="h-4 w-4" />
                 E-mail
               </a>
-              <a
-                href={`https://www.tiktok.com/@${ASSO.tiktok}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`${t(langue, "footer.suivre")} : TikTok @${ASSO.tiktok}`}
-                className="inline-flex h-10 items-center gap-2 rounded-full border border-white/20 px-4 text-sm font-semibold text-white transition hover:bg-white/10"
-              >
-                <IconeTikTok className="h-4 w-4" />
-                @{ASSO.tiktok}
-              </a>
             </div>
+            <a
+              href={`https://www.tiktok.com/@${ASSO.tiktok}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group mt-4 flex max-w-sm items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3 transition hover:border-white/25 hover:bg-white/[0.07]"
+            >
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-black text-white">
+                <IconeTikTok className="h-5 w-5" />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-bold text-white">TikTok · @{ASSO.tiktok}</span>
+                <span className="block text-xs text-navy-100/70">{t(langue, "footer.tiktok")}</span>
+              </span>
+              <IconeFleche className="ml-auto h-4 w-4 shrink-0 text-navy-100/50 transition-transform group-hover:translate-x-0.5" />
+            </a>
           </div>
 
+          {/* ----------------------------------------------------- navigation */}
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
             {COLONNES.map((col) => (
               <nav key={col.titreCle} aria-label={t(langue, col.titreCle)}>
@@ -97,12 +118,31 @@ export function Footer({ langue }: { langue: Langue }) {
           </div>
         </div>
 
-        <div className="mt-12 space-y-1 border-t border-white/10 pt-5 text-xs leading-relaxed text-navy-100/60">
-          <p>
-            <strong className="text-navy-100">{ASSO.nom}</strong> — {ASSO.formeJuridique} — BCE {ASSO.bce} — {ASSO.rue},{" "}
-            {ASSO.codePostal} {ASSO.ville}.
+        {/* ------------------------------------------------------------ légal */}
+        <nav aria-label={t(langue, "footer.infosLegales")} className="mt-12 rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
+          <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-gold-400">{t(langue, "footer.infosLegales")}</h2>
+          <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+            {LEGAL.map((l) => (
+              <li key={l.href}>
+                <Link href={l.href} className="text-navy-100/85 underline decoration-white/20 underline-offset-4 transition hover:text-white hover:decoration-white/60">
+                  {t(langue, l.cle)}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 text-xs text-navy-100/55">
+            Versions en vigueur : {DOCUMENTS_LEGAUX.cgu.version} · {DOCUMENTS_LEGAUX.confidentialite.version}. Réclamation
+            sur vos données : Autorité de protection des données, rue de la Presse 35, 1000 Bruxelles.
           </p>
-          <p>{t(langue, "footer.identite")}</p>
+        </nav>
+
+        {/* --------------------------------------------------------- identité */}
+        <div className="mt-6 flex flex-col gap-2 text-xs leading-relaxed text-navy-100/60 md:flex-row md:items-start md:justify-between">
+          <p>
+            © {annee} <strong className="text-navy-100">{ASSO.nom}</strong> · {ASSO.formeJuridique} · BCE {ASSO.bce} ·{" "}
+            {ASSO.rue}, {ASSO.codePostal} {ASSO.ville}
+          </p>
+          <p className="md:max-w-sm md:text-right">{t(langue, "footer.identite")}</p>
         </div>
       </div>
     </footer>

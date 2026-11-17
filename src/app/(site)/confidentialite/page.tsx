@@ -187,6 +187,7 @@ export default function ConfidentialitePage() {
         </p>
       </Card>
 
+      <div id="cookies" className="scroll-mt-24" />
       <Card title="Cookies et mesures techniques" className="mt-6">
         <p className="text-sm leading-relaxed text-ink-soft">
           Le site n&apos;utilise aucune solution de mesure d&apos;audience ni de publicité. Un cookie
@@ -203,6 +204,7 @@ export default function ConfidentialitePage() {
         </p>
       </Card>
 
+      <div id="droits" className="scroll-mt-24" />
       <Card title="Vos droits" className="mt-6">
         <p className="text-sm leading-relaxed text-ink-soft">
           Vous disposez des droits d&apos;accès, de rectification, d&apos;effacement, de limitation,

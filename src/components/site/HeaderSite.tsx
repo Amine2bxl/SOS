@@ -44,7 +44,7 @@ function AccesCompte() {
   }
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-1 sm:gap-1.5">
       <Link
         href="/don"
         aria-label={t(langue, "nav.don")}
@@ -55,7 +55,7 @@ function AccesCompte() {
       </Link>
       <Link
         href="/connexion"
-        className="inline-flex h-10 items-center whitespace-nowrap rounded-full px-3.5 text-sm font-semibold text-navy-100 transition hover:bg-white/10 hover:text-white"
+        className="inline-flex h-10 items-center whitespace-nowrap rounded-full px-2.5 text-sm font-semibold text-navy-100 transition hover:bg-white/10 hover:text-white sm:px-3.5"
       >
         {t(langue, "commun.seConnecter")}
       </Link>
@@ -98,7 +98,7 @@ export function HeaderSite() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1 sm:gap-1.5">
           <ChoixLangue />
           <AccesCompte />
           <button
